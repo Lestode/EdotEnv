@@ -1,0 +1,47 @@
+name: API documentation review
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    concurrency:
+      group: documentation-review-${{ github.event.pull_request.number || github.event.issue.number }}
+      queue: max
+      cancel-in-progress: false
+    if: >-
+      github.event.repository.private &&
+      ((github.event_name == 'pull_request_target' &&
+        github.event.pull_request.user.type == 'User') ||
+       (github.event.issue.pull_request &&
+        github.event.comment.user.type == 'User' &&
+        startsWith(github.event.comment.body, '/review-docs')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Resolve the accepted reviewer revision
+        id: reviewer
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const { data } = await github.rest.repos.getBranch({
+              ...context.repo, branch: context.payload.repository.default_branch,
+            });
+            core.setOutput('sha', data.commit.sha);
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ steps.reviewer.outputs.sha }}
+          persist-credentials: false
+      - name: Review with the shared API agent
+        uses: Lestode/review-agents/documentation-review@f4db0e334f6fc2216c583fe796638b096a5abbfe
+        with:
+          config-path: .github/documentation-review.json
+          auth-mode: api-key
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
