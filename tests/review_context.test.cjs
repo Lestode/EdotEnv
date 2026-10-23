@@ -19,13 +19,14 @@ function fixture({ bootstrap = false, acceptedImplementation = !bootstrap } = {}
     }),
     '.github/documentation-review.md': 'Accepted documentation customization.',
     '.github/implementation-review.md': 'Accepted implementation customization.',
+    '.github/workflows/documentation-review.yml': 'const number = Number(5);\nAccepted resolver fixture.\n      - uses: actions/checkout',
   };
   if (acceptedImplementation) accepted['.github/implementation-review.json'] = JSON.stringify({
     documentationIndex: 'docs/README.md', instructionsPath: '.github/implementation-review.md',
     command: '/review-implementation', markerPrefix: 'implementation-fixture', contextPaths: [],
   });
   const privateFiles = {
-    'README.md': '## Required reviews before merge\nContract fixture.\n## Project settings\n',
+    'README.md': '## Required reviews before merge\nContract fixture.\nCopy [the comparison workflow]\n## Implementation review\nImplementation behavior fixture.\nThe collector reads the full accepted target-tip Markdown snapshot\n## Project settings\n',
     'documentation-review/action.yml': 'Documentation action fixture.',
     'implementation-review/action.yml': 'Implementation action fixture.',
     'implementation-review/SKILL.md': 'Accepted implementation procedure fixture.',
@@ -85,7 +86,8 @@ test('bootstrap supplies the approved contracts to both agents without proposed 
   assert.ok(docs.includes('Accepted documentation customization.'));
   assert.ok(docs.includes('Accepted implementation procedure fixture.'));
   assert.ok(impl.includes('publication fixture'));
-  assert.ok(!docs.includes('publication fixture'));
+  assert.ok(docs.includes('publication fixture'));
+  assert.ok(docs.includes('Accepted resolver fixture.'));
   assert.ok(!impl.includes('Accepted implementation customization.'));
   assert.ok(!f.reads.includes('.github/implementation-review.md'));
   assert.ok(docs.includes('do not reproduce private source'));

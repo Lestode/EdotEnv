@@ -104,6 +104,12 @@ jobs:
               settings = JSON.parse(await readProjectFile(root, path, 8000));
             }
             settings = projectSettings(settings);
+            const section = (source, startMarker, endMarker) => {
+              const start = source.indexOf(startMarker);
+              const end = source.indexOf(endMarker, start);
+              if (start < 0 || end < start) throw new Error('Pinned caller interface is missing.');
+              return source.slice(start, end);
+            };
             const readme = fs.readFileSync('.review-agent/README.md', 'utf8');
             const start = readme.indexOf('## Required reviews before merge');
             const end = readme.indexOf('## Project settings', start);
@@ -116,10 +122,7 @@ jobs:
             // Include only the pinned helper and publication interfaces used by this caller.
             const excerpt = (file, startMarker, endMarker) => {
               const source = fs.readFileSync(`.review-agent/${file}`, 'utf8');
-              const start = source.indexOf(startMarker);
-              const end = source.indexOf(endMarker, start);
-              if (start < 0 || end < start) throw new Error('Pinned caller interface is missing.');
-              return [`${file}: ${startMarker}`, source.slice(start, end)];
+              return [`${file}: ${startMarker}`, section(source, startMarker, endMarker)];
             };
             const callerInterfaces = [
               excerpt('documentation-review/action.cjs', 'async function readProjectFile(', 'async function runAction('),
@@ -141,13 +144,26 @@ jobs:
               'private passages in the public report.\n';
             const procedure = ['implementation-review/SKILL.md',
               fs.readFileSync('.review-agent/implementation-review/SKILL.md', 'utf8')];
-            for (const [name, config, additional] of [
-              ['documentation', documentation, [procedure]],
-              ['implementation', settings, callerInterfaces],
+            const acceptedCaller = [
+              ['Accepted .github/documentation-review.json',
+                await readProjectFile(root, '.github/documentation-review.json', 8000)],
+              ['Accepted .github/workflows/documentation-review.yml: resolver',
+                section(await readProjectFile(root, '.github/workflows/documentation-review.yml', 20000),
+                  'const number = Number(', '      - uses: actions/checkout')],
+            ];
+            const documentationEvidence = [
+              ['README.md (blocking policy and implementation behavior)',
+                section(readme, '## Required reviews before merge', 'Copy [the comparison workflow]') +
+                section(readme, '## Implementation review', 'The collector reads the full accepted target-tip Markdown snapshot')],
+              ...evidence.slice(1), procedure, ...callerInterfaces, ...acceptedCaller,
+            ];
+            for (const [name, config, sources] of [
+              ['documentation', documentation, documentationEvidence],
+              ['implementation', settings, [...evidence, ...callerInterfaces]],
             ]) {
               const customization = config.instructionsPath
                 ? await readProjectFile(root, config.instructionsPath, 32000) : '';
-              const instructions = customization + scope + JSON.stringify([...evidence, ...additional]);
+              const instructions = customization + scope + JSON.stringify(sources);
               if (Buffer.byteLength(instructions) > 32000) throw new Error('Dependency evidence exceeds the instruction bound.');
               fs.writeFileSync(`.review-agent/${name}-context.md`, instructions);
               const path = `.review-agent/${name}-consumer.json`;

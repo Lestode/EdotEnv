@@ -126,9 +126,9 @@ reviewed dependency, not a new consumer audit of its internals. Missing caller
 source or interface details needed for a consequential integration requirement
 still make the assessment incomplete. If the evidence exceeds the shared 32 KB
 instruction bound, preparation fails rather than silently truncating it.
-Documentation review also receives the adopted implementation procedure;
-implementation review receives the narrow helper and check-publication interfaces
-used by the caller. Both disclosures to the OpenAI API were explicitly authorized
+Documentation review also receives the adopted implementation procedure and
+accepted caller configuration/resolver. Both receive the narrow helper and
+check-publication interfaces used by the caller. Both disclosures to the OpenAI API were explicitly authorized
 by the user. The private checkout is never published as review context.
 
 The [comparison workflow](../.github/workflows/review-comparison.yml) verifies
