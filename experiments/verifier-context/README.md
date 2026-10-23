@@ -3,7 +3,8 @@
 Status: the local pilot was stopped at the user’s request because it was too
 slow. Its partial results are preserved. Daytona hosting is now authorized;
 cloud reference integration passed and 20-sandbox capacity was confirmed.
-The fresh comparison is running with 10 trials per arm; final results are pending.
+The fresh comparison has 10 trials per arm; its controller is moving to Daytona
+to avoid repeated task uploads from the local machine. Final results are pending.
 
 ## Goal
 
@@ -138,7 +139,7 @@ Only after validating the model and pilot limits, launch paid trials explicitly:
 ```
 
 The dollar value above is an example **stop threshold, not a hard billing cap**.
-The runner checks accumulated reported cost before starting another wave; every
+The runner checks accumulated reported cost before starting another trial; every
 trial already in flight can cross the threshold. With concurrency four, all four
 trials may start before any usage is reported. With concurrency twenty, the
 entire 20-rollout batch can be in flight before the first completed-trial cost
@@ -164,7 +165,7 @@ with cloud results as if they shared identical execution conditions:
   --task data/autoresearch-feature-volume \
   --output experiments/verifier-context/runs/daytona-01 \
   --model openai/gpt-6-luna --pairs 10 --max-turns 30 --agent-seconds 1800 \
-  --backend daytona --concurrency 20 --cpus 4 --memory-gb 8 --storage-gb 10
+  --backend daytona --concurrency 19 --cpus 4 --memory-gb 8 --storage-gb 10
 ```
 
 The `check` and `run` commands above also apply to a Daytona study. Check the
@@ -261,7 +262,7 @@ capacity. A later scale check successfully created 19 additional simultaneous
 sandboxes beside the reference run, then verified their deletion. The user
 authorized scaling up to 20 and confirmed that the $2 model-API target excludes
 modest hosting costs. The fresh cloud comparison uses 10 trials per arm, up to
-20 in parallel, with the same four-CPU / 8 GiB / 10 GiB allocation for both arms.
+19 research/verifier sandboxes in parallel plus one trusted controller, with the same four-CPU / 8 GiB / 10 GiB allocation for both arms.
 The complete cloud reference flow then passed, including separate hidden scoring,
 with IC 0.518312997231824, matching the local reference to floating-point precision.
 It made no model API calls and is excluded from A/B results. Reference and probe
@@ -281,7 +282,21 @@ Both arms use this execution path. Cancellation interrupts each child, waits
 for cleanup, forcibly reaps a stalled child if needed, then audits study-wide
 sandbox deletion. The process change requires a fresh frozen study.
 
-The replacement 20-rollout cloud study is running in isolated worker processes. Its private launcher monitors reported
+A second startup with isolated workers passed Docker startup, but repeating a
+260.5 MiB upload twenty times saturated the local connection. It was stopped
+before any model usage was observed, and its independent cleanup watchdog
+verified deletion. Preserve this staging failure separately too.
+
+The next 20-rollout study places the trusted controller in its own Daytona
+sandbox, transfers the frozen task once, and starts up to 19 independent trial
+sandboxes from there. A worker pool starts the final queued rollout when a slot
+frees, keeping at most 20 sandboxes including the controller. The controller holds
+credentials and the full private task, just as the local controller did; neither
+is mounted in research sandboxes. Research environments receive only their
+original public build context, and hidden data is staged into separate verifier
+sandboxes. Download private results before deleting the controller.
+
+The cloud controller uses the same frozen runner, agent settings, and guidance. Its private launcher monitors reported
 trajectory costs and cancels at $1.75 of observed API usage including the prior
 local pilot and smoke request, leaving headroom below the $2 target. Reported
 usage can lag in-flight requests, so this remains a guard rather than a hard cap.

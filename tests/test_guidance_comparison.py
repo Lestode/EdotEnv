@@ -249,7 +249,7 @@ class ComparisonTests(unittest.TestCase):
 
         TrialConfig.model_validate(config)
 
-    def test_concurrent_wave_overlaps_and_cost_stops_next_wave(self):
+    def test_concurrent_pool_overlaps_and_cost_stops_next_launch(self):
         self.plan["concurrency"] = 2
         active, peak = 0, 0
 
@@ -271,6 +271,33 @@ class ComparisonTests(unittest.TestCase):
         execution = comparison.read_json(self.root / "execution.json")
         self.assertEqual(execution["state"], "cost_threshold_reached")
         self.assertAlmostEqual(execution["observed_cost_usd"], 0.3)
+
+    def test_pool_reuses_first_available_slot_without_waiting_for_slow_trial(self):
+        self.plan["concurrency"] = 2
+        overlap = []
+
+        async def exercise():
+            release = asyncio.Event()
+
+            async def fake_trial(root, plan, trial):
+                if trial == plan["trials"][0]:
+                    await release.wait()
+                elif trial == plan["trials"][2]:
+                    overlap.append(not release.is_set())
+                    release.set()
+                self.result(trial, cost=0.01)
+
+            with (
+                patch.object(comparison, "preflight"),
+                patch.object(comparison, "run_trial", side_effect=fake_trial),
+            ):
+                await comparison.execute(self.root, self.plan, 1)
+
+        asyncio.run(exercise())
+        self.assertEqual(overlap, [True])
+        self.assertEqual(
+            comparison.read_json(self.root / "execution.json")["state"], "completed"
+        )
 
     def test_failed_cloud_trial_cleans_up_and_counts_cancelled_usage(self):
         self.plan["environment"] = {"type": "daytona", "delete": True}

@@ -421,7 +421,7 @@ async def cleanup_daytona(root, plan):
 
 
 async def execute(root, plan, max_total_cost):
-    """Bounded waves, no automatic retries and no reuse of conversations."""
+    """Bounded worker pool, no retries and no reuse of conversations."""
     if not finite_number(max_total_cost, low=0) or max_total_cost <= 0:
         raise ValueError("Cost stop threshold must be a positive finite number")
     preflight(root, plan)
@@ -433,23 +433,30 @@ async def execute(root, plan, max_total_cost):
     spent = 0.0
     state = "completed"
     concurrency = plan.get("concurrency", 1)
-    try:
-        for offset in range(0, len(plan["trials"]), concurrency):
-            verify_frozen(root, plan)
+    pending = iter(plan["trials"])
+
+    async def worker():
+        nonlocal spent, state
+        while state == "completed":
+            trial = next(pending, None)
+            if trial is None:
+                break
             if spent >= max_total_cost:
                 state = "cost_threshold_reached"
                 break
-            wave = plan["trials"][offset : offset + concurrency]
-            async with asyncio.TaskGroup() as group:
-                for trial in wave:
-                    print(f"Running {trial['id']}", flush=True)
-                    (root / "trials" / trial["id"]).mkdir(parents=True)
-                    group.create_task(run_trial(root, plan, trial))
-            rows = [collect_trial(root, trial) for trial in wave]
-            spent += sum(row["cost_usd"] or 0 for row in rows)
-            if any(row["cost_usd"] is None for row in rows):
+            verify_frozen(root, plan)
+            print(f"Running {trial['id']}", flush=True)
+            (root / "trials" / trial["id"]).mkdir(parents=True)
+            await run_trial(root, plan, trial)
+            row = collect_trial(root, trial)
+            spent += row["cost_usd"] or 0
+            if row["cost_usd"] is None:
                 state = "stopped_unknown_cost"
-                break
+
+    try:
+        async with asyncio.TaskGroup() as group:
+            for _ in range(concurrency):
+                group.create_task(worker())
     except BaseException:
         state = "interrupted_or_failed"
         raise
