@@ -76,9 +76,9 @@ These are integration points, not a claim that hooks alone cover every requireme
 The authoritative policy and integration details are in [the development workflow](WORKFLOW.md).
 
 - [x] Accept the shared action's API-key support PR, then pin its accepted full commit SHA in the consumer workflow and documentation links.
-- [ ] Provision the repository's `OPENAI_API_KEY` Actions secret with access to the pinned model; keep the value out of project files and PR discussion.
-- [ ] Merge the reviewed setup PR after explicit user acceptance, then verify `Project checks` on the accepted default branch.
-- [ ] Verify one automatic documentation-review response on a small PR after activation; record its PR and Actions URLs.
+- [x] Provision the repository's `OPENAI_API_KEY` Actions secret with access to the pinned model; keep the value out of project files and PR discussion.
+- [x] Merge the reviewed setup PR after explicit user acceptance, then verify `Project checks` on the accepted default branch.
+- [x] Verify one automatic documentation-review response on a small PR after activation; record its PR and Actions URLs.
 - [ ] Verify `/review-docs <question>` produces a follow-up response, and a later push is reviewed after a fresh request.
 - [ ] Enable private `main` branch protection when the GitHub account plan supports it, then verify direct pushes and unchecked merges are rejected.
 - [ ] Add CPU regression tests alongside each OPCD implementation step and extend CI for its dependencies; retain separate GPU/distributed run evidence.

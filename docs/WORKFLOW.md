@@ -69,9 +69,15 @@ is enabled for repositories under the same owner.
 
 [EdotEnv PR #1](https://github.com/Lestode/EdotEnv/pull/1) is merged and the API
 documentation-review workflow is active on the default branch. The repository's
-`OPENAI_API_KEY` Actions secret is configured. Automatic publication and a
-follow-up command are being validated on a small documentation PR; successful
-API model access and publication are not yet claimed.
+`OPENAI_API_KEY` Actions secret is configured and live API model access is verified.
+The accepted default branch's [Project checks](https://github.com/Lestode/EdotEnv/actions/runs/39946844008)
+passed. Opening [validation PR #2](https://github.com/Lestode/EdotEnv/pull/2)
+produced one [automatic API review report](https://github.com/Lestode/EdotEnv/pull/2#issuecomment-6363933978)
+in a [successful review job](https://github.com/Lestode/EdotEnv/actions/runs/39946910380).
+The report identifies OpenAI Responses API execution and API-key billing.
+A [rerun of the same automatic request](https://github.com/Lestode/EdotEnv/actions/runs/39946910380/attempts/2)
+passed without a model-input event and left exactly one matching report, verifying
+same-request deduplication. Follow-up behavior remains under validation.
 See [the activation tasks](TODO.md#repository-workflow-validation).
 
 GitHub rejected private-repository branch protection on the current account
