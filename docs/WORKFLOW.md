@@ -149,11 +149,10 @@ the [experiment's virtual-environment setup](../experiments/verifier-context/REA
 for the Harbor/Daytona dependencies required by the project tests, then run:
 
 ```sh
-python -m pip install pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt
-pre-commit run --all-files
-python scripts/check_project.py
-# Once project CPU tests exist:
-python -m unittest discover -s tests -p 'test_*.py' -v
+.venv/bin/python -m pip install pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt
+.venv/bin/pre-commit run --all-files
+.venv/bin/python scripts/check_project.py
+.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
 Add deterministic CPU tests under `tests/` using unittest as OPCD is implemented;
