@@ -3,5 +3,5 @@
   "instructionsPath": ".github/implementation-review.md",
   "command": "/review-implementation",
   "markerPrefix": "edotenv-implementation-review",
-  "contextPaths": []
+  "contextPaths": [".github/documentation-review.json"]
 }

@@ -76,7 +76,11 @@ Keep the review job's per-PR concurrency group and queued execution so repeated
 automatic events cannot invoke paid reviews concurrently for the same revision.
 
 Human collaborators with write access receive both reviews on PR open,
-reopen, ready-for-review, every `synchronize` update, and target-branch changes.
+reopen, ready-for-review, every `synchronize` update, and PR retargeting.
+When the target branch advances, update the PR branch to obtain fresh automatic
+assessments and satisfy strict up-to-date protection. Authorized review requests
+can also reassess the current comparison; a target-branch push alone does not
+start either reviewer.
 Implementation includes any non-Markdown path, including tests, configuration,
 and workflows. A PR changing only Markdown receives an explicit successful
 not-applicable implementation assessment without a model call.
@@ -110,6 +114,18 @@ reviews` and gives runs the title `Review PR #<number>`. One immutable private
 checkout supplies both actions, serialized per PR. An implementation assessment
 still runs when documentation findings fail the preceding action. Each agent's
 own command selects that reviewer for comment requests.
+
+Implementation review includes the accepted shared action manifests, integration
+contract, known limitations, and upstream validation references in bounded private
+model context. Normal runs prepend accepted project customization; bootstrap runs
+do not activate proposed customization. Temporary context/configuration stays in
+the ignored private checkout and is never uploaded. Reports may cite dependency
+paths and the pin but must not reproduce private source. This supplies evidence
+for checking caller compatibility; the shared runtime remains a separately
+reviewed dependency, not a new consumer audit of its internals. Missing caller
+source or interface details needed for a consequential integration requirement
+still make the assessment incomplete. If the evidence exceeds the shared 32 KB
+instruction bound, preparation fails rather than silently truncating it.
 
 The [comparison workflow](../.github/workflows/review-comparison.yml) verifies
 the two published assessments and named checks against the current head, target
@@ -190,6 +206,17 @@ workflow, and daily update alerts is proposed in
 [EdotEnv PR #5](https://github.com/Lestode/EdotEnv/pull/5); these additions are not
 active on `main` until acceptance and merge. The historical private API review
 evidence is separate from the public-consumer bootstrap evidence.
+The accepted documentation-only workflow also produced a
+[successful automatic run](https://github.com/Lestode/EdotEnv/actions/runs/39983355266)
+after PR #5 was updated to `f22949c`, confirming that update-triggered review is
+already active for that rollout.
+The [initial dual-review bootstrap](https://github.com/Lestode/EdotEnv/actions/runs/39983388029)
+on `f22949c` published both assessments and exact-head checks. Documentation
+findings blocked its named check while completion passed; implementation
+assessment was incomplete because private dependency contracts were unavailable.
+The subsequent revision corrects the wording and supplies bounded interface
+evidence. Both named checks still need a complete, clear assessment of the
+latest PR revision before acceptance; consult PR #5 for the current results.
 
 For this activation transition, validate both reviewers on the setup PR using
 the manual bootstrap below while preserving all existing branch protections.
