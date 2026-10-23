@@ -115,8 +115,8 @@ checkout supplies both actions, serialized per PR. An implementation assessment
 still runs when documentation findings fail the preceding action. Each agent's
 own command selects that reviewer for comment requests.
 
-Implementation review includes the accepted shared action manifests, integration
-contract, known limitations, and upstream validation references in bounded private
+Both reviews include the accepted shared action manifests, integration contract,
+known limitations, and upstream validation references in bounded private
 model context. Normal runs prepend accepted project customization; bootstrap runs
 do not activate proposed customization. Temporary context/configuration stays in
 the ignored private checkout and is never uploaded. Reports may cite dependency
@@ -126,6 +126,10 @@ reviewed dependency, not a new consumer audit of its internals. Missing caller
 source or interface details needed for a consequential integration requirement
 still make the assessment incomplete. If the evidence exceeds the shared 32 KB
 instruction bound, preparation fails rather than silently truncating it.
+Documentation review also receives the adopted implementation procedure;
+implementation review receives the narrow helper and check-publication interfaces
+used by the caller. Both disclosures to the OpenAI API were explicitly authorized
+by the user. The private checkout is never published as review context.
 
 The [comparison workflow](../.github/workflows/review-comparison.yml) verifies
 the two published assessments and named checks against the current head, target
