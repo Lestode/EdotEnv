@@ -113,6 +113,21 @@ jobs:
               ...['documentation-review/action.yml', 'implementation-review/action.yml', 'KNOWN_ISSUES.md']
                 .map(file => [file, fs.readFileSync(`.review-agent/${file}`, 'utf8')]),
             ];
+            // Include only the pinned helper and publication interfaces used by this caller.
+            const excerpt = (file, startMarker, endMarker) => {
+              const source = fs.readFileSync(`.review-agent/${file}`, 'utf8');
+              const start = source.indexOf(startMarker);
+              const end = source.indexOf(endMarker, start);
+              if (start < 0 || end < start) throw new Error('Pinned caller interface is missing.');
+              return [`${file}: ${startMarker}`, source.slice(start, end)];
+            };
+            evidence.push(
+              excerpt('documentation-review/action.cjs', 'async function readProjectFile(', 'async function runAction('),
+              excerpt('documentation-review/review.cjs', 'const defaults = Object.freeze(', 'function formatResponse('),
+              excerpt('implementation-review/review.cjs', 'function projectSettings(', 'async function collectContext('),
+              excerpt('documentation-review/check.cjs', '  ledger(includeResult', '  recover(checks)'),
+              excerpt('documentation-review/check.cjs', '  finalized(check, report)', '  async reuse(comment)'),
+            );
             const instructions = customization + '\n\n' +
               'Review EdotEnv caller integration against the accepted shared interfaces below. ' +
               'The private shared runtime is a separately reviewed, pinned dependency; ' +
