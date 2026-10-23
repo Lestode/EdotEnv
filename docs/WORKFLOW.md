@@ -7,8 +7,8 @@ branch and open a PR against `main`. Update that PR as work progresses. Do not
 push changes directly to `main`. Agents may prepare and push changes within the
 user's authorized task; merging requires explicit user acceptance of the PR.
 
-EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/2b5de43ffd26e01ef16c4a263c02516baac24170/WORKFLOW.md)
-and [documentation review procedure](https://github.com/Lestode/review-agents/blob/2b5de43ffd26e01ef16c4a263c02516baac24170/documentation-review/SKILL.md)
+EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/12748b95e04dede35e073b7505bc6c4918564b94/WORKFLOW.md)
+and [documentation review procedure](https://github.com/Lestode/review-agents/blob/12748b95e04dede35e073b7505bc6c4918564b94/documentation-review/SKILL.md)
 at the same revision as the action. Project scope remains in [AGENTS.md](../AGENTS.md).
 Update the action pin and these links together through a reviewed PR.
 
@@ -35,11 +35,11 @@ itself is proposed through the first PR.
 ## Reviewer operation
 
 The [workflow](../.github/workflows/documentation-review.yml) pins
-`Lestode/review-agents` at `2b5de43ffd26e01ef16c4a263c02516baac24170`.
+`Lestode/review-agents` at `12748b95e04dede35e073b7505bc6c4918564b94`.
 [Project settings](../.github/documentation-review.json) select this documentation
 index and [project review instructions](../.github/documentation-review.md).
 The shared action defines the model, collection limits, authorization, execution,
-and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/2b5de43ffd26e01ef16c4a263c02516baac24170/README.md).
+and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/12748b95e04dede35e073b7505bc6c4918564b94/README.md).
 
 The action runs on a GitHub-hosted Ubuntu runner with `auth-mode: api-key`.
 Create an `OPENAI_API_KEY` repository Actions secret in
@@ -51,6 +51,8 @@ local Mac runner or ChatGPT sign-in. The shared action makes a tool-free
 Responses API request using the same bounded review context as its ChatGPT mode.
 Proposed PR code runs only in the separate verification job; the privileged
 reviewer uses accepted default-branch settings and never executes PR code.
+Keep the review job's per-PR concurrency group and queued execution so repeated
+automatic events cannot invoke paid reviews concurrently for the same revision.
 
 Human collaborators with write access receive an automatic review on PR open,
 reopen, or ready-for-review when that revision lacks an automatic response.

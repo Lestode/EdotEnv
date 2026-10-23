@@ -12,6 +12,10 @@ permissions:
 
 jobs:
   review:
+    concurrency:
+      group: documentation-review-${{ github.event.pull_request.number || github.event.issue.number }}
+      queue: max
+      cancel-in-progress: false
     if: >-
       github.event.repository.private &&
       ((github.event_name == 'pull_request_target' &&
@@ -36,7 +40,7 @@ jobs:
           ref: ${{ steps.reviewer.outputs.sha }}
           persist-credentials: false
       - name: Review with the shared API agent
-        uses: Lestode/review-agents/documentation-review@2b5de43ffd26e01ef16c4a263c02516baac24170
+        uses: Lestode/review-agents/documentation-review@12748b95e04dede35e073b7505bc6c4918564b94
         with:
           config-path: .github/documentation-review.json
           auth-mode: api-key
