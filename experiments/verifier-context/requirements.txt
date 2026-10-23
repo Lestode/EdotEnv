@@ -1,0 +1,4 @@
+# Runner and OpenAI transport versions validated together; install in Python 3.12.
+harbor==0.20.0
+litellm==1.106.2
+openai==2.54.0

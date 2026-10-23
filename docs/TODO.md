@@ -71,6 +71,26 @@ Use `--custom-generate-function-path` if rollout capture needs customization; `-
 
 These are integration points, not a claim that hooks alone cover every requirement. The [batch builder](../slime/slime/data/batch_builder.py), [training batch loader](../slime/slime/backends/megatron_utils/model.py), and [actor tensor handling](../slime/slime/backends/megatron_utils/actor.py) have explicit field handling that must be checked when adding OPCD tensors.
 
+## Markdown guidance final-score comparison
+
+The [experiment](../experiments/verifier-context/README.md) defines the comparison,
+local commands, result semantics, and remaining run decisions. It is a task-level
+pilot; it does not implement OPCD training or establish distillability.
+
+- [x] Implement frozen task/guidance preparation, identical Harbor settings for
+  both arms, alternating trial order, explicit paid execution, and cost stop
+  handling without claiming a hard billing cap.
+- [x] Add synthetic CPU tests for condition differences, changed inputs,
+  rejected/missing/corrupt scores, valid zero/negative scores, cost stops, and
+  repeat-execution refusal; validate the pinned Harbor instruction/config contract.
+- [x] Collect final hidden IC with failure counts and preserve per-trial evidence;
+  keep the licensed task and private run outputs out of the public repository.
+- [ ] Validate Docker builds, MCP connectivity, submission artifact transfer, and
+  separate verifier execution on a Docker host; local Docker is unavailable.
+- [ ] Select the pilot model and approve repetitions, equal resource limits, and
+  spending threshold before launching paid comparison trials.
+- [ ] Run the comparison and inspect the final-score report and all failures.
+
 ## Repository workflow validation
 
 The authoritative policy and integration details are in [the development workflow](WORKFLOW.md).
@@ -84,6 +104,6 @@ The authoritative policy and integration details are in [the development workflo
 - [x] Provision a read-only deploy key restricted to `Lestode/review-agents` and store its private part as `REVIEW_AGENTS_READ_KEY` in EdotEnv Actions secrets; verify scope and secret metadata without logging credentials.
 - [x] Confirm shared reviewer PR #4 is merged and pin its accepted commit; verify its file tree matches the head that passed all 92 tests.
 - [x] Validate private checkout, API execution, report publication, and a passing exact-head agent check through the feature-branch bootstrap run recorded in the development workflow.
-- [ ] Activate the consumer workflow after user acceptance without bypassing its required completion gate.
+- [x] Activate the consumer workflow after user acceptance without bypassing its required completion gate; EdotEnv PR #4 was merged on 2026-10-23.
 - [ ] Verify a real completed review passes only for its captured PR head, a new push automatically requests another review, duplicate completed requests do not repeat billing, and stale, skipped, failed, or unpublished reviews cannot allow merging. Confirm merge blocking through GitHub's merge state without attempting an unauthorized merge or direct push.
 - [ ] Add CPU regression tests alongside each OPCD implementation step and extend CI for its dependencies; retain separate GPU/distributed run evidence.

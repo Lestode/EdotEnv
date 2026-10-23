@@ -8,3 +8,6 @@ __pycache__/
 .env.*
 !.env.example
 .review-agent/
+# Locally supplied benchmark package and private comparison artifacts.
+/data/
+/experiments/verifier-context/runs/

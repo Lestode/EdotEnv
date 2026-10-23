@@ -123,10 +123,11 @@ report publication, and an exact-head passing check were verified in a
 [feature-branch bootstrap run](https://github.com/Lestode/EdotEnv/actions/runs/39959766619)
 for `a6deb6646aee9849a8de7b1ec1a6c6ba07672cea`.
 
-The required agent check is enforced. The shared dependency is merged and the
-public-consumer runtime is validated on the feature branch. Automatic review
-after updates on `main` still needs acceptance and merge of this consumer workflow.
-The historical private API review evidence is separate from the bootstrap evidence.
+The required agent check is enforced. The consumer workflow was accepted and
+merged in [EdotEnv PR #4](https://github.com/Lestode/EdotEnv/pull/4) on 2026-10-23,
+activating automatic review after PR updates. The historical private API review
+evidence is separate from the public-consumer bootstrap evidence. Further live
+validation remains tracked in [the activation tasks](TODO.md#repository-workflow-validation).
 
 For bootstrap validation of an authorized workflow upgrade, manually dispatch
 this workflow from its feature branch for its own PR once the shared dependency
