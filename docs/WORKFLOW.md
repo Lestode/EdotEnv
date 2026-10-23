@@ -25,9 +25,9 @@ Before merging:
    coverage limits in the PR. Use [the OPCD TODO](TODO.md) for feature evidence
    and [hardware planning](HARDWARE.md) for GPU/distributed validation.
    CPU checks and model commentary alone cannot establish training correctness.
-4. Obtain explicit user acceptance of the PR. Each new commit automatically
-   requests a fresh review, requires fresh checks, and needs acceptance of the
-   updated proposal.
+4. Obtain explicit user acceptance of the PR. Each new commit requires fresh
+   checks, a completed review under [the reviewer operation policy](#reviewer-operation),
+   and acceptance of the updated proposal.
 
 The sole bootstrap exception is the initial commit containing the existing
 project documents and pinned upstream Slime source. The review integration
@@ -118,20 +118,24 @@ acceptance still follows the policy above. The user manages repository access.
 
 The read-only deploy key and `REVIEW_AGENTS_READ_KEY` secret were configured on
 2026-10-23, with read-only scope verified through GitHub's API. The private part
-was deleted locally after the secret was stored. Live checkout remains unverified.
+was deleted locally after the secret was stored. Private checkout, API execution,
+report publication, and an exact-head passing check were verified in a
+[feature-branch bootstrap run](https://github.com/Lestode/EdotEnv/actions/runs/39959766619)
+for `a6deb6646aee9849a8de7b1ec1a6c6ba07672cea`.
 
-The required agent check currently blocks merges until the new reviewer path is
-activated. The shared dependency is merged; the consumer workflow proposal
-still needs user acceptance before activation. The historical private
-API review evidence above does not establish that public-consumer reviews or the
-new completion gate have run successfully.
+The required agent check is enforced. The shared dependency is merged and the
+public-consumer runtime is validated on the feature branch. Automatic review
+after updates on `main` still needs acceptance and merge of this consumer workflow.
+The historical private API review evidence is separate from the bootstrap evidence.
 
-For bootstrap, after the user accepts the reviewed workflow proposal and shared
-dependency, manually dispatch this workflow from its reviewed feature branch for
-its own PR. The registered workflow path already exists on `main`. The job still
+For bootstrap validation of an authorized workflow upgrade, manually dispatch
+this workflow from its feature branch for its own PR once the shared dependency
+is accepted. The registered workflow path already exists on `main`. The job still
 reads accepted default-branch project configuration and the accepted shared
 reviewer, and must publish a real completed review before the required gate can
-pass. Do not remove protection or fabricate a successful check to merge setup.
+pass. This one-off validation does not activate automatic review on `main` or
+authorize merging. Obtain user acceptance before merging. Do not remove
+protection or fabricate a successful check to merge setup.
 If manual dispatch is unavailable before merge, leave the gate blocking and
 resolve bootstrap with the user. After acceptance and merge, validate automatic
 reviews on updated PRs, exact-head association, duplicate handling, and failure
