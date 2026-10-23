@@ -7,8 +7,8 @@ branch and open a PR against `main`. Update that PR as work progresses. Do not
 push changes directly to `main`. Agents may prepare and push changes within the
 user's authorized task; merging requires explicit user acceptance of the PR.
 
-EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/fc3d7ef5d347631bf670e5d1248decc4af379350/WORKFLOW.md)
-and [documentation review procedure](https://github.com/Lestode/review-agents/blob/fc3d7ef5d347631bf670e5d1248decc4af379350/documentation-review/SKILL.md)
+EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/0b7cc867d1899bbdffcb1a93b1f41b5fe881fc65/WORKFLOW.md)
+and [documentation review procedure](https://github.com/Lestode/review-agents/blob/0b7cc867d1899bbdffcb1a93b1f41b5fe881fc65/documentation-review/SKILL.md)
 at the same revision as the action. Project scope remains in [AGENTS.md](../AGENTS.md).
 Update the action pin and these links together through a reviewed PR.
 
@@ -37,12 +37,12 @@ itself is proposed through the first PR.
 
 The [workflow](../.github/workflows/documentation-review.yml) fetches the private
 `Lestode/review-agents` repository at its pinned immutable revision, then invokes
-its local composite action. Public-consumer support requires acceptance of
-[shared reviewer PR #4](https://github.com/Lestode/review-agents/pull/4) before activation.
+its local composite action. Public-consumer support was accepted in
+[shared reviewer PR #4](https://github.com/Lestode/review-agents/pull/4).
 [Project settings](../.github/documentation-review.json) select this documentation
 index and [project review instructions](../.github/documentation-review.md).
 The shared action defines the model, collection limits, authorization, execution,
-and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/fc3d7ef5d347631bf670e5d1248decc4af379350/README.md).
+and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/0b7cc867d1899bbdffcb1a93b1f41b5fe881fc65/README.md).
 
 The action runs on a GitHub-hosted Ubuntu runner with `auth-mode: api-key` and
 explicit public-repository opt-in. Fetch it with `REVIEW_AGENTS_READ_KEY`, a
@@ -91,7 +91,7 @@ count as completion evidence.
 The initial API-key support was accepted and merged in
 [review-agents PR #2](https://github.com/Lestode/review-agents/pull/2). Its original
 private-consumer pin was `f4db0e334f6fc2216c583fe796638b096a5abbfe`.
-The new public-consumer pin above awaits acceptance of shared reviewer PR #4.
+The new public-consumer pin above is the accepted merge commit of shared reviewer PR #4.
 
 [EdotEnv PR #1](https://github.com/Lestode/EdotEnv/pull/1) activated the initial
 private-repository workflow on the default branch. The repository's
@@ -121,8 +121,8 @@ The read-only deploy key and `REVIEW_AGENTS_READ_KEY` secret were configured on
 was deleted locally after the secret was stored. Live checkout remains unverified.
 
 The required agent check currently blocks merges until the new reviewer path is
-activated. Accept the shared dependency and the consumer workflow proposal
-before activation. The historical private
+activated. The shared dependency is merged; the consumer workflow proposal
+still needs user acceptance before activation. The historical private
 API review evidence above does not establish that public-consumer reviews or the
 new completion gate have run successfully.
 

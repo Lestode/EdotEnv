@@ -64,8 +64,8 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: Lestode/review-agents
-          # Dependency: review-agents PR #4 must be accepted before activation.
-          ref: fc3d7ef5d347631bf670e5d1248decc4af379350
+          # Accepted shared reviewer: review-agents PR #4.
+          ref: 0b7cc867d1899bbdffcb1a93b1f41b5fe881fc65
           ssh-key: ${{ secrets.REVIEW_AGENTS_READ_KEY }}
           path: .review-agent
           persist-credentials: false

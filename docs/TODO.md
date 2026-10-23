@@ -82,6 +82,7 @@ The authoritative policy and integration details are in [the development workflo
 - [x] Verify `/review-docs <question>` produces a follow-up response, and a later push is reviewed after a fresh request.
 - [x] Enable `main` protection after the repository becomes public: require `Project checks` and `Agent reviews completed` from GitHub Actions, up-to-date branches, PRs, resolved conversations, and administrator enforcement; disallow force pushes and deletion. Settings verified through GitHub's API on 2026-10-23; live rejection tests remain below.
 - [x] Provision a read-only deploy key restricted to `Lestode/review-agents` and store its private part as `REVIEW_AGENTS_READ_KEY` in EdotEnv Actions secrets; verify scope and secret metadata without logging credentials.
-- [ ] Accept the shared public-consumer upgrade and activate the consumer workflow without bypassing its required completion gate.
+- [x] Confirm shared reviewer PR #4 is merged and pin its accepted commit; verify its file tree matches the head that passed all 92 tests.
+- [ ] Activate the consumer workflow after user acceptance without bypassing its required completion gate.
 - [ ] Verify a real completed review passes only for its captured PR head, a new push automatically requests another review, duplicate completed requests do not repeat billing, and stale, skipped, failed, or unpublished reviews cannot allow merging. Confirm merge blocking through GitHub's merge state without attempting an unauthorized merge or direct push.
 - [ ] Add CPU regression tests alongside each OPCD implementation step and extend CI for its dependencies; retain separate GPU/distributed run evidence.
