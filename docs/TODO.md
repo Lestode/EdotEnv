@@ -71,3 +71,13 @@ Use `--custom-generate-function-path` if rollout capture needs customization; `-
 
 These are integration points, not a claim that hooks alone cover every requirement. The [batch builder](../slime/slime/data/batch_builder.py), [training batch loader](../slime/slime/backends/megatron_utils/model.py), and [actor tensor handling](../slime/slime/backends/megatron_utils/actor.py) have explicit field handling that must be checked when adding OPCD tensors.
 
+## Repository workflow validation
+
+The authoritative policy and integration details are in [the development workflow](WORKFLOW.md).
+
+- [ ] Merge the reviewed setup PR after explicit user acceptance, then verify `Project checks` on the accepted default branch.
+- [ ] Register the dedicated `edotenv-mac` runner and confirm it is online with access to the local Codex ChatGPT sign-in.
+- [ ] Verify one automatic documentation-review response on a small PR after activation; record its PR and Actions URLs.
+- [ ] Verify `/review-docs <question>` produces a follow-up response, and a later push is reviewed after a fresh request.
+- [ ] Enable private `main` branch protection when the GitHub account plan supports it, then verify direct pushes and unchecked merges are rejected.
+- [ ] Add CPU regression tests alongside each OPCD implementation step and extend CI for its dependencies; retain separate GPU/distributed run evidence.

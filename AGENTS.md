@@ -14,6 +14,10 @@ Keep supporting project documentation in `docs/` and follow [documentation rules
 
 Track implementation gaps and validation work in [the OPCD TODO](docs/TODO.md).
 
+## Development workflow
+
+Use a `codex/` feature branch and a pull request for every change after the initial repository bootstrap. Follow [the development workflow](docs/WORKFLOW.md) for required checks, review requests, acceptance, and merge conditions. Do not push changes directly to `main` or merge without explicit user acceptance of the PR.
+
 ## Confirmed decisions
 
 - The teacher will be an accessible model.
