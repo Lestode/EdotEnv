@@ -67,11 +67,11 @@ As of 2026-10-23, API-key support is accepted and merged in
 and documentation links pin its accepted full commit SHA. Private action sharing
 is enabled for repositories under the same owner.
 
-[EdotEnv PR #1](https://github.com/Lestode/EdotEnv/pull/1) installs the consumer
-workflow; default-branch review triggers become active after it is merged.
-Provision the repository secret, then open a small PR or reopen an existing PR,
-verify exactly one report, and test a follow-up command. A live API call and
-publication have not yet been verified.
+[EdotEnv PR #1](https://github.com/Lestode/EdotEnv/pull/1) is merged and the API
+documentation-review workflow is active on the default branch. The repository's
+`OPENAI_API_KEY` Actions secret is configured. Automatic publication and a
+follow-up command are being validated on a small documentation PR; successful
+API model access and publication are not yet claimed.
 See [the activation tasks](TODO.md#repository-workflow-validation).
 
 GitHub rejected private-repository branch protection on the current account
