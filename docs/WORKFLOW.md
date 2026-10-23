@@ -166,13 +166,15 @@ and stale-head blocking. See [the activation tasks](TODO.md#repository-workflow-
 
 ## Local verification
 
-Initialize Slime with `git submodule update --init slime`, then run:
+Initialize Slime with `git submodule update --init slime`. The reviewer freshness
+tests require Node.js. Then run:
 
 ```sh
 python -m pip install pre-commit==4.2.0
 pre-commit run --all-files
 python scripts/check_project.py
-# Once project CPU tests exist:
+node --test tests/*.test.cjs
+# Once project Python CPU tests exist:
 python -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
