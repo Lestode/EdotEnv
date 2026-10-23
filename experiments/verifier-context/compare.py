@@ -379,23 +379,27 @@ async def run_trial(root, plan, trial):
 async def cleanup_daytona(root, plan):
     """Delete only this study's remaining sandboxes; report failed cleanup."""
     from daytona import AsyncDaytona, ListSandboxesQuery
-    from daytona.common.errors import DaytonaNotFoundError
+    from daytona.common.errors import DaytonaConflictError, DaytonaNotFoundError
 
     client = AsyncDaytona()
     deleted, remaining = [], []
     status = "failed"
     try:
         query = ListSandboxesQuery(labels={"edot.study": plan["study_id"]})
-        async for sandbox in client.list(query, request_timeout=30):
-            if sandbox.labels.get("edot.study") != plan["study_id"]:
-                continue
-            try:
-                await sandbox.delete(timeout=60, wait=True)
-            except DaytonaNotFoundError:
-                pass  # An eventually consistent listing can contain a deleted ID.
-            deleted.append(sandbox.id)
-        # The list endpoint can briefly lag a completed deletion.
-        for attempt in range(4):
+        # Lists can lag deletion, and a concurrent native stop can return 409.
+        # Retry only owned resources and require an empty final listing.
+        for attempt in range(6):
+            async for sandbox in client.list(query, request_timeout=30):
+                if sandbox.labels.get("edot.study") != plan["study_id"]:
+                    continue
+                try:
+                    await sandbox.delete(timeout=60, wait=True)
+                except DaytonaNotFoundError:
+                    pass
+                except DaytonaConflictError:
+                    continue
+                if sandbox.id not in deleted:
+                    deleted.append(sandbox.id)
             remaining = [
                 sandbox.id
                 async for sandbox in client.list(query, request_timeout=30)
@@ -403,7 +407,7 @@ async def cleanup_daytona(root, plan):
             ]
             if not remaining:
                 break
-            if attempt < 3:
+            if attempt < 5:
                 await asyncio.sleep(2)
         if remaining:
             raise RuntimeError(f"Study sandboxes remain after cleanup: {remaining}")

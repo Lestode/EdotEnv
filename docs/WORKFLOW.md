@@ -144,10 +144,12 @@ and stale-head blocking. See [the activation tasks](TODO.md#repository-workflow-
 
 ## Local verification
 
-Initialize Slime with `git submodule update --init slime`, then run:
+Initialize Slime with `git submodule update --init slime`. Use Python 3.12 and
+the [experiment's virtual-environment setup](../experiments/verifier-context/README.md#running-the-comparison)
+for the Harbor/Daytona dependencies required by the project tests, then run:
 
 ```sh
-python -m pip install pre-commit==4.2.0
+python -m pip install pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt
 pre-commit run --all-files
 python scripts/check_project.py
 # Once project CPU tests exist:

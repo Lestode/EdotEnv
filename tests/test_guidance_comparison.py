@@ -399,6 +399,60 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual(process.wait.await_count, 3)
         self.assertIn("--allow-paid", spawn.call_args.args)
 
+    def test_daytona_cleanup_retries_conflicting_state_transition(self):
+        from types import SimpleNamespace
+        from daytona.common.errors import DaytonaConflictError
+
+        sandbox = SimpleNamespace(
+            id="transitioning-sandbox",
+            labels={"edot.study": self.plan["study_id"]},
+            delete=AsyncMock(
+                side_effect=[DaytonaConflictError("state change in progress"), None]
+            ),
+        )
+        calls = 0
+
+        async def listed(query, request_timeout):
+            nonlocal calls
+            calls += 1
+            if calls <= 3:
+                yield sandbox
+
+        client = SimpleNamespace(list=listed, close=AsyncMock())
+        with (
+            patch("daytona.AsyncDaytona", return_value=client),
+            patch.object(asyncio, "sleep", new_callable=AsyncMock),
+        ):
+            asyncio.run(comparison.cleanup_daytona(self.root, self.plan))
+        self.assertEqual(sandbox.delete.await_count, 2)
+        report = comparison.read_json(self.root / "cloud-cleanup.json")
+        self.assertEqual(report["status"], "verified_empty")
+
+    def test_daytona_cleanup_cannot_pass_while_owned_resource_remains(self):
+        from types import SimpleNamespace
+        from daytona.common.errors import DaytonaConflictError
+
+        sandbox = SimpleNamespace(
+            id="stuck-sandbox",
+            labels={"edot.study": self.plan["study_id"]},
+            delete=AsyncMock(side_effect=DaytonaConflictError("still transitioning")),
+        )
+
+        async def listed(query, request_timeout):
+            yield sandbox
+
+        client = SimpleNamespace(list=listed, close=AsyncMock())
+        with (
+            patch("daytona.AsyncDaytona", return_value=client),
+            patch.object(asyncio, "sleep", new_callable=AsyncMock),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "sandboxes remain"):
+                asyncio.run(comparison.cleanup_daytona(self.root, self.plan))
+        client.close.assert_awaited_once()
+        report = comparison.read_json(self.root / "cloud-cleanup.json")
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["remaining"], ["stuck-sandbox"])
+
     def test_harbor_contract_when_dependency_installed(self):
         try:
             from harbor.models.task.task import Task

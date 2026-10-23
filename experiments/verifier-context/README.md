@@ -1,10 +1,10 @@
 # Verifier context experiment
 
-Status: the local pilot was stopped at the user’s request because it was too
-slow. Its partial results are preserved. Daytona hosting is now authorized;
-cloud reference integration passed and 20-sandbox capacity was confirmed.
-The fresh comparison has 10 trials per arm; its controller is moving to Daytona
-to avoid repeated task uploads from the local machine. Final results are pending.
+Status: the fresh cloud comparison completed all 20 rollouts, with ten accepted
+submissions per condition and no trial execution errors. Frozen inputs and all
+20 initial prompt conditions were audited. Private results were downloaded;
+independent checks verified deletion of every trial sandbox and the controller.
+The local pilot and two aborted cloud startups remain separate evidence.
 
 ## Goal
 
@@ -44,7 +44,7 @@ hidden evaluation results.
 ## What to measure
 
 The primary outcome is the final model's official hidden weighted Pearson
-correlation (`weighted_pearson_ic`). Compare this metric across repeated runs
+correlation (`weighted_pearson_ic`). Higher values are better. Compare this metric across repeated runs
 with and without the selected guidance.
 
 Report rejected or missing submissions alongside the scores for accepted
@@ -126,7 +126,7 @@ and key presence; Docker and Compose are checked only for the Docker backend. It
 billing, successful image builds, MCP connectivity, or artifact transfer. The local reference check has since validated image builds, MCP access,
 submission transfer, and separate hidden scoring. The local paid agent path
 has also produced one accepted baseline. Complete cloud submission/hidden-verifier
-validation has since passed too. The fresh A/B comparison remains pending. No host repository or hidden data
+validation has since passed too. The fresh A/B comparison has since completed. No host repository or hidden data
 is added to the agent's mounts; access boundaries rely on the original task's
 Docker allowlists and Harbor's separate verifier.
 
@@ -300,9 +300,23 @@ The cloud controller uses the same frozen runner, agent settings, and guidance. 
 trajectory costs and cancels at $1.75 of observed API usage including the prior
 local pilot and smoke request, leaving headroom below the $2 target. Reported
 usage can lag in-flight requests, so this remains a guard rather than a hard cap.
-Daytona charges remain separate. Completed cloud A/B scores and failure counts
-remain to collect. A small pilot is not
-a claim of statistical significance or evidence of OPCD distillability.
+Daytona charges remain separate.
+
+The study completed all 20 accepted submissions on runner revision `6bf56cf`,
+with reported model usage of $0.143722165 ($0.15949155 including the prior local
+pilot and smoke request). Its frozen inputs, initial prompts, and official score
+contracts passed the completion audit. Per-trial scores and the final comparison
+remain in the private, ignored run artifacts; they are not published in this PR.
+A small pilot does not establish statistical significance or OPCD distillability.
+
+After all scores were saved, the controller's first cleanup audit encountered a
+Daytona HTTP 409 because the last sandbox was already changing state. The host
+supervisor downloaded results and verified deletion, and its independent watchdog
+separately confirmed that both the controller and all trial sandboxes were gone.
+The original failed remote audit is preserved. The runner now retries this
+transient conflict, checks final absence, and fails if any owned resource remains.
+This cleanup-only fix follows the completed study; prepare a fresh study for any
+new paid run rather than rewriting its frozen runner hash.
 
 Offline tests use synthetic task and verifier fixtures. Run all project tests
 with the installed runner dependencies to include the Harbor instruction/schema

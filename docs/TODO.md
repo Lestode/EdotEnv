@@ -95,7 +95,10 @@ pilot; it does not implement OPCD training or establish distillability.
 - [x] Validate Harbor’s native Daytona Compose path, artifact transfer, separate
   hidden verification, 20-sandbox capacity, and reference/probe cleanup for this
   task; record equal cloud allocations and the larger study’s API target.
-- [ ] Run a fresh cloud comparison and inspect its final-score report and failures.
+- [x] Run and inspect the fresh 20-rollout cloud comparison: ten accepted
+  submissions per arm, prompt/frozen-input audits passed, private results
+  downloaded, and independent controller/trial deletion verified. Record and fix
+  the final cleanup transition conflict without rewriting the completed study.
 
 ## Repository workflow validation
 
