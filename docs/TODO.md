@@ -85,10 +85,11 @@ pilot; it does not implement OPCD training or establish distillability.
   repeat-execution refusal; validate the pinned Harbor instruction/config contract.
 - [x] Collect final hidden IC with failure counts and preserve per-trial evidence;
   keep the licensed task and private run outputs out of the public repository.
-- [ ] Validate Docker builds, MCP connectivity, submission artifact transfer, and
-  separate verifier execution on a Docker host; local Docker is unavailable.
-- [ ] Select the pilot model and approve repetitions, equal resource limits, and
-  spending threshold before launching paid comparison trials.
+- [x] Validate Docker builds, MCP connectivity, submission artifact transfer, and
+  separate verifier execution locally with the reference solution; record the
+  host dependency startup failure and adapter regression test in the experiment.
+- [x] Select GPT-6 Luna and obtain authorization for the small local pilot and
+  API budget; the experiment records equal limits and the spending stop threshold.
 - [ ] Run the comparison and inspect the final-score report and all failures.
 
 ## Repository workflow validation

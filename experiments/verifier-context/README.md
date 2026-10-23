@@ -1,8 +1,9 @@
 # Verifier context experiment
 
-Status: comparison runner implemented with offline tests. No paid trials have
-been launched; final model choice, pilot limits, and live container validation
-remain before the first comparison.
+Status: local reference integration passed. The first A/B startup attempt
+stopped before producing a model response because a host dependency was missing;
+the dependency is now pinned and covered by a regression test. The completed
+comparison results remain pending.
 
 ## Goal
 
@@ -75,8 +76,10 @@ A receives the original instruction. No extra behavioral coaching is added by
 this runner. The original public-data Docker build and separate hidden verifier
 are preserved. The reference solution is omitted from the snapshot.
 
-Use Python 3.12 on a Docker host with Compose v2. Install the pinned runner and
-transport dependencies in a virtual environment:
+Use Python 3.12 on a Docker host with Compose. Install the pinned runner and
+transport dependencies, including the host MCP SDK required by LiteLLM, in a
+virtual environment. This SDK does not change the task containers' own locked
+dependencies:
 
 ```sh
 python3.12 -m venv .venv
@@ -84,7 +87,7 @@ python3.12 -m venv .venv
 ```
 
 Prepare inputs without Docker, credentials, or any API calls. Replace
-`MODEL_ID` with the affordable OpenAI model selected for the pilot; the runner
+`MODEL_ID` with the chosen model; the current pilot uses `gpt-6-luna`. The runner
 does not silently select a model. Run commands from the repository root:
 
 ```sh
@@ -115,8 +118,9 @@ Actions secret is separate and cannot supply a key to this local process.
 
 This checks frozen inputs, the Harbor task/config schema, key presence, Docker,
 and Compose availability. It does not call the model or verify API access,
-billing, successful image builds, MCP connectivity, or artifact transfer. Those
-still need a live trial on the selected host. No host repository or hidden data
+billing, successful image builds, MCP connectivity, or artifact transfer. The local reference check has since validated image builds, MCP access,
+submission transfer, and separate hidden scoring; the paid agent path needs
+its own validation. No host repository or hidden data
 is added to the agent's mounts; access boundaries rely on the original task's
 Docker allowlists and Harbor's separate verifier.
 
@@ -166,16 +170,33 @@ recorded. Harbor keeps the trajectory, verifier outputs, and fitted submission
 artifacts under each trial directory for later checks. The guidance is advisory:
 the verifier does not enforce the research advice itself.
 
-## Validation before the first paid comparison
+## Pilot settings and validation status
 
-- Select and record an affordable OpenAI model and confirm the chosen account
-  can use it; exact model choice remains open.
-- Validate image builds, MCP access, submission collection, and separate hidden
-  scoring on a Docker host. This machine currently has no Docker executable;
-  container integration and live model execution have not been demonstrated.
-- Agree pilot repetitions, time/turn limits, and spending threshold. Two pairs
-  and the command above are starting examples, not approved paid execution.
-- Check the saved reports and failure counts before increasing the pilot size.
+The authorized local pilot uses GPT-6 Luna, two trials per condition, 30 turns
+and 1,800 seconds per agent, and the $2 between-trial spending stop threshold.
+No paid cloud hosting is used. Its dedicated Colima VM has eight CPUs and 8 GiB
+of RAM; the task's declared 16 GiB memory ceiling is not a minimum requirement.
+Monitor free host storage and reclaim only unused build cache from the dedicated
+VM when necessary. Container images and research artifacts can occupy substantial
+space even when the supplied task package is small.
+
+On 2026-10-23, the original task's reference solution passed the complete local
+Harbor flow: MCP training/evaluation, submission artifact transfer, and hidden
+verification, with IC 0.5183129972318243. This was a pipeline check without model
+API calls and is excluded from the A/B comparison.
+
+The first pilot startup stopped with `APIConnectionError` wrapping a missing
+host-side `mcp` dependency, before a model response was recorded. The failed
+attempt remains in local run artifacts. LiteLLM's Responses gateway imports the
+MCP SDK even without MCP tools in the API request; its pinned version also needs
+MCP 2.x types. The requirements now pin the compatible host SDK, and an offline
+regression test exercises the real adapter up to a mocked HTTP boundary. A
+mocked LiteLLM response alone bypasses those imports and cannot check this path.
+Prepare a new frozen run after the dependency correction; do not overwrite the
+aborted attempt or interpret it as an agent's research performance.
+
+Completed A/B scores and failure counts remain to collect. A small pilot is not
+a claim of statistical significance or evidence of OPCD distillability.
 
 Offline tests use synthetic task and verifier fixtures. Run all project tests
 with the installed runner dependencies to include the Harbor instruction/schema

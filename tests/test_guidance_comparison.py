@@ -3,6 +3,7 @@
 import asyncio
 import copy
 import importlib.util
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -246,6 +247,36 @@ class ComparisonTests(unittest.TestCase):
         )
         self.assertEqual(task_a.config, task_b.config)
         self.assertEqual(copy.deepcopy(config_a.agent), config_b.agent)
+
+    def test_responses_adapter_reaches_http_boundary_without_network(self):
+        # LiteLLM's mock_response shortcut skips MCP dispatch; intercept the
+        # HTTP boundary instead so this covers the actual production imports.
+        with patch.dict(os.environ, {"LITELLM_LOCAL_MODEL_COST_MAP": "True"}):
+            try:
+                import litellm
+            except ImportError:
+                self.skipTest("Optional runner dependencies are not installed")
+            import importlib
+
+            responses = importlib.import_module("litellm.responses.main")
+            response = responses.mock_responses_api_response("offline-ok")
+            response.model = "gpt-6-luna"
+            with patch.object(
+                responses.base_llm_http_handler,
+                "response_api_handler",
+                return_value=response,
+            ) as handler:
+                result = asyncio.run(
+                    litellm.aresponses(
+                        model="openai/gpt-6-luna",
+                        input="Offline adapter check",
+                        api_key="offline-placeholder",
+                        reasoning={"effort": "low"},
+                        max_output_tokens=4096,
+                    )
+                )
+            handler.assert_called_once()
+            self.assertEqual(result.output[0].content[0].text, "offline-ok")
 
 
 if __name__ == "__main__":
