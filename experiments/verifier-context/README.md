@@ -5,12 +5,12 @@ come after validation.
 
 ## Goal
 
-Understand how agents succeed or fail at quantitative research, and whether
-additional Markdown explaining the tests and verifier improves their results.
+Determine whether additional Markdown explaining the tests and verifier improves
+agent results on this specific task, `autoresearch-feature-volume`.
 Use this comparison to assess whether that extra context provides a useful
 learning opportunity for OPCD.
 
-The first task uses the local `data/autoresearch-feature-volume` package:
+The task uses the local `data/autoresearch-feature-volume` package:
 agents research features, train an Elastic Net model to forecast next-minute
 volume changes, and submit it for evaluation on hidden market data. The package
 contains reference baselines, but no completed agent trial results.
