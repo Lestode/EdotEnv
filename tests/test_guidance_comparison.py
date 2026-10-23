@@ -1,6 +1,7 @@
 """Offline regression tests: no market data, Docker, credentials, or API calls."""
 
 import asyncio
+from builtins import ExceptionGroup
 import copy
 import importlib.util
 import os
@@ -198,7 +199,7 @@ class ComparisonTests(unittest.TestCase):
                 new=AsyncMock(side_effect=RuntimeError("failure")),
             ),
         ):
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(ExceptionGroup):
                 asyncio.run(comparison.execute(other, plan, 1))
         self.assertTrue((other / "summary.json").exists())
         self.assertEqual(
@@ -212,6 +213,10 @@ class ComparisonTests(unittest.TestCase):
             {"turns": -1},
             {"seconds": 0},
             {"model": "oracle"},
+            {"backend": "unknown"},
+            {"concurrency": 0},
+            {"concurrency": 5},
+            {"memory_gb": 0},
         ):
             args = {
                 "source": self.source,
@@ -221,6 +226,106 @@ class ComparisonTests(unittest.TestCase):
             }
             with self.assertRaises(ValueError):
                 comparison.prepare(**args)
+
+    def test_cloud_arms_share_resources_and_only_study_cleanup_label(self):
+        plan = comparison.prepare(
+            self.source,
+            self.base / "cloud",
+            "openai/test-model",
+            backend="daytona",
+            concurrency=2,
+            cpus=4,
+            memory_gb=8,
+            storage_gb=20,
+        )
+        config = comparison.trial_config(self.root, plan, plan["trials"][0])
+        self.assertEqual(config["environment"]["type"], "daytona")
+        self.assertEqual(config["environment"]["override_memory_mb"], 8192)
+        self.assertEqual(
+            config["environment"]["kwargs"]["labels"], {"edot.study": plan["study_id"]}
+        )
+        self.assertTrue(config["environment"]["delete"])
+        from harbor.models.trial.config import TrialConfig
+
+        TrialConfig.model_validate(config)
+
+    def test_concurrent_wave_overlaps_and_cost_stops_next_wave(self):
+        self.plan["concurrency"] = 2
+        active, peak = 0, 0
+
+        async def fake_trial(root, plan, trial):
+            nonlocal active, peak
+            active += 1
+            peak = max(peak, active)
+            await asyncio.sleep(0)
+            self.result(trial, cost=0.15)
+            active -= 1
+
+        with (
+            patch.object(comparison, "preflight"),
+            patch.object(comparison, "run_trial", side_effect=fake_trial) as run,
+        ):
+            asyncio.run(comparison.execute(self.root, self.plan, 0.1))
+        self.assertEqual(peak, 2)
+        self.assertEqual(run.call_count, 2)
+        execution = comparison.read_json(self.root / "execution.json")
+        self.assertEqual(execution["state"], "cost_threshold_reached")
+        self.assertAlmostEqual(execution["observed_cost_usd"], 0.3)
+
+    def test_failed_cloud_trial_cleans_up_and_counts_cancelled_usage(self):
+        self.plan["environment"] = {"type": "daytona", "delete": True}
+
+        async def fail(root, plan, trial):
+            self.result(trial, cost=0.03, exception="CancelledError")
+            raise RuntimeError("failed")
+
+        with (
+            patch.object(comparison, "preflight"),
+            patch.object(comparison, "run_trial", side_effect=fail),
+            patch.object(
+                comparison, "cleanup_daytona", new_callable=AsyncMock
+            ) as cleanup,
+        ):
+            with self.assertRaises(ExceptionGroup):
+                asyncio.run(comparison.execute(self.root, self.plan, 1))
+        cleanup.assert_awaited_once_with(self.root, self.plan)
+        execution = comparison.read_json(self.root / "execution.json")
+        self.assertAlmostEqual(execution["observed_cost_usd"], 0.03)
+
+    def test_daytona_cleanup_filters_study_and_verifies_deletion(self):
+        from types import SimpleNamespace
+
+        sandbox = SimpleNamespace(
+            id="owned-sandbox",
+            delete=AsyncMock(),
+            labels={"edot.study": self.plan["study_id"]},
+        )
+        unrelated = SimpleNamespace(
+            id="unrelated-sandbox",
+            delete=AsyncMock(),
+            labels={"edot.study": "other"},
+        )
+        queries = []
+
+        async def listed(query, request_timeout):
+            queries.append(query)
+            if len(queries) == 1:
+                yield sandbox
+            yield unrelated
+
+        client = SimpleNamespace(list=listed, close=AsyncMock())
+        with patch("daytona.AsyncDaytona", return_value=client):
+            asyncio.run(comparison.cleanup_daytona(self.root, self.plan))
+        self.assertEqual(len(queries), 2)
+        self.assertTrue(
+            all(q.labels == {"edot.study": self.plan["study_id"]} for q in queries)
+        )
+        sandbox.delete.assert_awaited_once_with(timeout=60, wait=True)
+        unrelated.delete.assert_not_awaited()
+        client.close.assert_awaited_once()
+        report = comparison.read_json(self.root / "cloud-cleanup.json")
+        self.assertEqual(report["status"], "verified_empty")
+        self.assertEqual(report["deleted"], ["owned-sandbox"])
 
     def test_harbor_contract_when_dependency_installed(self):
         try:

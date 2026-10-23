@@ -74,7 +74,7 @@ These are integration points, not a claim that hooks alone cover every requireme
 ## Markdown guidance final-score comparison
 
 The [experiment](../experiments/verifier-context/README.md) defines the comparison,
-local commands, result semantics, and remaining run decisions. It is a task-level
+execution commands, result semantics, and validation status. It is a task-level
 pilot; it does not implement OPCD training or establish distillability.
 
 - [x] Implement frozen task/guidance preparation, identical Harbor settings for
@@ -83,14 +83,18 @@ pilot; it does not implement OPCD training or establish distillability.
 - [x] Add synthetic CPU tests for condition differences, changed inputs,
   rejected/missing/corrupt scores, valid zero/negative scores, cost stops, and
   repeat-execution refusal; validate the pinned Harbor instruction/config contract.
-- [x] Collect final hidden IC with failure counts and preserve per-trial evidence;
+- [x] Implement collection of final hidden IC, failure counts, and per-trial evidence;
   keep the licensed task and private run outputs out of the public repository.
 - [x] Validate Docker builds, MCP connectivity, submission artifact transfer, and
   separate verifier execution locally with the reference solution; record the
   host dependency startup failure and adapter regression test in the experiment.
 - [x] Select GPT-6 Luna and obtain authorization for the small local pilot and
   API budget; the experiment records equal limits and the spending stop threshold.
-- [ ] Run the comparison and inspect the final-score report and all failures.
+- [x] Preserve the cancelled local pilot and stop its containers/VM; obtain
+  authorization for paid Daytona hosting.
+- [ ] Validate Harbor’s native Daytona Compose path, artifact transfer, separate
+  hidden verification, account capacity, and sandbox cleanup for this task.
+- [ ] Run a fresh cloud comparison and inspect its final-score report and failures.
 
 ## Repository workflow validation
 

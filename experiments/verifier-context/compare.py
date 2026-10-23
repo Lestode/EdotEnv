@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare, execute, and summarize the local Markdown guidance comparison."""
+"""Prepare, execute, and summarize the Markdown guidance comparison."""
 
 from __future__ import annotations
 
@@ -51,12 +51,30 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def prepare(source, destination, model, pairs=2, turns=30, seconds=1800):
+def prepare(
+    source,
+    destination,
+    model,
+    pairs=2,
+    turns=30,
+    seconds=1800,
+    backend="docker",
+    concurrency=1,
+    cpus=None,
+    memory_gb=None,
+    storage_gb=None,
+):
     source, destination = source.resolve(), destination.resolve()
     if destination == source or source in destination.parents:
         raise ValueError("Run directory must be outside the supplied task")
     if min(pairs, turns, seconds) < 1:
         raise ValueError("Pairs, turns and seconds must be positive")
+    if backend not in ("docker", "daytona"):
+        raise ValueError("Backend must be docker or daytona")
+    if not 1 <= concurrency <= 2 * pairs:
+        raise ValueError("Concurrency must be between one and the trial count")
+    if any(v is not None and v < 1 for v in (cpus, memory_gb, storage_gb)):
+        raise ValueError("Resource overrides must be positive")
     if not model.startswith("openai/") or len(model) <= len("openai/"):
         raise ValueError("Use an explicit LiteLLM OpenAI model, e.g. openai/MODEL_ID")
     for name in ("task.toml", "instruction.md", "environment", "tests"):
@@ -78,6 +96,20 @@ def prepare(source, destination, model, pairs=2, turns=30, seconds=1800):
             shutil.copyfile(src, dst)
     shutil.copyfile(HERE / "research-guidance.md", destination / "guidance.md")
     study_id = uuid4().hex[:12]
+    environment = {"type": backend, "delete": True}
+    for name, value in (
+        ("override_cpus", cpus),
+        ("override_memory_mb", memory_gb * 1024 if memory_gb else None),
+        ("override_storage_mb", storage_gb * 1024 if storage_gb else None),
+    ):
+        if value is not None:
+            environment[name] = value
+    if backend == "daytona":
+        environment["kwargs"] = {
+            "labels": {"edot.study": study_id},
+            "auto_stop_interval_mins": 30,
+            "auto_delete_interval_mins": 0,
+        }
     trials = []
     for pair in range(1, pairs + 1):
         for arm in ("A", "B") if pair % 2 else ("B", "A"):
@@ -91,6 +123,8 @@ def prepare(source, destination, model, pairs=2, turns=30, seconds=1800):
         "model": model,
         "max_turns": turns,
         "agent_seconds": seconds,
+        "environment": environment,
+        "concurrency": concurrency,
         "runner_sha256": digest(Path(__file__)),
         "requirements_sha256": digest(HERE / "requirements.txt"),
         "task_files": fingerprint(task),
@@ -132,7 +166,7 @@ def trial_config(root, plan, trial):
                 "llm_call_kwargs": {"max_output_tokens": 4096},
             },
         },
-        "environment": {"type": "docker", "delete": True},
+        "environment": plan.get("environment", {"type": "docker", "delete": True}),
         "extra_instruction_paths": (
             [str(root / "guidance.md")] if trial["arm"] == "B" else []
         ),
@@ -154,10 +188,20 @@ def preflight(root, plan):
     Task(task_dir=root / "task")
     if not os.environ.get("OPENAI_API_KEY"):
         raise ValueError("Set OPENAI_API_KEY in the process environment")
-    subprocess.run(["docker", "info"], check=True, capture_output=True, timeout=30)
-    subprocess.run(
-        ["docker", "compose", "version"], check=True, capture_output=True, timeout=30
-    )
+    if plan.get("environment", {}).get("type", "docker") == "daytona":
+        from harbor.environments.daytona.environment import DaytonaEnvironment
+
+        if not os.environ.get("DAYTONA_API_KEY"):
+            raise ValueError("Set DAYTONA_API_KEY in the process environment")
+        DaytonaEnvironment.preflight()
+    else:
+        subprocess.run(["docker", "info"], check=True, capture_output=True, timeout=30)
+        subprocess.run(
+            ["docker", "compose", "version"],
+            check=True,
+            capture_output=True,
+            timeout=30,
+        )
 
 
 def finite_number(value, low=None, high=None):
@@ -289,8 +333,48 @@ async def run_trial(root, plan, trial):
     await instance.run()
 
 
+async def cleanup_daytona(root, plan):
+    """Delete only this study's remaining sandboxes; report failed cleanup."""
+    from daytona import AsyncDaytona, ListSandboxesQuery
+
+    client = AsyncDaytona()
+    deleted, remaining = [], []
+    status = "failed"
+    try:
+        query = ListSandboxesQuery(labels={"edot.study": plan["study_id"]})
+        async for sandbox in client.list(query, request_timeout=30):
+            if sandbox.labels.get("edot.study") != plan["study_id"]:
+                continue
+            await sandbox.delete(timeout=60, wait=True)
+            deleted.append(sandbox.id)
+        # The list endpoint can briefly lag a completed deletion.
+        for attempt in range(4):
+            remaining = [
+                sandbox.id
+                async for sandbox in client.list(query, request_timeout=30)
+                if sandbox.labels.get("edot.study") == plan["study_id"]
+            ]
+            if not remaining:
+                break
+            if attempt < 3:
+                await asyncio.sleep(2)
+        if remaining:
+            raise RuntimeError(f"Study sandboxes remain after cleanup: {remaining}")
+        status = "verified_empty"
+    finally:
+        write_json(
+            root / "cloud-cleanup.json",
+            {
+                "status": status,
+                "deleted": deleted,
+                "remaining": remaining,
+            },
+        )
+        await client.close()
+
+
 async def execute(root, plan, max_total_cost):
-    """Serial execution, no automatic retries and no reuse of conversations."""
+    """Bounded waves, no automatic retries and no reuse of conversations."""
     if not finite_number(max_total_cost, low=0) or max_total_cost <= 0:
         raise ValueError("Cost stop threshold must be a positive finite number")
     preflight(root, plan)
@@ -301,33 +385,48 @@ async def execute(root, plan, max_total_cost):
         json.dump({"max_total_cost_usd": max_total_cost, "state": "started"}, stream)
     spent = 0.0
     state = "completed"
+    concurrency = plan.get("concurrency", 1)
     try:
-        for trial in plan["trials"]:
+        for offset in range(0, len(plan["trials"]), concurrency):
             verify_frozen(root, plan)
             if spent >= max_total_cost:
                 state = "cost_threshold_reached"
                 break
-            print(f"Running {trial['id']}", flush=True)
-            (root / "trials" / trial["id"]).mkdir(parents=True)
-            await run_trial(root, plan, trial)
-            row = collect_trial(root, trial)
-            if row["cost_usd"] is None:
+            wave = plan["trials"][offset : offset + concurrency]
+            async with asyncio.TaskGroup() as group:
+                for trial in wave:
+                    print(f"Running {trial['id']}", flush=True)
+                    (root / "trials" / trial["id"]).mkdir(parents=True)
+                    group.create_task(run_trial(root, plan, trial))
+            rows = [collect_trial(root, trial) for trial in wave]
+            spent += sum(row["cost_usd"] or 0 for row in rows)
+            if any(row["cost_usd"] is None for row in rows):
                 state = "stopped_unknown_cost"
                 break
-            spent += row["cost_usd"]
     except BaseException:
         state = "interrupted_or_failed"
         raise
     finally:
+        rows = [collect_trial(root, trial) for trial in plan["trials"]]
+        # Include calls made by a cancelled trial when Harbor saved its usage.
+        spent = sum(row["cost_usd"] or 0 for row in rows)
         write_json(
             root / "execution.json",
             {
                 "max_total_cost_usd": max_total_cost,
                 "state": state,
                 "observed_cost_usd": spent,
+                "cost_scope": "reported model API usage only; excludes cloud hosting",
+                "unknown_cost_trials": [
+                    row["id"]
+                    for row in rows
+                    if row["status"] != "not_run" and row["cost_usd"] is None
+                ],
             },
         )
         summarize(root, plan)
+        if plan.get("environment", {}).get("type") == "daytona":
+            await cleanup_daytona(root, plan)
 
 
 def main():
@@ -340,6 +439,11 @@ def main():
     prep.add_argument("--pairs", type=int, default=2)
     prep.add_argument("--max-turns", type=int, default=30)
     prep.add_argument("--agent-seconds", type=int, default=1800)
+    prep.add_argument("--backend", choices=("docker", "daytona"), default="docker")
+    prep.add_argument("--concurrency", type=int, default=1)
+    prep.add_argument("--cpus", type=int)
+    prep.add_argument("--memory-gb", type=int)
+    prep.add_argument("--storage-gb", type=int)
     for command in ("check", "run", "summarize"):
         cmd = sub.add_parser(command)
         cmd.add_argument("directory", type=Path)
@@ -356,6 +460,11 @@ def main():
                 args.pairs,
                 args.max_turns,
                 args.agent_seconds,
+                backend=args.backend,
+                concurrency=args.concurrency,
+                cpus=args.cpus,
+                memory_gb=args.memory_gb,
+                storage_gb=args.storage_gb,
             )
             print(f"Prepared {len(plan['trials'])} trials; no API calls made.")
             return
@@ -363,7 +472,7 @@ def main():
         plan = read_json(root / "plan.json")
         if args.command == "check":
             preflight(root, plan)
-            print("Local preflight passed; model/API access has not been tested.")
+            print("Preflight passed; cloud quota and model/API access not tested.")
         elif args.command == "run":
             asyncio.run(execute(root, plan, args.max_total_cost_usd))
         else:

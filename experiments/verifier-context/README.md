@@ -1,9 +1,9 @@
 # Verifier context experiment
 
-Status: local reference integration passed. The first A/B startup attempt
-stopped before producing a model response because a host dependency was missing;
-the dependency is now pinned and covered by a regression test. The completed
-comparison results remain pending.
+Status: the local pilot was stopped at the user’s request because it was too
+slow. Its partial results are preserved. Daytona hosting is now authorized;
+cloud reference integration is running with two-sandbox capacity confirmed.
+The completed comparison remains to validate.
 
 ## Goal
 
@@ -76,7 +76,8 @@ A receives the original instruction. No extra behavioral coaching is added by
 this runner. The original public-data Docker build and separate hidden verifier
 are preserved. The reference solution is omitted from the snapshot.
 
-Use Python 3.12 on a Docker host with Compose. Install the pinned runner and
+Use Python 3.12. Local execution requires Docker with Compose; Daytona execution
+uses Harbor’s native backend and requires no local Docker daemon. Install the pinned runner and
 transport dependencies, including the host MCP SDK required by LiteLLM, in a
 virtual environment. This SDK does not change the task containers' own locked
 dependencies:
@@ -98,14 +99,17 @@ does not silently select a model. Run commands from the repository root:
 ```
 
 These are editable pilot defaults, not validated success criteria. This creates
-four fresh trials ordered A, B, B, A. A pair is an execution block, not a shared
+four fresh trials listed A, B, B, A. With parallel execution this is the
+launch order, not a promise about completion order. A pair is an execution block, not a shared
 random seed. The runner freezes a private task copy, the guidance, file hashes,
-model, order, and resource settings in `plan.json`. It checks for changed task,
+model, backend, concurrency, order, and resource settings in `plan.json`. It checks for changed task,
 guidance, runner, or dependency declarations before execution and each trial.
 Prepare a new directory to change these inputs. Use only the supplied trusted
-task package; its Dockerfiles and Compose configuration execute locally.
+task package; its Dockerfiles and Compose configuration execute on the selected backend.
 The task package and `runs/` outputs are gitignored. Keep all run directories
-local: they include hidden verifier data, submissions, and agent logs.
+private: they include hidden verifier data, submissions, and agent logs.
+Daytona receives the task package in private sandboxes; keep it out of public
+images, snapshots, repositories, and published artifacts.
 
 Before running, expose `OPENAI_API_KEY` through the process environment. Do not
 put its value in commands, files committed to Git, or chat. The repository's
@@ -116,8 +120,8 @@ Actions secret is separate and cannot supply a key to this local process.
   experiments/verifier-context/runs/pilot-01
 ```
 
-This checks frozen inputs, the Harbor task/config schema, key presence, Docker,
-and Compose availability. It does not call the model or verify API access,
+This checks frozen inputs, pinned dependencies, the Harbor task/config schema,
+and key presence; Docker and Compose are checked only for the Docker backend. It does not call the model or verify API access,
 billing, successful image builds, MCP connectivity, or artifact transfer. The local reference check has since validated image builds, MCP access,
 submission transfer, and separate hidden scoring; the paid agent path needs
 its own validation. No host repository or hidden data
@@ -133,8 +137,9 @@ Only after validating the model and pilot limits, launch paid trials explicitly:
 ```
 
 The dollar value above is an example **stop threshold, not a hard billing cap**.
-The runner checks accumulated reported cost before starting another trial; an
-in-flight trial can cross the threshold. Missing cost information stops further
+The runner checks accumulated reported cost before starting another wave; every
+trial already in flight can cross the threshold. With concurrency four, all four
+trials may start before any usage is reported. Missing cost information stops further
 trials. Each arm has the same 30-turn/30-minute defaults and a 4,096-output-token
 limit per request. Harbor/provider retries may still incur spending within a
 trial. There are no automatic trial retries or resumed conversations. An
@@ -142,6 +147,50 @@ execution marker prevents rerunning a partially billed comparison; inspect its
 artifacts and prepare a new comparison deliberately if necessary. Running can
 stop before all pairs finish; the report shows the unrun trials. Use an external
 billing control if an absolute dollar limit is required.
+
+## Daytona execution
+
+Set `DAYTONA_API_KEY` and `OPENAI_API_KEY` in the launcher’s environment. The local
+private `.env` can supply them through a dotenv-aware launcher; the runner does
+not automatically load credential files or upload them into sandboxes.
+Prepare a new study when switching backend; do not pool the aborted local pilot
+with cloud results as if they shared identical execution conditions:
+
+```sh
+.venv/bin/python experiments/verifier-context/compare.py prepare \
+  --task data/autoresearch-feature-volume \
+  --output experiments/verifier-context/runs/daytona-01 \
+  --model openai/gpt-6-luna --pairs 2 --max-turns 30 --agent-seconds 1800 \
+  --backend daytona --concurrency 2 --cpus 4 --memory-gb 8 --storage-gb 10
+```
+
+The `check` and `run` commands above also apply to a Daytona study. Check the
+account’s per-sandbox and total resource quotas first. Resource overrides
+`--cpus`, `--memory-gb`, and `--storage-gb` are optional and frozen for both arms;
+otherwise the original task’s allocation is used. This task stops its research
+sandbox after collecting artifacts and then starts a separate hidden verifier
+sandbox. Allow capacity for lifecycle transitions as well as the intended
+concurrency. Concurrency must fit the available pool.
+
+Harbor detects the task’s Compose definition and runs it inside Docker-in-Docker
+on Daytona, including sidecar services and the separate verifier environment.
+The original Compose files, worker restrictions, artifact transfer, and hidden
+build boundaries remain in the snapshot. Native support is not evidence of a
+successful cloud integration; validate this task’s complete submission/scoring
+path before interpreting cloud agent results.
+
+Every sandbox is labelled with its study ID and configured for deletion on
+completion, with a 30-minute inactivity stop and immediate deletion after stop
+as a fallback. On completion or interruption the runner also deletes remaining
+sandboxes bearing that study’s label and verifies none remain, writing
+`cloud-cleanup.json`. Cleanup failures must be resolved in Daytona. Auto-stop
+measures inactivity, not total runtime, and is not a spending cap. A killed
+launcher can leave resources until fallback cleanup occurs.
+
+The reported dollar threshold and `cost_usd` cover model API usage only.
+Daytona compute/storage charges are separate; consult its billing records.
+No automatic snapshots are created by the runner. Cloud costs depend on
+allocation, image builds, research time, verification time, and cleanup.
 
 ## Reading the results
 
@@ -174,7 +223,7 @@ the verifier does not enforce the research advice itself.
 
 The authorized local pilot uses GPT-6 Luna, two trials per condition, 30 turns
 and 1,800 seconds per agent, and the $2 between-trial spending stop threshold.
-No paid cloud hosting is used. Its dedicated Colima VM has eight CPUs and 8 GiB
+That local pilot used a dedicated Colima VM with eight CPUs and 8 GiB
 of RAM; the task's declared 16 GiB memory ceiling is not a minimum requirement.
 Monitor free host storage and reclaim only unused build cache from the dedicated
 VM when necessary. Container images and research artifacts can occupy substantial
@@ -195,7 +244,18 @@ mocked LiteLLM response alone bypasses those imports and cannot check this path.
 Prepare a new frozen run after the dependency correction; do not overwrite the
 aborted attempt or interpret it as an agent's research performance.
 
-Completed A/B scores and failure counts remain to collect. A small pilot is not
+The corrected local pilot was deliberately cancelled on 2026-10-23. One baseline
+submission was accepted with IC 0.18275811917854118; the first guided trial was
+interrupted before a final score, and two trials never started. Recorded model
+usage totals about $0.0158, including the interrupted trial. This supplies no
+complete A/B pair and cannot establish a guidance effect. The local VM is stopped.
+The user then authorized paid Daytona hosting to run a fresh comparison faster.
+The account rejected the original eight-CPU allocation and a 20 GiB disk
+request; its observed per-sandbox limits are four CPUs and 10 GiB disk. A
+four-CPU, 8 GiB RAM, 10 GiB disk sandbox started successfully, and a second
+simultaneous sandbox with that allocation was created and deleted to check
+capacity. Both comparison arms will use those equal settings, two at a time.
+Completed cloud A/B scores and failure counts remain to collect. A small pilot is not
 a claim of statistical significance or evidence of OPCD distillability.
 
 Offline tests use synthetic task and verifier fixtures. Run all project tests

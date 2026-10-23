@@ -4,3 +4,5 @@ litellm==1.106.2
 openai==2.54.0
 # LiteLLM's Responses adapter imports the MCP SDK even for terminal-only tools.
 mcp==2.3.0
+# Harbor's native Daytona backend, including Compose/Docker-in-Docker support.
+daytona==0.226.0
