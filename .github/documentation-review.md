@@ -10,6 +10,12 @@ objective, and distributed validation. Use the [implementation TODO](../docs/TOD
 to distinguish planned capabilities from completed work. Do not reopen settled
 choices because hardware, checkpoints, or later evaluations remain undecided.
 
+Apply the agent-awareness rules in [the documentation rules](../docs/DOCUMENTATION.md)
+when proposals affect data interpretation, instructions, budgets, or submission.
+Compare model-visible instructions with enforced behavior when evidence is supplied.
+If that evidence is unavailable, flag the awareness check as unverified rather than
+assuming that an agent received the information documented for operators.
+
 For workflow changes, inspect [the development workflow](../docs/WORKFLOW.md).
 Distinguish a completed documentation review, passing deterministic checks, human
 acceptance, and evidence that training works. Highlight any proposal that conflates

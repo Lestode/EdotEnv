@@ -103,8 +103,13 @@ pilot; it does not implement OPCD training or establish distillability.
   detached private cloud supervisor; validate controller disk retention across
   stop/start and archive verification before eventual deletion.
 - [ ] Inspect the Astra comparison's scores, failures, usage, context conditions,
-  and frozen inputs; download and verify its retained results and confirm deletion
-  of the final controller. See the experiment for its spending and retention policy.
+  and frozen inputs before any follow-up. The stopped study's archive is downloaded
+  and checksum-verified, and all cloud resources are independently verified deleted;
+  the experiment records the disclosure finding and incomplete comparison.
+- [ ] Resolve the experiment's execution-budget disclosure mismatch before a fresh
+  paid comparison: make actual turn/time limits visible equally in both arms and
+  verify the delivered prompts against the enforced limits. Preserve the existing
+  pilot evidence and distinguish undisclosed truncation from informed agent behavior.
 
 ## Repository workflow validation
 

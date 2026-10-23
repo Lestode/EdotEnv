@@ -198,6 +198,14 @@ allocation, image builds, research time, verification time, and cleanup.
 
 ## Reading the results
 
+Private `runs/` folders include experiment data, controller operations, aborted
+startups, and environment checks. They are not all separate experiments or A/B
+conditions. The local `runs/README.md` indexes them: `daytona-03` is the completed
+Luna comparison and `astra-02` is the stopped Astra study. Each study contains
+both arms under `trials/`. Prefer its private `analysis-report.md` for the
+expanded outcome, distribution, and cancellation analysis; original runner and
+cohort reports remain preserved alongside it.
+
 The runner writes `summary.md`, `summary.json`, and `scores.csv` after execution.
 You can regenerate the report without credentials or Docker:
 
@@ -213,6 +221,16 @@ conditional summaries must be read alongside all failure counts; a condition
 that submits fewer models can have a misleadingly high accepted-score mean.
 No failure penalty is averaged into forecasting IC. Zero and negative accepted
 ICs are retained. A small pilot is descriptive, without a significance claim.
+
+Do not assess a condition by its accepted-score mean alone. Analysis reports
+must also show valid-submission rates with explicit denominators, all status
+counts, median and range, and the individual accepted ICs. For a partial report,
+separate running and unstarted positions from finished outcomes. For a completed
+attempt, distinguish agent/submission failures, infrastructure errors, and
+operator cancellations, and explain any externally imposed cutoff. Report the
+official task rewards, including verifier-issued failure penalties, separately
+when available, with their coverage. Do not invent rewards for execution errors
+or unstarted trials, or present a penalty-inclusive reward as forecasting IC.
 
 The collector reads Harbor's `trials/<id>/result.json` and the official verifier's
 `verifier/metrics.json` and `verifier/reward.json`. It requires acceptance,
@@ -346,20 +364,42 @@ checks verified archive checksums, exclusion of the frozen hidden task from the
 download archive, and preservation of cleanup-failure evidence. These checks
 do not establish completion of the 40 paid rollouts. The detached study was
 launched on 2026-10-23, and its supervisor, cloud watchdog, usage monitor, and 19
-worker processes were observed running. Results and completion audits remain
-pending in the private run directory.
+worker processes were observed running. That established launch, not completion.
+The study was later stopped after the
+budget-disclosure audit below. Its archive has been downloaded and checksum
+verified, and independent checks confirm deletion of every trial/cohort sandbox
+and the retained controller. It did not complete the planned 40-rollout
+comparison; private reports distinguish completed, cancelled, incomplete, and
+unstarted positions.
 
 One initial sandbox failed to start its Docker daemon before agent setup or any
 model execution. Its missing usage record correctly stopped further launches in
 that cohort. Preserve that failed trial and its raw result; a separate cost
 attestation records the environment-preparation traceback as evidence of zero
-model calls. A controlled handover of the private cloud supervisor leaves the
-existing trials running and assigns only unstarted original pair/arm positions
-to fresh, frozen continuation cohorts. The combined comparison still has 20
-planned positions per arm, counts that startup failure, and shares the same API
-target, live guard, sandbox limit, and original execution deadline. No failed or
-previously billed trial is restarted. Keep each cohort's original report and use
-the private combined report to account for all positions without double counting.
+model calls. A controlled handover prepared a continuation of only unstarted
+original pair/arm positions under the shared budget and deadline. A subsequent
+budget-disclosure audit identified the mismatch below. One continuation cohort
+had already started before the supervisor handover; it was gracefully cancelled
+to stop further paid execution. Further cohort launches were disabled. Preserve
+completed results, cancelled attempts, and unstarted positions separately, with
+their spending, cleanup, and retention records. No failed or previously billed
+trial is restarted.
+
+### Execution-budget disclosure finding
+
+The original task tells the agent it has four hours. Both pilots instead enforce
+30 agent turns and a 1,800-second agent timeout. The observed prompts disclose
+neither those actual limits nor a remaining-turn countdown. Harbor's artificial
+turn-limit warning is operator logging, not a message to the model. Keeping the
+same hidden cap in both conditions does not establish that either agent knew it.
+
+All four initially inspected Astra `missing_submission` rejections reached the
+30-turn cutoff while still researching or waiting for operations. Those failures
+must not be described as ignoring a known turn budget. Preserve the pilot's plans,
+prompts, and raw outcomes with this qualification. Before a fresh paid comparison,
+validate that both arms receive the same accurate execution-budget information;
+only their research guidance should differ. This follows the
+[agent-awareness documentation rules](../../docs/DOCUMENTATION.md).
 
 Offline tests use synthetic task and verifier fixtures. Run all project tests
 with the installed runner dependencies to include the Harbor instruction/schema
