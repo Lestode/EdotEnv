@@ -349,6 +349,18 @@ launched on 2026-10-23, and its supervisor, cloud watchdog, usage monitor, and 1
 worker processes were observed running. Results and completion audits remain
 pending in the private run directory.
 
+One initial sandbox failed to start its Docker daemon before agent setup or any
+model execution. Its missing usage record correctly stopped further launches in
+that cohort. Preserve that failed trial and its raw result; a separate cost
+attestation records the environment-preparation traceback as evidence of zero
+model calls. A controlled handover of the private cloud supervisor leaves the
+existing trials running and assigns only unstarted original pair/arm positions
+to fresh, frozen continuation cohorts. The combined comparison still has 20
+planned positions per arm, counts that startup failure, and shares the same API
+target, live guard, sandbox limit, and original execution deadline. No failed or
+previously billed trial is restarted. Keep each cohort's original report and use
+the private combined report to account for all positions without double counting.
+
 Offline tests use synthetic task and verifier fixtures. Run all project tests
 with the installed runner dependencies to include the Harbor instruction/schema
 contract test:
