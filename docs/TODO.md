@@ -75,7 +75,7 @@ These are integration points, not a claim that hooks alone cover every requireme
 
 The authoritative policy and integration details are in [the development workflow](WORKFLOW.md).
 
-- [ ] Accept the shared action's API-key support PR, then pin its accepted full commit SHA in the consumer workflow and documentation links.
+- [x] Accept the shared action's API-key support PR, then pin its accepted full commit SHA in the consumer workflow and documentation links.
 - [ ] Provision the repository's `OPENAI_API_KEY` Actions secret with access to the pinned model; keep the value out of project files and PR discussion.
 - [ ] Merge the reviewed setup PR after explicit user acceptance, then verify `Project checks` on the accepted default branch.
 - [ ] Verify one automatic documentation-review response on a small PR after activation; record its PR and Actions URLs.

@@ -40,7 +40,7 @@ jobs:
           ref: ${{ steps.reviewer.outputs.sha }}
           persist-credentials: false
       - name: Review with the shared API agent
-        uses: Lestode/review-agents/documentation-review@12748b95e04dede35e073b7505bc6c4918564b94
+        uses: Lestode/review-agents/documentation-review@f4db0e334f6fc2216c583fe796638b096a5abbfe
         with:
           config-path: .github/documentation-review.json
           auth-mode: api-key

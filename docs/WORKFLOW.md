@@ -7,8 +7,8 @@ branch and open a PR against `main`. Update that PR as work progresses. Do not
 push changes directly to `main`. Agents may prepare and push changes within the
 user's authorized task; merging requires explicit user acceptance of the PR.
 
-EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/12748b95e04dede35e073b7505bc6c4918564b94/WORKFLOW.md)
-and [documentation review procedure](https://github.com/Lestode/review-agents/blob/12748b95e04dede35e073b7505bc6c4918564b94/documentation-review/SKILL.md)
+EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/f4db0e334f6fc2216c583fe796638b096a5abbfe/WORKFLOW.md)
+and [documentation review procedure](https://github.com/Lestode/review-agents/blob/f4db0e334f6fc2216c583fe796638b096a5abbfe/documentation-review/SKILL.md)
 at the same revision as the action. Project scope remains in [AGENTS.md](../AGENTS.md).
 Update the action pin and these links together through a reviewed PR.
 
@@ -35,11 +35,11 @@ itself is proposed through the first PR.
 ## Reviewer operation
 
 The [workflow](../.github/workflows/documentation-review.yml) pins
-`Lestode/review-agents` at `12748b95e04dede35e073b7505bc6c4918564b94`.
+`Lestode/review-agents` at `f4db0e334f6fc2216c583fe796638b096a5abbfe`.
 [Project settings](../.github/documentation-review.json) select this documentation
 index and [project review instructions](../.github/documentation-review.md).
 The shared action defines the model, collection limits, authorization, execution,
-and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/12748b95e04dede35e073b7505bc6c4918564b94/README.md).
+and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/f4db0e334f6fc2216c583fe796638b096a5abbfe/README.md).
 
 The action runs on a GitHub-hosted Ubuntu runner with `auth-mode: api-key`.
 Create an `OPENAI_API_KEY` repository Actions secret in
@@ -62,16 +62,16 @@ This workflow authorizes the reviewer's PR reports and requested follow-up repli
 
 ## Activation and enforcement status
 
-As of 2026-10-23, the private GitHub repository exists and the initial setup PR's
-`Project checks` passes. API-key support is proposed in
-[review-agents PR #2](https://github.com/Lestode/review-agents/pull/2); the pinned
-commit is its candidate revision, awaiting acceptance. Accept and merge that
-upstream PR first, then update the action pin and documentation links to the
-accepted full SHA if it changes during review or merge. Provision the repository
-secret and accept and merge [EdotEnv PR #1](https://github.com/Lestode/EdotEnv/pull/1)
-before default-branch review triggers become active. Then
-open a small PR or reopen an existing PR, verify exactly one report, and test a
-follow-up command. A live API call and publication have not yet been verified.
+As of 2026-10-23, API-key support is accepted and merged in
+[review-agents PR #2](https://github.com/Lestode/review-agents/pull/2). The workflow
+and documentation links pin its accepted full commit SHA. Private action sharing
+is enabled for repositories under the same owner.
+
+[EdotEnv PR #1](https://github.com/Lestode/EdotEnv/pull/1) installs the consumer
+workflow; default-branch review triggers become active after it is merged.
+Provision the repository secret, then open a small PR or reopen an existing PR,
+verify exactly one report, and test a follow-up command. A live API call and
+publication have not yet been verified.
 See [the activation tasks](TODO.md#repository-workflow-validation).
 
 GitHub rejected private-repository branch protection on the current account
