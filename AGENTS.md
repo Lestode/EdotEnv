@@ -22,6 +22,7 @@ Use a `codex/` feature branch and a pull request for every change after the init
 
 - The teacher will be an accessible model.
 - For now, the user manages collaboration and access in this repository.
+- The documentation reviewer will use the user's OpenAI API key on a GitHub-hosted runner; setup and activation are tracked in [the development workflow](docs/WORKFLOW.md).
 
 ## Working assumptions
 

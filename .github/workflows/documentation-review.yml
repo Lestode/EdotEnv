@@ -1,4 +1,4 @@
-name: Local documentation review
+name: API documentation review
 
 on:
   pull_request_target:
@@ -19,7 +19,7 @@ jobs:
        (github.event.issue.pull_request &&
         github.event.comment.user.type == 'User' &&
         startsWith(github.event.comment.body, '/review-docs')))
-    runs-on: [self-hosted, macOS, edotenv]
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Resolve the accepted reviewer revision
@@ -35,7 +35,9 @@ jobs:
         with:
           ref: ${{ steps.reviewer.outputs.sha }}
           persist-credentials: false
-      - name: Review with the shared local agent
-        uses: Lestode/review-agents/documentation-review@6eda8f76f55eebfee5020271e9a8d9d1149d9e2a
+      - name: Review with the shared API agent
+        uses: Lestode/review-agents/documentation-review@2b5de43ffd26e01ef16c4a263c02516baac24170
         with:
           config-path: .github/documentation-review.json
+          auth-mode: api-key
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}

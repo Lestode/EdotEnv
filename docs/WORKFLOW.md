@@ -7,8 +7,8 @@ branch and open a PR against `main`. Update that PR as work progresses. Do not
 push changes directly to `main`. Agents may prepare and push changes within the
 user's authorized task; merging requires explicit user acceptance of the PR.
 
-EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/6eda8f76f55eebfee5020271e9a8d9d1149d9e2a/WORKFLOW.md)
-and [documentation review procedure](https://github.com/Lestode/review-agents/blob/6eda8f76f55eebfee5020271e9a8d9d1149d9e2a/documentation-review/SKILL.md)
+EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/2b5de43ffd26e01ef16c4a263c02516baac24170/WORKFLOW.md)
+and [documentation review procedure](https://github.com/Lestode/review-agents/blob/2b5de43ffd26e01ef16c4a263c02516baac24170/documentation-review/SKILL.md)
 at the same revision as the action. Project scope remains in [AGENTS.md](../AGENTS.md).
 Update the action pin and these links together through a reviewed PR.
 
@@ -35,18 +35,22 @@ itself is proposed through the first PR.
 ## Reviewer operation
 
 The [workflow](../.github/workflows/documentation-review.yml) pins
-`Lestode/review-agents` at `6eda8f76f55eebfee5020271e9a8d9d1149d9e2a`.
+`Lestode/review-agents` at `2b5de43ffd26e01ef16c4a263c02516baac24170`.
 [Project settings](../.github/documentation-review.json) select this documentation
 index and [project review instructions](../.github/documentation-review.md).
 The shared action defines the model, collection limits, authorization, execution,
-and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/6eda8f76f55eebfee5020271e9a8d9d1149d9e2a/README.md).
+and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/2b5de43ffd26e01ef16c4a263c02516baac24170/README.md).
 
-The action runs on the project-specific `edotenv-mac` self-hosted macOS runner
-with label `edotenv`, using the runner account's local Codex ChatGPT sign-in.
-Keep credentials and runner installation outside the repository. Keep the Mac
-awake and online while waiting for a review. Proposed PR code runs only in the
-separate GitHub-hosted verification job; the privileged reviewer uses accepted
-default-branch settings and never executes PR code.
+The action runs on a GitHub-hosted Ubuntu runner with `auth-mode: api-key`.
+Create an `OPENAI_API_KEY` repository Actions secret in
+[GitHub settings](https://github.com/Lestode/EdotEnv/settings/secrets/actions).
+Pass it only through the action's `openai-api-key` input. Do not put the key in
+project files or PR comments. The API project needs billing and access to the
+shared action's pinned model; this mode uses OpenAI API billing and needs no
+local Mac runner or ChatGPT sign-in. The shared action makes a tool-free
+Responses API request using the same bounded review context as its ChatGPT mode.
+Proposed PR code runs only in the separate verification job; the privileged
+reviewer uses accepted default-branch settings and never executes PR code.
 
 Human collaborators with write access receive an automatic review on PR open,
 reopen, or ready-for-review when that revision lacks an automatic response.
@@ -56,10 +60,17 @@ This workflow authorizes the reviewer's PR reports and requested follow-up repli
 
 ## Activation and enforcement status
 
-As of 2026-10-23, the private GitHub repository exists. The setup PR must be
-accepted and merged before default-branch review triggers become active. Then
+As of 2026-10-23, the private GitHub repository exists and the initial setup PR's
+`Project checks` passes. API-key support is proposed in
+[review-agents PR #2](https://github.com/Lestode/review-agents/pull/2); the pinned
+commit is its candidate revision, awaiting acceptance. Accept and merge that
+upstream PR first, then update the action pin and documentation links to the
+accepted full SHA if it changes during review or merge. Provision the repository
+secret and accept and merge [EdotEnv PR #1](https://github.com/Lestode/EdotEnv/pull/1)
+before default-branch review triggers become active. Then
 open a small PR or reopen an existing PR, verify exactly one report, and test a
-follow-up command. See [the activation tasks](TODO.md#repository-workflow-validation).
+follow-up command. A live API call and publication have not yet been verified.
+See [the activation tasks](TODO.md#repository-workflow-validation).
 
 GitHub rejected private-repository branch protection on the current account
 with `Upgrade to GitHub Pro or make this repository public` (HTTP 403).
