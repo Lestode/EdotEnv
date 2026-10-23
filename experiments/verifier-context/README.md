@@ -5,10 +5,10 @@ setup and agent runs await user validation.
 
 ## Goal
 
-Determine whether additional Markdown about verification and research validation
-improves agent results on this specific task, `autoresearch-feature-volume`.
-Use this comparison to assess whether that extra context provides a useful
-learning opportunity for OPCD.
+Determine whether additional Markdown guidelines improve the final hidden
+weighted Pearson correlation on this specific task,
+`autoresearch-feature-volume`. Compare the baseline with the selected guidance
+under the same conditions.
 
 The task uses the local `data/autoresearch-feature-volume` package:
 agents research features, train an Elastic Net model to forecast next-minute
@@ -39,44 +39,31 @@ mechanics. Hidden labels and the reference solution remain outside both agents'
 contexts. Freeze the Markdown before comparison runs; do not tune it against
 hidden evaluation results.
 
-## What to observe
+## What to measure
 
-Compare both the final outcome and the research process:
+The primary outcome is the final model's official hidden weighted Pearson
+correlation (`weighted_pearson_ic`). Compare this metric across repeated runs
+with and without the selected guidance.
 
-- Submission success: whether the agent produces an accepted model, including
-  whether it passes the causal audit.
-- Forecast quality: the official hidden weighted correlation for accepted
-  models. Report rejected or missing submissions separately; their penalty is
-  not a measured forecasting correlation.
-- Research behavior: how the agent designs validation, compares experiments,
-  interprets evidence, recovers from errors, and chooses its final model.
-- Resource use: time, model usage, and cost under the same limits.
+Report rejected or missing submissions alongside the scores for accepted
+models, so failed runs remain visible. Their penalty is not a measured
+forecasting correlation. Keep the submitted models and verifier outcomes so
+that reported results can be checked.
 
-Keep full agent actions, tool responses, submitted code, and verifier outcomes
-so that failure explanations can point to specific evidence. Distinguish agent
-mistakes from infrastructure failures. Describe observed actions and stated
-reasoning without assuming access to the model's internal reasoning.
+The current experiment asks whether the guidelines improve the final metric.
+Detailed analysis of the agents' research process is potential future work.
 
-## What this would tell us about OPCD
+## Potential future work
 
-If condition B consistently improves outcomes, inspect which decisions changed
-and whether those changes explain the improvement. This would support testing
-whether an agent can learn the useful behavior without receiving the extra
-Markdown at deployment.
+If the guidelines improve the final metric, future work could inspect which
+agent decisions changed and whether those changes explain the improvement.
+It could also test whether an agent can learn the useful behavior through OPCD
+without receiving the extra Markdown at deployment.
 
-For a later OPCD experiment, that Markdown could become teacher-only context,
-while the student retains the baseline context. Keep it out of student inputs
-and training payloads as required by the project scope. The teacher would score
-student-generated continuations with the additional context; successful B
-rollouts alone do not implement OPCD.
-
-An improvement in this comparison would show that context helps, not prove
-that it can be distilled. OpenAI API models can support the initial behavioral
-comparison; suitability for the required teacher token scoring is a separate
-validation. A null result is informative too: check for redundant guidance,
-unclear guidance, or a task that is too easy or too difficult before concluding
-that there is nothing to learn. This single task cannot establish general
-quantitative research ability.
+These follow-ups are outside the current experiment. Any later OPCD work must
+follow the teacher-only context separation required by the project scope.
+A score improvement here would not by itself establish that the behavior can
+be distilled or that the guidelines help on other tasks.
 
 ## Decisions before implementation and runs
 
@@ -85,8 +72,8 @@ quantitative research ability.
 2. Select a recent, affordable OpenAI model and fix the agent setup used in both
    conditions.
 3. Agree a small pilot size, equal per-run limits, and a total spending cap.
-4. Agree how much improvement and consistency would justify a larger comparison
-   or an OPCD follow-up, including whether a gain in completion alone is enough.
+4. Agree how to summarize the final metric across repeated runs and report
+   failed submissions.
 5. Validate the proposal, then prepare the experiment. Launch paid trials only
    after the run settings and execution environment are ready.
 
