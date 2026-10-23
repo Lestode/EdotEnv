@@ -77,7 +77,10 @@ in a [successful review job](https://github.com/Lestode/EdotEnv/actions/runs/399
 The report identifies OpenAI Responses API execution and API-key billing.
 A [rerun of the same automatic request](https://github.com/Lestode/EdotEnv/actions/runs/39946910380/attempts/2)
 passed without a model-input event and left exactly one matching report, verifying
-same-request deduplication. Follow-up behavior remains under validation.
+same-request deduplication. After a later push, a fresh `/review-docs` request
+produced a [successful follow-up report](https://github.com/Lestode/EdotEnv/pull/2#issuecomment-6363988681)
+for revision `03420af` in a [passing comment-triggered job](https://github.com/Lestode/EdotEnv/actions/runs/39947308582).
+The follow-up confirmed that the activation-checklist finding was resolved.
 See [the activation tasks](TODO.md#repository-workflow-validation).
 
 GitHub rejected private-repository branch protection on the current account
