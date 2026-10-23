@@ -65,7 +65,7 @@ jobs:
         with:
           repository: Lestode/review-agents
           # Dependency: review-agents PR #4 must be accepted before activation.
-          ref: c8df70658fc3977bb8c0709812b6eb22e8c1bf61
+          ref: fc3d7ef5d347631bf670e5d1248decc4af379350
           ssh-key: ${{ secrets.REVIEW_AGENTS_READ_KEY }}
           path: .review-agent
           persist-credentials: false

@@ -7,8 +7,8 @@ branch and open a PR against `main`. Update that PR as work progresses. Do not
 push changes directly to `main`. Agents may prepare and push changes within the
 user's authorized task; merging requires explicit user acceptance of the PR.
 
-EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/c8df70658fc3977bb8c0709812b6eb22e8c1bf61/WORKFLOW.md)
-and [documentation review procedure](https://github.com/Lestode/review-agents/blob/c8df70658fc3977bb8c0709812b6eb22e8c1bf61/documentation-review/SKILL.md)
+EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/fc3d7ef5d347631bf670e5d1248decc4af379350/WORKFLOW.md)
+and [documentation review procedure](https://github.com/Lestode/review-agents/blob/fc3d7ef5d347631bf670e5d1248decc4af379350/documentation-review/SKILL.md)
 at the same revision as the action. Project scope remains in [AGENTS.md](../AGENTS.md).
 Update the action pin and these links together through a reviewed PR.
 
@@ -42,7 +42,7 @@ its local composite action. Public-consumer support requires acceptance of
 [Project settings](../.github/documentation-review.json) select this documentation
 index and [project review instructions](../.github/documentation-review.md).
 The shared action defines the model, collection limits, authorization, execution,
-and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/c8df70658fc3977bb8c0709812b6eb22e8c1bf61/README.md).
+and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/fc3d7ef5d347631bf670e5d1248decc4af379350/README.md).
 
 The action runs on a GitHub-hosted Ubuntu runner with `auth-mode: api-key` and
 explicit public-repository opt-in. Fetch it with `REVIEW_AGENTS_READ_KEY`, a
