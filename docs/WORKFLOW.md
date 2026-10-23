@@ -86,6 +86,29 @@ events do not review newer code under an older request, and duplicate completed
 requests do not repeat billing. Legacy or incomplete response markers do not
 count as completion evidence.
 
+### Reviewer update alerts
+
+The [freshness workflow](../.github/workflows/reviewer-freshness.yml) checks the
+accepted pin against the private reviewer's default-branch head each Monday at
+07:23 UTC, and can also be run manually from Actions. It reuses the read-only
+deploy key and requires only project contents read access and issue write access.
+It reads Git history without executing upstream code or calling the model API.
+
+When the pin is an ancestor of a newer upstream revision, it creates one tracking
+issue containing the two revisions and a private comparison link. Unchanged runs
+do not edit the issue or add comments. Later upstream changes update that issue;
+catching up closes it. Closing the alert while still behind causes the next run
+to reopen it. Private source and commit messages are not published. Review and
+update the pin and matching links through a PR under the acceptance policy above;
+the alert does not install updates or establish compatibility.
+
+Failed private checkout, a missing pin, unexpected Git history, or API errors fail
+the workflow rather than reporting a successful freshness check. Inspect failed
+Actions runs for these cases. The schedule activates only after this workflow is
+merged to the default branch. GitHub may disable schedules in public repositories
+after [60 days without repository activity](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows);
+re-enable the workflow in Actions if needed.
+
 ## Activation and enforcement status
 
 The initial API-key support was accepted and merged in

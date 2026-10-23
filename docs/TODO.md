@@ -87,3 +87,4 @@ The authoritative policy and integration details are in [the development workflo
 - [ ] Activate the consumer workflow after user acceptance without bypassing its required completion gate.
 - [ ] Verify a real completed review passes only for its captured PR head, a new push automatically requests another review, duplicate completed requests do not repeat billing, and stale, skipped, failed, or unpublished reviews cannot allow merging. Confirm merge blocking through GitHub's merge state without attempting an unauthorized merge or direct push.
 - [ ] Add CPU regression tests alongside each OPCD implementation step and extend CI for its dependencies; retain separate GPU/distributed run evidence.
+- [ ] After accepting and merging the reviewer freshness workflow, run it manually and record its Actions URL; verify the scheduled run and the live alert lifecycle when an upstream update is available. Git-history and alert-lifecycle regression tests run in `Project checks`.

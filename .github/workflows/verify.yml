@@ -31,6 +31,8 @@ jobs:
         run: pre-commit run --all-files
       - name: Check project documentation and review configuration
         run: python scripts/check_project.py
+      - name: Test reviewer freshness detection and alert lifecycle
+        run: node --test tests/*.test.cjs
       - name: Run project CPU tests when present
         shell: bash
         run: |
