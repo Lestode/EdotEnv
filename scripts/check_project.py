@@ -8,6 +8,38 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def check_review_configuration(root: Path) -> list[str]:
+    errors = []
+    for reviewer, command in (
+        ("documentation", "/review-docs"),
+        ("implementation", "/review-implementation"),
+    ):
+        path = root / f".github/{reviewer}-review.json"
+        expected = {
+            "documentationIndex": "docs/README.md",
+            "instructionsPath": f".github/{reviewer}-review.md",
+            "command": command,
+            "markerPrefix": f"edotenv-{reviewer}-review",
+        }
+        if reviewer == "implementation":
+            expected["contextPaths"] = []
+        try:
+            config = json.loads(path.read_text())
+        except (OSError, ValueError):
+            errors.append(f"Missing or invalid review configuration: {path.name}")
+            continue
+        if config != expected:
+            errors.append(
+                f"{reviewer.capitalize()} review configuration changed; "
+                "update validation and workflow together."
+            )
+        for field in ("documentationIndex", "instructionsPath"):
+            target = config.get(field) if isinstance(config, dict) else None
+            if not isinstance(target, str) or not (root / target).is_file():
+                errors.append(f"Missing {reviewer} review entry point: {field}")
+    return errors
+
+
 def check_project(root: Path) -> list[str]:
     errors = []
     documents = [root / "AGENTS.md", *sorted((root / "docs").rglob("*.md"))]
@@ -27,20 +59,7 @@ def check_project(root: Path) -> list[str]:
                     f"{document.relative_to(root)}: missing local target {target}"
                 )
 
-    config = json.loads((root / ".github/documentation-review.json").read_text())
-    expected = {
-        "documentationIndex": "docs/README.md",
-        "instructionsPath": ".github/documentation-review.md",
-        "command": "/review-docs",
-        "markerPrefix": "edotenv-documentation-review",
-    }
-    if config != expected:
-        errors.append(
-            "Review configuration changed; update validation and workflow together."
-        )
-    for field in ("documentationIndex", "instructionsPath"):
-        if not (root / config[field]).is_file():
-            errors.append(f"Missing review entry point: {config[field]}")
+    errors.extend(check_review_configuration(root))
     return errors
 
 

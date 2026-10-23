@@ -1,8 +1,9 @@
-name: API documentation review
+name: API agent reviews
+run-name: 'Review PR #${{ github.event.pull_request.number || github.event.issue.number || inputs.pull_request_number }}'
 
 on:
   pull_request_target:
-    types: [opened, reopened, ready_for_review, synchronize]
+    types: [opened, reopened, ready_for_review, synchronize, edited]
   issue_comment:
     types: [created]
   workflow_dispatch:
@@ -11,6 +12,10 @@ on:
         description: Open PR number to review using this workflow revision
         required: true
         type: string
+      bootstrap_implementation:
+        description: Review before implementation configuration is accepted, using the accepted documentation index and shared defaults
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -25,14 +30,16 @@ jobs:
       cancel-in-progress: false
     if: >-
       ((github.event_name == 'pull_request_target' &&
-        github.event.pull_request.user.type == 'User') ||
+        github.event.sender.type == 'User' &&
+        (github.event.action != 'edited' || github.event.changes.base)) ||
        (github.event_name == 'workflow_dispatch' &&
         github.event.sender.type == 'User') ||
        (github.event_name == 'issue_comment' && github.event.issue.pull_request &&
         github.event.comment.user.type == 'User' &&
-        startsWith(github.event.comment.body, '/review-docs')))
+        (startsWith(github.event.comment.body, '/review-docs') ||
+         startsWith(github.event.comment.body, '/review-implementation'))))
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: Resolve the accepted configuration and exact PR revision
         id: reviewer
@@ -61,15 +68,36 @@ jobs:
           ref: ${{ steps.reviewer.outputs.sha }}
           persist-credentials: false
       - name: Fetch the pinned private reviewer
+        id: shared_reviewer
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: Lestode/review-agents
-          # Accepted shared reviewer: review-agents PR #4.
-          ref: 0b7cc867d1899bbdffcb1a93b1f41b5fe881fc65
+          # Accepted shared reviewer: review-agents PR #3 (includes PR #4).
+          ref: 57e1e998e109d879f41c1872eb547e8502555e60
           ssh-key: ${{ secrets.REVIEW_AGENTS_READ_KEY }}
           path: .review-agent
           persist-credentials: false
-      - name: Review with the shared API agent
+      - name: Resolve accepted implementation settings or explicit bootstrap defaults
+        id: implementation_config
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            let path = '.github/implementation-review.json';
+            if (context.eventName === 'workflow_dispatch' &&
+                context.payload.inputs.bootstrap_implementation === 'true') {
+              if (fs.existsSync(path)) throw new Error('Use the accepted implementation configuration.');
+              const accepted = JSON.parse(fs.readFileSync('.github/documentation-review.json', 'utf8'));
+              path = '.github/implementation-review.bootstrap.json';
+              fs.writeFileSync(path, JSON.stringify({
+                documentationIndex: accepted.documentationIndex,
+                command: '/review-implementation',
+                markerPrefix: 'edotenv-implementation-review',
+                contextPaths: [],
+              }));
+            }
+            core.setOutput('path', path);
+      - name: Review documentation with the shared API agent
         uses: ./.review-agent/documentation-review
         with:
           config-path: .github/documentation-review.json
@@ -78,3 +106,15 @@ jobs:
           allow-public-repository: 'true'
           expected-head-sha: ${{ steps.reviewer.outputs.head }}
           completion-check-name: Agent reviews completed
+      - name: Review implementation with the shared API agent
+        # A documentation finding must not prevent the implementation assessment.
+        if: >-
+          !cancelled() && steps.shared_reviewer.outcome == 'success' &&
+          steps.implementation_config.outcome == 'success'
+        uses: ./.review-agent/implementation-review
+        with:
+          config-path: ${{ steps.implementation_config.outputs.path }}
+          auth-mode: api-key
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          allow-public-repository: 'true'
+          expected-head-sha: ${{ steps.reviewer.outputs.head }}

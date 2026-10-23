@@ -1,0 +1,7 @@
+{
+  "documentationIndex": "docs/README.md",
+  "instructionsPath": ".github/implementation-review.md",
+  "command": "/review-implementation",
+  "markerPrefix": "edotenv-implementation-review",
+  "contextPaths": []
+}

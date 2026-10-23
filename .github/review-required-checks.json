@@ -1,0 +1,10 @@
+{
+  "strict": true,
+  "checks": [
+    { "context": "Project checks", "app_id": 15368 },
+    { "context": "Agent reviews completed", "app_id": 15368 },
+    { "context": "Documentation reviewer", "app_id": 15368 },
+    { "context": "Implementation reviewer", "app_id": 15368 },
+    { "context": "Current review comparison", "app_id": 15368 }
+  ]
+}
