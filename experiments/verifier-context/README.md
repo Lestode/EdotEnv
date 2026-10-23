@@ -89,7 +89,7 @@ python3.12 -m venv .venv
 ```
 
 Prepare inputs without Docker, credentials, or any API calls. Replace
-`MODEL_ID` with the chosen model; the current pilot uses `gpt-6-luna`. The runner
+`MODEL_ID` with the chosen model; the completed pilot used `gpt-6-luna`. The runner
 does not silently select a model. Run commands from the repository root:
 
 ```sh
@@ -317,6 +317,37 @@ The original failed remote audit is preserved. The runner now retries this
 transient conflict, checks final absence, and fails if any owned resource remains.
 This cleanup-only fix follows the completed study; prepare a fresh study for any
 new paid run rather than rewriting its frozen runner hash.
+
+### Astra follow-up
+
+The user requested a separate comparison with `openai/gpt-6-astra`: 20 baseline
+rollouts and 20 with the same research Markdown. The fresh study preserves the
+task and guidance hashes, 30-turn / 1,800-second agent limits, low reasoning,
+4,096 output tokens per request, and equal cloud resources. It uses up to 19
+trial sandboxes plus one trusted controller. Its API spending target is $40,
+with the private launcher cancelling at $30 of observed usage to leave room for
+in-flight calls; hosting is separate. Neither threshold is a hard billing cap.
+
+This follow-up uses a detached private supervisor in the controller, including
+its usage monitor, two-hour execution deadline, and a separate cloud watchdog.
+The laptop uploads and starts the study, then is not required for execution or
+trial cleanup. Trial sandboxes are deleted; the controller stops after saving
+the results and a checksummed archive on its own disk. Its automatic deletion
+is disabled, so it can retain the private results while the laptop is closed.
+Retrieve and verify the archive before deleting that final sandbox. A stopped
+controller continues to incur storage charges until deletion. This retention
+policy applies to this private launcher; `compare.py run` alone does not provide
+detached supervision or retain a controller.
+
+Daytona denied persistent-volume creation with the available key (HTTP 403);
+no volume was created. Following the user's choice to use sandboxes, a real
+controller stop/start test verified that its files survive. Offline supervisor
+checks verified archive checksums, exclusion of the frozen hidden task from the
+download archive, and preservation of cleanup-failure evidence. These checks
+do not establish completion of the 40 paid rollouts. The detached study was
+launched on 2026-10-23, and its supervisor, cloud watchdog, usage monitor, and 19
+worker processes were observed running. Results and completion audits remain
+pending in the private run directory.
 
 Offline tests use synthetic task and verifier fixtures. Run all project tests
 with the installed runner dependencies to include the Harbor instruction/schema

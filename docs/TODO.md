@@ -99,6 +99,12 @@ pilot; it does not implement OPCD training or establish distillability.
   submissions per arm, prompt/frozen-input audits passed, private results
   downloaded, and independent controller/trial deletion verified. Record and fix
   the final cleanup transition conflict without rewriting the completed study.
+- [x] Prepare the separate Astra comparison with 20 rollouts per arm and a
+  detached private cloud supervisor; validate controller disk retention across
+  stop/start and archive verification before eventual deletion.
+- [ ] Inspect the Astra comparison's scores, failures, usage, context conditions,
+  and frozen inputs; download and verify its retained results and confirm deletion
+  of the final controller. See the experiment for its spending and retention policy.
 
 ## Repository workflow validation
 
