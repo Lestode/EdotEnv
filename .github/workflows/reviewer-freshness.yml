@@ -2,7 +2,7 @@ name: Reviewer freshness
 
 on:
   schedule:
-    - cron: '23 7 * * 1'
+    - cron: '23 7 * * *'
   workflow_dispatch:
 
 permissions:

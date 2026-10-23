@@ -89,7 +89,7 @@ count as completion evidence.
 ### Reviewer update alerts
 
 The [freshness workflow](../.github/workflows/reviewer-freshness.yml) checks the
-accepted pin against the private reviewer's default-branch head each Monday at
+accepted pin against the private reviewer's default-branch head every day at
 07:23 UTC, and can also be run manually from Actions. It reuses the read-only
 deploy key and requires only project contents read access and issue write access.
 It reads Git history without executing upstream code or calling the model API.
