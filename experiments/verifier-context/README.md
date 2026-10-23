@@ -1,12 +1,12 @@
 # Verifier context experiment
 
-Status: high-level proposal for user validation. Implementation and agent runs
-come after validation.
+Status: high-level proposal. The first guidance text is agreed; the experiment
+setup and agent runs await user validation.
 
 ## Goal
 
-Determine whether additional Markdown explaining the tests and verifier improves
-agent results on this specific task, `autoresearch-feature-volume`.
+Determine whether additional Markdown about verification and research validation
+improves agent results on this specific task, `autoresearch-feature-volume`.
 Use this comparison to assess whether that extra context provides a useful
 learning opportunity for OPCD.
 
@@ -20,7 +20,7 @@ contains reference baselines, but no completed agent trial results.
 | Condition | What the agent receives |
 | --- | --- |
 | A: baseline | The existing task instructions, public data, tools, and existing task documentation. |
-| B: additional verifier Markdown | Everything in A, plus Markdown explaining the tests and verifier. |
+| B: additional research guidance | Everything in A, plus the [research guidance](research-guidance.md). |
 
 The proposed baseline keeps the documentation already supplied with the task.
 The comparison measures the value of additional guidance; it does not remove
@@ -32,10 +32,12 @@ resource limits in both conditions. Start each rollout with a fresh environment
 and conversation. Repeat both conditions so that one lucky or failed run does
 not determine the conclusion.
 
-The extra Markdown should explain evaluation criteria and submission
-requirements. Its exact content remains to be validated. Hidden labels and the
-reference solution remain outside both agents' contexts. Freeze the Markdown
-before comparison runs; do not tune it against hidden evaluation results.
+The first treatment covers how to validate research findings. It adds research
+advice to the existing task documentation, so any improvement would measure the
+value of that advice. It would not isolate the benefit of explaining verifier
+mechanics. Hidden labels and the reference solution remain outside both agents'
+contexts. Freeze the Markdown before comparison runs; do not tune it against
+hidden evaluation results.
 
 ## What to observe
 
@@ -78,8 +80,8 @@ quantitative research ability.
 
 ## Decisions before implementation and runs
 
-1. Validate the baseline and the exact additional Markdown. Decide whether the
-   treatment covers verifier requirements alone or also research advice.
+1. Validate the baseline and how the agreed research guidance is supplied to
+   condition B. Both conditions retain the existing task documentation.
 2. Select a recent, affordable OpenAI model and fix the agent setup used in both
    conditions.
 3. Agree a small pilot size, equal per-run limits, and a total spending cap.
