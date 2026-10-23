@@ -336,6 +336,7 @@ async def run_trial(root, plan, trial):
 async def cleanup_daytona(root, plan):
     """Delete only this study's remaining sandboxes; report failed cleanup."""
     from daytona import AsyncDaytona, ListSandboxesQuery
+    from daytona.common.errors import DaytonaNotFoundError
 
     client = AsyncDaytona()
     deleted, remaining = [], []
@@ -345,7 +346,10 @@ async def cleanup_daytona(root, plan):
         async for sandbox in client.list(query, request_timeout=30):
             if sandbox.labels.get("edot.study") != plan["study_id"]:
                 continue
-            await sandbox.delete(timeout=60, wait=True)
+            try:
+                await sandbox.delete(timeout=60, wait=True)
+            except DaytonaNotFoundError:
+                pass  # An eventually consistent listing can contain a deleted ID.
             deleted.append(sandbox.id)
         # The list endpoint can briefly lag a completed deletion.
         for attempt in range(4):

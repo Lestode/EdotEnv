@@ -327,6 +327,29 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual(report["status"], "verified_empty")
         self.assertEqual(report["deleted"], ["owned-sandbox"])
 
+    def test_daytona_cleanup_tolerates_already_deleted_sandbox(self):
+        from types import SimpleNamespace
+        from daytona.common.errors import DaytonaNotFoundError
+
+        sandbox = SimpleNamespace(
+            id="deleted-sandbox",
+            labels={"edot.study": self.plan["study_id"]},
+            delete=AsyncMock(side_effect=DaytonaNotFoundError("already deleted")),
+        )
+        calls = 0
+
+        async def listed(query, request_timeout):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                yield sandbox
+
+        client = SimpleNamespace(list=listed, close=AsyncMock())
+        with patch("daytona.AsyncDaytona", return_value=client):
+            asyncio.run(comparison.cleanup_daytona(self.root, self.plan))
+        report = comparison.read_json(self.root / "cloud-cleanup.json")
+        self.assertEqual(report["status"], "verified_empty")
+
     def test_harbor_contract_when_dependency_installed(self):
         try:
             from harbor.models.task.task import Task

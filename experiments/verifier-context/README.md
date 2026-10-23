@@ -2,7 +2,7 @@
 
 Status: the local pilot was stopped at the user’s request because it was too
 slow. Its partial results are preserved. Daytona hosting is now authorized;
-cloud reference integration is running with two-sandbox capacity confirmed.
+cloud reference integration is running with 20-sandbox capacity confirmed.
 The completed comparison remains to validate.
 
 ## Goal
@@ -123,8 +123,9 @@ Actions secret is separate and cannot supply a key to this local process.
 This checks frozen inputs, pinned dependencies, the Harbor task/config schema,
 and key presence; Docker and Compose are checked only for the Docker backend. It does not call the model or verify API access,
 billing, successful image builds, MCP connectivity, or artifact transfer. The local reference check has since validated image builds, MCP access,
-submission transfer, and separate hidden scoring; the paid agent path needs
-its own validation. No host repository or hidden data
+submission transfer, and separate hidden scoring. The local paid agent path
+has also produced one accepted baseline. Complete cloud submission/hidden-verifier
+validation and the fresh A/B comparison remain pending. No host repository or hidden data
 is added to the agent's mounts; access boundaries rely on the original task's
 Docker allowlists and Harbor's separate verifier.
 
@@ -139,7 +140,9 @@ Only after validating the model and pilot limits, launch paid trials explicitly:
 The dollar value above is an example **stop threshold, not a hard billing cap**.
 The runner checks accumulated reported cost before starting another wave; every
 trial already in flight can cross the threshold. With concurrency four, all four
-trials may start before any usage is reported. Missing cost information stops further
+trials may start before any usage is reported. With concurrency twenty, the
+entire 20-rollout batch can be in flight before the first completed-trial cost
+check. Monitor live usage and stop the study if the spending target is at risk. Missing cost information stops further
 trials. Each arm has the same 30-turn/30-minute defaults and a 4,096-output-token
 limit per request. Harbor/provider retries may still incur spending within a
 trial. There are no automatic trial retries or resumed conversations. An
@@ -160,8 +163,8 @@ with cloud results as if they shared identical execution conditions:
 .venv/bin/python experiments/verifier-context/compare.py prepare \
   --task data/autoresearch-feature-volume \
   --output experiments/verifier-context/runs/daytona-01 \
-  --model openai/gpt-6-luna --pairs 2 --max-turns 30 --agent-seconds 1800 \
-  --backend daytona --concurrency 2 --cpus 4 --memory-gb 8 --storage-gb 10
+  --model openai/gpt-6-luna --pairs 10 --max-turns 30 --agent-seconds 1800 \
+  --backend daytona --concurrency 20 --cpus 4 --memory-gb 8 --storage-gb 10
 ```
 
 The `check` and `run` commands above also apply to a Daytona study. Check the
@@ -254,7 +257,11 @@ The account rejected the original eight-CPU allocation and a 20 GiB disk
 request; its observed per-sandbox limits are four CPUs and 10 GiB disk. A
 four-CPU, 8 GiB RAM, 10 GiB disk sandbox started successfully, and a second
 simultaneous sandbox with that allocation was created and deleted to check
-capacity. Both comparison arms will use those equal settings, two at a time.
+capacity. A later scale check successfully created 19 additional simultaneous
+sandboxes beside the reference run, then verified their deletion. The user
+authorized scaling up to 20 and confirmed that the $2 model-API target excludes
+modest hosting costs. The fresh cloud comparison uses 10 trials per arm, up to
+20 in parallel, with the same four-CPU / 8 GiB / 10 GiB allocation for both arms.
 Completed cloud A/B scores and failure counts remain to collect. A small pilot is not
 a claim of statistical significance or evidence of OPCD distillability.
 
