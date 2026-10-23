@@ -2,35 +2,56 @@ name: API documentation review
 
 on:
   pull_request_target:
-    types: [opened, reopened, ready_for_review]
+    types: [opened, reopened, ready_for_review, synchronize]
   issue_comment:
     types: [created]
+  workflow_dispatch:
+    inputs:
+      pull_request_number:
+        description: Open PR number to review using this workflow revision
+        required: true
+        type: string
 
 permissions:
   contents: read
   pull-requests: write
+  checks: write
 
 jobs:
   review:
     concurrency:
-      group: documentation-review-${{ github.event.pull_request.number || github.event.issue.number }}
+      group: documentation-review-${{ github.event.pull_request.number || github.event.issue.number || inputs.pull_request_number }}
       queue: max
       cancel-in-progress: false
     if: >-
-      github.event.repository.private &&
       ((github.event_name == 'pull_request_target' &&
         github.event.pull_request.user.type == 'User') ||
-       (github.event.issue.pull_request &&
+       (github.event_name == 'workflow_dispatch' &&
+        github.event.sender.type == 'User') ||
+       (github.event_name == 'issue_comment' && github.event.issue.pull_request &&
         github.event.comment.user.type == 'User' &&
         startsWith(github.event.comment.body, '/review-docs')))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Resolve the accepted reviewer revision
+      - name: Resolve the accepted configuration and exact PR revision
         id: reviewer
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
+            const number = Number(context.payload.pull_request?.number ||
+              context.payload.issue?.number || context.payload.inputs?.pull_request_number);
+            if (!Number.isSafeInteger(number) || number <= 0) {
+              throw new Error('An open pull request number is required.');
+            }
+            const { data: pull } = await github.rest.pulls.get({
+              ...context.repo, pull_number: number,
+            });
+            if (pull.state !== 'open') throw new Error('Review an open PR.');
+            const head = context.eventName === 'pull_request_target'
+              ? context.payload.pull_request.head.sha : pull.head.sha;
+            if (!/^[0-9a-f]{40}$/.test(head)) throw new Error('Invalid PR head SHA.');
+            core.setOutput('head', head);
             const { data } = await github.rest.repos.getBranch({
               ...context.repo, branch: context.payload.repository.default_branch,
             });
@@ -39,9 +60,21 @@ jobs:
         with:
           ref: ${{ steps.reviewer.outputs.sha }}
           persist-credentials: false
+      - name: Fetch the pinned private reviewer
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: Lestode/review-agents
+          # Accepted shared reviewer: review-agents PR #4.
+          ref: 0b7cc867d1899bbdffcb1a93b1f41b5fe881fc65
+          ssh-key: ${{ secrets.REVIEW_AGENTS_READ_KEY }}
+          path: .review-agent
+          persist-credentials: false
       - name: Review with the shared API agent
-        uses: Lestode/review-agents/documentation-review@f4db0e334f6fc2216c583fe796638b096a5abbfe
+        uses: ./.review-agent/documentation-review
         with:
           config-path: .github/documentation-review.json
           auth-mode: api-key
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          allow-public-repository: 'true'
+          expected-head-sha: ${{ steps.reviewer.outputs.head }}
+          completion-check-name: Agent reviews completed
