@@ -13,6 +13,7 @@ import math
 import os
 from pathlib import Path
 import shutil
+import signal
 import statistics
 import subprocess
 import sys
@@ -324,13 +325,55 @@ def summarize(root, plan):
     return report
 
 
-async def run_trial(root, plan, trial):
+async def harbor_trial(root, plan, trial):
     from harbor.models.trial.config import TrialConfig
     from harbor.trial.trial import Trial
 
     config = TrialConfig.model_validate(trial_config(root, plan, trial))
     instance = await Trial.create(config)
-    await instance.run()
+    try:
+        await instance.run()
+    finally:
+        if plan.get("environment", {}).get("type") == "daytona":
+            from harbor.environments.daytona.environment import DaytonaClientManager
+
+            manager = await DaytonaClientManager.get_instance()
+            await manager._cleanup()
+
+
+async def run_trial(root, plan, trial):
+    if plan.get("environment", {}).get("type") != "daytona":
+        return await harbor_trial(root, plan, trial)
+    # Harbor synchronously compresses large upload trees. Separate processes
+    # prevent one trial from starving another trial's RPC timeout/heartbeat.
+    directory = root / "trials" / trial["id"]
+    with (directory / "worker.log").open("wb") as stream:
+        process = await asyncio.create_subprocess_exec(
+            sys.executable,
+            str(Path(__file__).resolve()),
+            "_trial",
+            str(root),
+            trial["id"],
+            "--allow-paid",
+            stdout=stream,
+            stderr=subprocess.STDOUT,
+        )
+        try:
+            code = await process.wait()
+            if code:
+                raise RuntimeError(f"Trial worker {trial['id']} exited with {code}")
+        except asyncio.CancelledError:
+            if process.returncode is None:
+                try:
+                    process.send_signal(signal.SIGINT)
+                except ProcessLookupError:
+                    pass
+                try:
+                    await asyncio.wait_for(process.wait(), timeout=30)
+                except asyncio.TimeoutError:
+                    process.kill()
+                    await process.wait()
+            raise
 
 
 async def cleanup_daytona(root, plan):
@@ -448,6 +491,10 @@ def main():
     prep.add_argument("--cpus", type=int)
     prep.add_argument("--memory-gb", type=int)
     prep.add_argument("--storage-gb", type=int)
+    worker = sub.add_parser("_trial", help=argparse.SUPPRESS)
+    worker.add_argument("directory", type=Path)
+    worker.add_argument("trial_id")
+    worker.add_argument("--allow-paid", action="store_true", required=True)
     for command in ("check", "run", "summarize"):
         cmd = sub.add_parser(command)
         cmd.add_argument("directory", type=Path)
@@ -474,7 +521,14 @@ def main():
             return
         root = args.directory.resolve()
         plan = read_json(root / "plan.json")
-        if args.command == "check":
+        if args.command == "_trial":
+            verify_frozen(root, plan)
+            trial = next(t for t in plan["trials"] if t["id"] == args.trial_id)
+            directory = root / "trials" / trial["id"]
+            with (directory / "worker-started.json").open("x") as stream:
+                json.dump({"pid": os.getpid()}, stream)
+            asyncio.run(harbor_trial(root, plan, trial))
+        elif args.command == "check":
             preflight(root, plan)
             print("Preflight passed; cloud quota and model/API access not tested.")
         elif args.command == "run":

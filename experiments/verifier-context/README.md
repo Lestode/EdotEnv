@@ -2,8 +2,8 @@
 
 Status: the local pilot was stopped at the user’s request because it was too
 slow. Its partial results are preserved. Daytona hosting is now authorized;
-cloud reference integration is running with 20-sandbox capacity confirmed.
-The completed comparison remains to validate.
+cloud reference integration passed and 20-sandbox capacity was confirmed.
+The fresh comparison is running with 10 trials per arm; final results are pending.
 
 ## Goal
 
@@ -125,7 +125,7 @@ and key presence; Docker and Compose are checked only for the Docker backend. It
 billing, successful image builds, MCP connectivity, or artifact transfer. The local reference check has since validated image builds, MCP access,
 submission transfer, and separate hidden scoring. The local paid agent path
 has also produced one accepted baseline. Complete cloud submission/hidden-verifier
-validation and the fresh A/B comparison remain pending. No host repository or hidden data
+validation has since passed too. The fresh A/B comparison remains pending. No host repository or hidden data
 is added to the agent's mounts; access boundaries rely on the original task's
 Docker allowlists and Harbor's separate verifier.
 
@@ -262,7 +262,31 @@ sandboxes beside the reference run, then verified their deletion. The user
 authorized scaling up to 20 and confirmed that the $2 model-API target excludes
 modest hosting costs. The fresh cloud comparison uses 10 trials per arm, up to
 20 in parallel, with the same four-CPU / 8 GiB / 10 GiB allocation for both arms.
-Completed cloud A/B scores and failure counts remain to collect. A small pilot is not
+The complete cloud reference flow then passed, including separate hidden scoring,
+with IC 0.518312997231824, matching the local reference to floating-point precision.
+It made no model API calls and is excluded from A/B results. Reference and probe
+sandbox deletion were verified before the cloud comparison started.
+
+The first 20-rollout cloud startup was stopped before any model response was
+observed: simultaneous trials hit Daytona session-command timeouts while
+starting Docker. Harbor synchronously gzipped each large upload on a shared
+controller event loop; one measured archive took 17 seconds, exceeding other
+trials’ 10-second RPC timeouts. This is an infrastructure failure, not evidence
+about either condition. Its artifacts are preserved, and deletion of all study
+sandboxes was independently verified.
+
+Cloud trials now run in separate controller processes through the same native
+Harbor backend, so compression in one trial cannot block another trial’s RPCs.
+Both arms use this execution path. Cancellation interrupts each child, waits
+for cleanup, forcibly reaps a stalled child if needed, then audits study-wide
+sandbox deletion. The process change requires a fresh frozen study.
+
+The replacement 20-rollout cloud study is running in isolated worker processes. Its private launcher monitors reported
+trajectory costs and cancels at $1.75 of observed API usage including the prior
+local pilot and smoke request, leaving headroom below the $2 target. Reported
+usage can lag in-flight requests, so this remains a guard rather than a hard cap.
+Daytona charges remain separate. Completed cloud A/B scores and failure counts
+remain to collect. A small pilot is not
 a claim of statistical significance or evidence of OPCD distillability.
 
 Offline tests use synthetic task and verifier fixtures. Run all project tests

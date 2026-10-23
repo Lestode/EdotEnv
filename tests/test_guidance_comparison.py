@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 SCRIPT = Path(__file__).resolve().parents[1] / "experiments/verifier-context/compare.py"
 SPEC = importlib.util.spec_from_file_location("comparison", SCRIPT)
@@ -349,6 +349,28 @@ class ComparisonTests(unittest.TestCase):
             asyncio.run(comparison.cleanup_daytona(self.root, self.plan))
         report = comparison.read_json(self.root / "cloud-cleanup.json")
         self.assertEqual(report["status"], "verified_empty")
+
+    def test_cancelled_cloud_worker_is_reaped_before_study_cleanup(self):
+        from types import SimpleNamespace
+
+        self.plan["environment"] = {"type": "daytona", "delete": True}
+        trial = self.plan["trials"][0]
+        (self.root / "trials" / trial["id"]).mkdir(parents=True)
+        process = SimpleNamespace(
+            returncode=None,
+            send_signal=Mock(),
+            kill=Mock(),
+            wait=AsyncMock(side_effect=[asyncio.CancelledError(), TimeoutError(), 0]),
+        )
+        with patch.object(
+            asyncio, "create_subprocess_exec", return_value=process
+        ) as spawn:
+            with self.assertRaises(asyncio.CancelledError):
+                asyncio.run(comparison.run_trial(self.root, self.plan, trial))
+        process.send_signal.assert_called_once_with(comparison.signal.SIGINT)
+        process.kill.assert_called_once()
+        self.assertEqual(process.wait.await_count, 3)
+        self.assertIn("--allow-paid", spawn.call_args.args)
 
     def test_harbor_contract_when_dependency_installed(self):
         try:

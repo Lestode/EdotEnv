@@ -92,8 +92,9 @@ pilot; it does not implement OPCD training or establish distillability.
   API budget; the experiment records equal limits and the spending stop threshold.
 - [x] Preserve the cancelled local pilot and stop its containers/VM; obtain
   authorization for paid Daytona hosting.
-- [ ] Validate Harbor’s native Daytona Compose path, artifact transfer, separate
-  hidden verification, account capacity, and sandbox cleanup for this task.
+- [x] Validate Harbor’s native Daytona Compose path, artifact transfer, separate
+  hidden verification, 20-sandbox capacity, and reference/probe cleanup for this
+  task; record equal cloud allocations and the larger study’s API target.
 - [ ] Run a fresh cloud comparison and inspect its final-score report and failures.
 
 ## Repository workflow validation
