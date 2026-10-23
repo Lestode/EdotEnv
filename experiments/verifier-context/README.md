@@ -89,5 +89,5 @@ quantitative research ability.
    after the run settings and execution environment are ready.
 
 Project implementation gaps and validation work remain in
-[the OPCD TODO](../docs/TODO.md); repository changes follow
-[the development workflow](../docs/WORKFLOW.md).
+[the OPCD TODO](../../docs/TODO.md); repository changes follow
+[the development workflow](../../docs/WORKFLOW.md).
