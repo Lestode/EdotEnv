@@ -19,8 +19,8 @@ Before merging:
    and project CPU tests when present. Slime's upstream test suite is separate.
 2. `Agent reviews completed` must pass on that exact PR head. It certifies that
    the configured documentation agent completed its review and published its
-   report. Read and resolve its findings, or record the user's explicit acceptance
-   of remaining findings. Completion is not model approval or human acceptance.
+   report. Resolve findings under the [finding-resolution and conflict policy](#finding-resolution-and-conflicts).
+   Completion is not model approval or human acceptance.
 3. Run relevant implementation tests and record their commands, results, and
    coverage limits in the PR. Use [the OPCD TODO](TODO.md) for feature evidence
    and [hardware planning](HARDWARE.md) for GPU/distributed validation.
@@ -32,6 +32,34 @@ Before merging:
 The sole bootstrap exception is the initial commit containing the existing
 project documents and pinned upstream Slime source. The review integration
 itself is proposed through the first PR.
+
+## Finding resolution and conflicts
+
+Fix routine implementation findings autonomously when the agreed requirements
+and evidence determine the correction without conflicting information.
+Always bring conflicting instructions, requirements, documentation, or factual
+claims to the user for review before choosing a resolution. This also applies
+when a new user request conflicts with an established rule or assumption, or an
+existing decision appears to resolve the conflict. Explain the affected sources,
+likely consequences, and recommended correction. Obtain the user's decision
+before dependent work proceeds; independent work may continue.
+
+Flag significant consequences the user may not have intended before taking the
+affected action. Do not silently change a high-level rule or accept an exception
+to satisfy a review finding. Dismissing a finding requires the user's explicit
+decision on that finding, including its rationale; general PR acceptance alone
+is not a specific dismissal. Record the finding and review IDs when available,
+the reviewed revision/comparison, the reason, and a reference to the user's
+decision in the PR. Once the shared dismissal mechanism is active, also record
+the decision through that mechanism for the applicable assessment and comparison.
+A proposed dismissal or prose record cannot substitute for a required check.
+
+A completed review establishes that a report was published. It does not establish
+that its findings were resolved or dismissed. This escalation policy does not
+close the separate enforcement gap: both named finding-blocking reviewer checks
+and `Current review comparison` are still required additions, preserving
+`Project checks`. Implementation and live enforcement verification are tracked
+in [the workflow TODO](TODO.md#repository-workflow-validation).
 
 ## Reviewer operation
 
