@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   project-checks:
-    name: Run project verification
+    name: Project checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

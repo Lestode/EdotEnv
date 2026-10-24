@@ -1,22 +1,15 @@
 name: Review comparison
 
 on:
-  workflow_dispatch:
-    inputs:
-      pull_request_number:
-        description: Open PR whose real checks should be verified on its test merge
-        required: true
-        type: string
   pull_request_target:
     types: [opened, reopened, ready_for_review, synchronize, edited]
   issue_comment:
     types: [created]
   workflow_run:
-    workflows: [API agent reviews, Verify project]
-    types: [in_progress, completed]
+    workflows: [API agent reviews]
+    types: [completed]
 
 permissions:
-  actions: read
   contents: read
   pull-requests: read
   checks: write
@@ -31,7 +24,6 @@ jobs:
       (github.event_name == 'pull_request_target' &&
        (github.event.action != 'edited' || github.event.changes.base)) ||
       github.event_name == 'workflow_run' ||
-      github.event_name == 'workflow_dispatch' ||
       (github.event.issue.pull_request && github.event.comment.user.type == 'User' &&
        (startsWith(github.event.comment.body, '/review-docs') ||
         startsWith(github.event.comment.body, '/review-implementation')))
@@ -44,31 +36,15 @@ jobs:
         with:
           script: |
             const run = context.payload.workflow_run;
-            let projectRun = false;
-            let number = context.payload.pull_request?.number || context.payload.issue?.number ||
-              Number(context.payload.inputs?.pull_request_number);
+            let number = context.payload.pull_request?.number || context.payload.issue?.number;
             let actor = context.eventName === 'issue_comment' ? context.payload.comment.user : context.payload.sender;
             if (context.eventName === 'workflow_run') {
               const path = run.path?.split('@')[0];
-              if (!['.github/workflows/documentation-review.yml', '.github/workflows/verify.yml'].includes(path)) return;
-              projectRun = path === '.github/workflows/verify.yml';
-              if (!projectRun && run.status !== 'completed') return;
-              number = projectRun
-                ? Number(run.pull_requests?.[0]?.number)
-                : Number(/^Review PR #([1-9][0-9]*)$/.exec(run.display_title || '')?.[1]);
+              if (!['.github/workflows/documentation-review.yml'].includes(path)) return;
+              number = Number(/^Review PR #([1-9][0-9]*)$/.exec(run.display_title || '')?.[1]);
               actor = run.actor;
             }
-            if (!Number.isSafeInteger(number) || number <= 0) return;
-            if (projectRun) {
-              // A native verification event may originate from a fork or bot.
-              // It is not permission to call a model or execute any PR code.
-              const { data: pull } = await github.rest.pulls.get({ ...context.repo, pull_number: number });
-              if (run.event !== 'pull_request' || pull.state !== 'open' || pull.head.sha !== run.head_sha) return;
-              core.setOutput('number', String(number));
-              core.setOutput('allowed', 'true');
-              return;
-            }
-            if (actor?.type !== 'User') return;
+            if (!Number.isSafeInteger(number) || number <= 0 || actor?.type !== 'User') return;
             const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
               ...context.repo, username: actor.login,
             });
@@ -81,12 +57,10 @@ jobs:
     if: needs.authorize.outputs.allowed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Serialize with the reviewer job so its source checks cannot change
-    # while this job verifies and publishes test-merge attestations.
+    # Only authorized jobs can enter this cancellation group.
     concurrency:
-      group: documentation-review-${{ needs.authorize.outputs.number }}
-      queue: max
-      cancel-in-progress: false
+      group: review-comparison-${{ needs.authorize.outputs.number }}
+      cancel-in-progress: true
     steps:
       # No checkout, model call, or secrets: only verify GitHub evidence.
       - uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
@@ -94,8 +68,6 @@ jobs:
           script: |
             const repo = context.repo;
             const number = context.payload.pull_request?.number || context.payload.issue?.number ||
-              Number(context.payload.inputs?.pull_request_number) ||
-              Number(context.payload.workflow_run?.pull_requests?.[0]?.number) ||
               Number(/^Review PR #([1-9][0-9]*)$/.exec(context.payload.workflow_run?.display_title || '')?.[1]);
             if (context.eventName === 'issue_comment') {
               const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
@@ -106,8 +78,7 @@ jobs:
             const required = ['Documentation reviewer', 'Implementation reviewer'];
             let comparison;
             let checkId;
-            let checkMerge;
-            for (let attempt = 0; attempt < 5; attempt++) {
+            for (let attempt = 0; attempt < 52; attempt++) {
               const { data: pull } = await github.rest.pulls.get({ ...repo, pull_number: number });
               const key = JSON.stringify([pull.head.sha, pull.base.sha, pull.base.ref]);
               if (pull.state !== 'open' || (comparison && comparison !== key)) {
@@ -124,13 +95,12 @@ jobs:
                 const { data: merge } = await github.rest.git.getCommit({ ...repo, commit_sha: pull.merge_commit_sha });
                 const parents = merge.parents.map(parent => parent.sha);
                 if (parents.length === 2 && parents.includes(pull.head.sha) && parents.includes(pull.base.sha)) {
-                  if (!checkId || checkMerge !== pull.merge_commit_sha) {
+                  if (!checkId) {
                     const { data } = await github.rest.checks.create({ ...repo,
                       name: 'Current review comparison', head_sha: pull.merge_commit_sha, status: 'in_progress',
                       output: { title: 'Waiting for both reviewers', summary: 'Reviews must match the current head, target commit, and target branch.' },
                     });
                     checkId = data.id;
-                    checkMerge = pull.merge_commit_sha;
                   }
                   const comments = await github.paginate(github.rest.issues.listComments, { ...repo, issue_number: number, per_page: 100 });
                   const assessments = comments.flatMap(comment => {
@@ -144,137 +114,23 @@ jobs:
                     } catch { return []; }
                   });
                   const reviewerChecks = await github.paginate(github.rest.checks.listForRef, { ...repo, ref: pull.head.sha, per_page: 100, filter: 'all' });
-                  // Test execution keeps a read-only token in its own job. This
-                  // serialized writer owns the required Project checks result.
-                  const candidates = reviewerChecks.filter(check =>
-                    check.name === 'Run project verification' && check.app?.slug === 'github-actions' &&
-                    check.head_sha === pull.head.sha).sort((a, b) => b.id - a.id);
-                  let native;
-                  let sourceStatus = 'in_progress', sourceConclusion;
-                  for (const candidate of candidates) {
-                    const { data: job } = await github.rest.actions.getJobForWorkflowRun({ ...repo, job_id: candidate.id });
-                    const { data: run } = await github.rest.actions.getWorkflowRun({ ...repo, run_id: job.run_id });
-                    if (job.id !== candidate.id || job.name !== 'Run project verification' ||
-                        run.path?.split('@')[0] !== '.github/workflows/verify.yml' ||
-                        run.event !== 'pull_request' || run.head_sha !== pull.head.sha ||
-                        !run.pull_requests?.some(item => item.number === number &&
-                          item.head.sha === pull.head.sha && item.base.sha === pull.base.sha &&
-                          item.base.ref === pull.base.ref)) continue;
-                    // Select by comparison first. Never fall back to an older
-                    // passing result when this comparison's newest result failed.
-                    native = candidate;
-                    if (candidate.status === 'completed' && job.status === 'completed' && run.status === 'completed') {
-                      sourceStatus = 'completed';
-                      sourceConclusion = candidate.conclusion === 'success' && job.conclusion === 'success' && run.conclusion === 'success'
-                        ? 'success' : 'failure';
-                    }
-                    break;
-                  }
-                  const eventRun = context.payload.workflow_run;
-                  if (context.eventName === 'workflow_run' && eventRun?.path?.split('@')[0] === '.github/workflows/verify.yml' &&
-                      eventRun.status !== 'completed') {
-                    const { data: liveRun } = await github.rest.actions.getWorkflowRun({ ...repo, run_id: eventRun.id });
-                    if (liveRun.head_sha === pull.head.sha && liveRun.status !== 'completed') {
-                      sourceStatus = 'in_progress';
-                      sourceConclusion = undefined;
-                    }
-                  }
-                  let project = reviewerChecks.filter(check => {
-                    if (check.name !== 'Project checks' || check.app?.slug !== 'github-actions' ||
-                        check.head_sha !== pull.head.sha) return false;
-                    try { return JSON.parse(check.output?.text || 'null')?.pullNumber === number; }
-                    catch { return false; }
-                  }).sort((a, b) => b.id - a.id)[0];
-                  let receipt;
-                  try { receipt = JSON.parse(project?.output?.text || 'null'); } catch {}
-                  const nativeId = native?.id ?? null;
-                  if (receipt?.sourceNativeCheckId !== nativeId || receipt?.base !== pull.base.sha ||
-                      receipt?.baseRef !== pull.base.ref || project?.status !== sourceStatus ||
-                      project?.conclusion !== (sourceConclusion ?? null)) {
-                    // Invalidate before changing this required head result. All
-                    // required source writers use this same authorized queue.
-                    for (const name of ['Project checks', 'Agent reviews completed', ...required]) {
-                      await github.rest.checks.create({ ...repo, name, head_sha: checkMerge,
-                        status: 'in_progress', output: {
-                          title: 'Project verification is being refreshed',
-                          summary: 'Current source checks must be verified before these attestations pass.',
-                        },
-                      });
-                    }
-                    const { data: updatedProject } = await github.rest.checks.create({ ...repo,
-                      name: 'Project checks', head_sha: pull.head.sha, status: sourceStatus,
-                      ...(sourceConclusion ? { conclusion: sourceConclusion } : {}),
-                      external_id: `project-verification:${number}:${nativeId}`,
-                      ...(native?.html_url ? { details_url: native.html_url } : {}),
-                      output: {
-                        title: native ? 'Verified native project result' : 'Waiting for native project verification',
-                        summary: 'This result is derived from Run project verification; no PR code executes in this writer.',
-                        text: JSON.stringify({ version: 1, pullNumber: number,
-                          sourceNativeCheckId: nativeId, head: pull.head.sha,
-                          base: pull.base.sha, baseRef: pull.base.ref }),
-                      },
-                    });
-                    reviewerChecks.push(updatedProject);
-                    project = updatedProject;
-                  }
-                  const reviewSources = new Map([['Project checks', project]]);
                   const complete = required.every(name => {
                     const checks = reviewerChecks.filter(check => {
-                      if (check.name !== name || check.app?.slug !== 'github-actions' ||
-                          check.head_sha !== pull.head.sha) return false;
+                      if (check.name !== name || check.app?.slug !== 'github-actions') return false;
                       try { return JSON.parse(check.output?.text || 'null')?.pullNumber === number; }
                       catch { return false; }
                     });
                     const latest = checks.sort((a, b) => b.id - a.id)[0];
-                    reviewSources.set(name, latest);
                     const assessment = assessments.filter(report => report.checkId === latest?.id).at(-1);
                     return latest?.status === 'completed' && latest.conclusion === 'success' &&
                       assessment && latest.external_id === `${assessment.id}:complete` &&
                       ['clear', 'findings'].includes(assessment.outcome);
                   });
-                  // GitHub selects the test merge's checks once it has any status.
-                  // Keep the head checks authoritative, and attest their verified results
-                  // on that same test merge instead of leaving required names Expected.
-                  const names = ['Project checks', 'Agent reviews completed', ...required];
-                  const sources = names.map(name => reviewSources.has(name) ? reviewSources.get(name) : reviewerChecks.filter(check =>
-                    check.name === name && check.app?.slug === 'github-actions' &&
-                    check.head_sha === pull.head.sha).sort((a, b) => b.id - a.id)[0]);
-                  const sourceChecksPassed = sources.every(check =>
-                    check?.status === 'completed' && check.conclusion === 'success');
-                  // Never hold the shared queue waiting for a reviewer behind us.
-                  // Reviewer completion will request a fresh comparison job.
-                  if (!complete || !sourceChecksPassed) break;
-                  if (complete && sourceChecksPassed) {
+                  if (complete) {
                     // Recheck after reading reports/checks; never certify a moving comparison.
                     const { data: current } = await github.rest.pulls.get({ ...repo, pull_number: number });
                     if (current.state === 'open' && current.merge_commit_sha === pull.merge_commit_sha &&
                         JSON.stringify([current.head.sha, current.base.sha, current.base.ref]) === comparison) {
-                      for (const source of sources) {
-                        await github.rest.checks.create({ ...repo, name: source.name,
-                          head_sha: checkMerge, status: 'completed', conclusion: 'success',
-                          external_id: `comparison:${number}:${source.id}:${checkMerge}`,
-                          details_url: source.html_url,
-                          output: {
-                            title: 'Verified result for this test merge',
-                            summary: `The real ${source.name} check passed on ${pull.head.sha}. ` +
-                              `Both finalized reviews cover target ${pull.base.sha} (${pull.base.ref}). ` +
-                              'This attestation does not execute tests or waive findings.',
-                            text: JSON.stringify({ version: 1, pullNumber: number,
-                              sourceCheckId: source.id, head: pull.head.sha,
-                              base: pull.base.sha, baseRef: pull.base.ref, testMerge: checkMerge }),
-                          },
-                        });
-                      }
-                      // Publication can take time. Do not certify a comparison that moved.
-                      const { data: published } = await github.rest.pulls.get({ ...repo, pull_number: number });
-                      if (published.state !== 'open' || published.merge_commit_sha !== checkMerge ||
-                          JSON.stringify([published.head.sha, published.base.sha, published.base.ref]) !== comparison) {
-                        await github.rest.checks.update({ ...repo, check_run_id: checkId,
-                          status: 'completed', conclusion: 'failure', output: {
-                            title: 'PR changed during publication', summary: 'Fresh verification is required.',
-                          } });
-                        return;
-                      }
                       await github.rest.checks.update({ ...repo, check_run_id: checkId, status: 'completed', conclusion: 'success',
                         output: { title: 'Both reviews match this comparison', summary: 'Both reviews are complete with no unresolved findings, including recorded human dismissals.' } });
                       return;
@@ -282,11 +138,11 @@ jobs:
                   }
                 }
               }
-              if (attempt < 4) await new Promise(resolve => setTimeout(resolve, 1500));
+              if (attempt < 51) await new Promise(resolve => setTimeout(resolve, 15000));
             }
             if (checkId) await github.rest.checks.update({ ...repo, check_run_id: checkId,
               status: 'completed', conclusion: 'failure', output: {
                 title: 'Current comparison still needs review',
-                summary: 'A required head check or current review is missing, failed, incomplete, or has unresolved findings. Reviewer completion refreshes verification; manual dispatch can retry without a model call.',
+                summary: 'A reviewer is missing, incomplete, or has unresolved findings. Fix and push, retry the reviewer, or explicitly dismiss findings. A review command refreshes this check.',
               } });
             core.setFailed('Both reviewers have not passed for the current PR comparison.');

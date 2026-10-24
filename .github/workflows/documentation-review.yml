@@ -63,47 +63,6 @@ jobs:
               ...context.repo, branch: context.payload.repository.default_branch,
             });
             core.setOutput('sha', data.commit.sha);
-            // Defer source-check changes until current merge results can be invalidated.
-            const actor = context.eventName === 'issue_comment'
-              ? context.payload.comment.user : context.payload.sender;
-            if (actor?.type === 'User' && head === pull.head.sha) {
-              const { data: access } = await github.rest.repos.getCollaboratorPermissionLevel({
-                ...context.repo, username: actor.login,
-              });
-              if (['write', 'maintain', 'admin'].includes(access.permission)) {
-                let invalidated = false;
-                for (let retry = 0; retry < 4; retry++) {
-                  const { data: current } = await github.rest.pulls.get({ ...context.repo, pull_number: number });
-                  if (current.state !== 'open' || current.head.sha !== head ||
-                      current.base.sha !== pull.base.sha || current.base.ref !== pull.base.ref) {
-                    throw new Error('PR comparison changed before review; request a fresh review.');
-                  }
-                  if (current.merge_commit_sha) {
-                    const { data: merge } = await github.rest.git.getCommit({
-                      ...context.repo, commit_sha: current.merge_commit_sha,
-                    });
-                    const parents = merge.parents.map(parent => parent.sha);
-                    if (parents.length === 2 && parents.includes(head) && parents.includes(current.base.sha)) {
-                      for (const name of ['Project checks', 'Agent reviews completed',
-                        'Documentation reviewer', 'Implementation reviewer', 'Current review comparison']) {
-                        await github.rest.checks.create({ ...context.repo, name,
-                          head_sha: current.merge_commit_sha, status: 'in_progress',
-                          output: { title: 'A review request is being assessed',
-                            summary: 'Previous merge attestations are invalid until current source checks and reviews are verified again.',
-                            text: JSON.stringify({ version: 1, pullNumber: number,
-                              head, base: current.base.sha, baseRef: current.base.ref }),
-                          },
-                        });
-                      }
-                      invalidated = true;
-                      break;
-                    }
-                  }
-                  if (retry < 3) await new Promise(resolve => setTimeout(resolve, 500));
-                }
-                if (!invalidated) throw new Error('Current merge could not be verified; review deferred before changing source checks.');
-              }
-            }
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ steps.reviewer.outputs.sha }}
@@ -190,7 +149,7 @@ jobs:
                 await readProjectFile(root, '.github/documentation-review.json', 8000)],
               ['Accepted .github/workflows/documentation-review.yml: resolver',
                 section(await readProjectFile(root, '.github/workflows/documentation-review.yml', 20000),
-                  'const number = Number(', '      - uses: actions/checkout').replace(/^ {12}/gm, '')],
+                  'const number = Number(', '      - uses: actions/checkout')],
             ];
             const documentationEvidence = [
               ['README.md (blocking policy and implementation behavior)',
