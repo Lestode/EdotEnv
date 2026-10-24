@@ -144,28 +144,39 @@ jobs:
                     } catch { return []; }
                   });
                   const reviewerChecks = await github.paginate(github.rest.checks.listForRef, { ...repo, ref: pull.head.sha, per_page: 100, filter: 'all' });
-                  const latestHead = name => reviewerChecks.filter(check =>
-                    check.name === name && check.app?.slug === 'github-actions' &&
-                    check.head_sha === pull.head.sha).sort((a, b) => b.id - a.id)[0];
                   // Test execution keeps a read-only token in its own job. This
                   // serialized writer owns the required Project checks result.
-                  const native = latestHead('Run project verification');
+                  const candidates = reviewerChecks.filter(check =>
+                    check.name === 'Run project verification' && check.app?.slug === 'github-actions' &&
+                    check.head_sha === pull.head.sha).sort((a, b) => b.id - a.id);
+                  let native;
                   let sourceStatus = 'in_progress', sourceConclusion;
-                  if (native) {
-                    const { data: job } = await github.rest.actions.getJobForWorkflowRun({ ...repo, job_id: native.id });
+                  for (const candidate of candidates) {
+                    const { data: job } = await github.rest.actions.getJobForWorkflowRun({ ...repo, job_id: candidate.id });
                     const { data: run } = await github.rest.actions.getWorkflowRun({ ...repo, run_id: job.run_id });
-                    if (job.id !== native.id || job.name !== 'Run project verification' ||
+                    if (job.id !== candidate.id || job.name !== 'Run project verification' ||
                         run.path?.split('@')[0] !== '.github/workflows/verify.yml' ||
                         run.event !== 'pull_request' || run.head_sha !== pull.head.sha ||
                         !run.pull_requests?.some(item => item.number === number &&
                           item.head.sha === pull.head.sha && item.base.sha === pull.base.sha &&
-                          item.base.ref === pull.base.ref)) {
-                      throw new Error('The project result is not from the current verification workflow.');
-                    }
-                    if (native.status === 'completed' && job.status === 'completed') {
+                          item.base.ref === pull.base.ref)) continue;
+                    // Select by comparison first. Never fall back to an older
+                    // passing result when this comparison's newest result failed.
+                    native = candidate;
+                    if (candidate.status === 'completed' && job.status === 'completed' && run.status === 'completed') {
                       sourceStatus = 'completed';
-                      sourceConclusion = native.conclusion === 'success' && job.conclusion === 'success'
+                      sourceConclusion = candidate.conclusion === 'success' && job.conclusion === 'success' && run.conclusion === 'success'
                         ? 'success' : 'failure';
+                    }
+                    break;
+                  }
+                  const eventRun = context.payload.workflow_run;
+                  if (context.eventName === 'workflow_run' && eventRun?.path?.split('@')[0] === '.github/workflows/verify.yml' &&
+                      eventRun.status !== 'completed') {
+                    const { data: liveRun } = await github.rest.actions.getWorkflowRun({ ...repo, run_id: eventRun.id });
+                    if (liveRun.head_sha === pull.head.sha && liveRun.status !== 'completed') {
+                      sourceStatus = 'in_progress';
+                      sourceConclusion = undefined;
                     }
                   }
                   let project = reviewerChecks.filter(check => {

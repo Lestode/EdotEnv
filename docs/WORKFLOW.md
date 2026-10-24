@@ -177,9 +177,12 @@ Comparison publication shares the reviewer's authorized, non-canceling per-PR
 queue so reviewer results cannot change during publication. Before an authorized
 review request can change a head check, its resolver invalidates all five merge
 attestations on the verified current merge. Unauthorized and stale-head review
-requests cannot invalidate them. Native tests run separately as
+requests cannot invalidate them. If the merge reference is missing or has the
+wrong parents, the resolver retries briefly and then defers the review before
+any source check changes. Native tests run separately as
 `Run project verification` with read-only permissions. The serialized comparison
-writer verifies that native job's workflow path, run event, and exact head, then
+writer selects the latest native result belonging to this exact PR/comparison,
+verifies its workflow path and run event, then
 updates the required `Project checks` result only after invalidating its merge
 copies. Thus both reviewer and project-result writers coordinate through the
 same queue without giving test code check-write credentials. Native verification
