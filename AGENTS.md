@@ -39,15 +39,12 @@ Use a `codex/` feature branch and a pull request for every change after the init
 ## Confirmed decisions
 
 - The teacher will be an accessible model.
+- Komondor is the target compute cluster; authenticated access and an A100 Slurm allocation have been verified. See [hardware planning](docs/HARDWARE.md) for evidence and remaining validation.
 - For now, the user manages collaboration and access in this repository.
 - Always bring conflicting information to the user for review before resolving it, including conflicts introduced by a new request. Follow the [finding-resolution and conflict policy](docs/WORKFLOW.md#finding-resolution-and-conflicts) for review findings, consequences, and recorded decisions.
 - When using tools or systems developed by the user or the company, use their documented configuration and supported interfaces. Report limitations before changing their implementation or adding local capabilities; follow the [supported-interface policy](docs/WORKFLOW.md#supported-interfaces-for-user-and-company-systems).
 - The documentation and implementation reviewers use the user's OpenAI API key on a GitHub-hosted runner; setup and activation are tracked in [the development workflow](docs/WORKFLOW.md).
 - This repository is public. Keep the shared reviewer repository private and fetch its pinned source in CI using a dedicated read-only deploy key. Require completed agent reviews on the latest PR commit before merging; activation is tracked in [the development workflow](docs/WORKFLOW.md).
-
-## Working assumptions
-
-- A100 GPU nodes may be available on Komondor; compute-node hardware and allocation permissions remain unverified. See [hardware planning](docs/HARDWARE.md).
 
 ## Open questions
 
@@ -57,7 +54,7 @@ These do not block local design and implementation. Resolve each before the run 
 - Scope: system-prompt distillation, experiential-knowledge distillation, or both? If experiential, how is knowledge generated and accumulated?
 - Context/data: which datasets and teacher-only contexts, who grants access, and where may they be processed and stored?
 - Teacher scoring: which backend exposes probabilities for the student's top-256 token IDs at every response position? See [implementation work](docs/TODO.md). Is a separate scalar grading reward also wanted?
-- Compute access: which Komondor GPU types/VRAM/count, allocation budget, job limits, project access, and scheduler permissions?
+- Compute sizing: which GPU/node counts and per-run budget should OPCD use within the verified Komondor project access? Multi-node execution remains unvalidated; see [hardware planning](docs/HARDWARE.md).
 - Runtime: which GPU container runtime/images are permitted, and can we install modified code and fetch dependencies/model weights?
 - Distribution: one managed cluster or independent sites? Are concurrent multi-node jobs and Ray/NCCL/teacher-service connections permitted?
 - Storage: where do model caches, checkpoints, rollouts, and logs live? What quotas and worker access are available?

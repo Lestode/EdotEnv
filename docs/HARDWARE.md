@@ -1,10 +1,8 @@
 # Hardware planning
 
-Status, 2026-10-24: Komondor is the target cluster. SSH access to the greengoblin
-gateway is verified, and the gateway's existing Komondor SSH alias reaches the
-cluster's browser-based eduID authentication step. Cluster login has not yet
-been completed in this session. No compute allocation, compute-node inventory,
-or GPU validation has been performed; A100 availability remains an assumption.
+Status, 2026-10-24: Komondor login through the existing greengoblin gateway is
+verified. A one-GPU Slurm inventory job completed successfully on an A100.
+The Slime runtime, OPCD training, and distributed execution remain unvalidated.
 
 ## Access boundary
 
@@ -12,6 +10,44 @@ Follow the [protected-infrastructure rule](../AGENTS.md#protected-infrastructure
 for all access through greengoblin. Perform runtime setup and workload validation
 on authorized Komondor resources. The gateway's hardware and software inventory
 does not establish the cluster's available compute resources or runtime.
+
+## Observed cluster resources and limits
+
+- Slurm advertises four A100-SXM4-40GB GPUs per standard `gpu` node (one node
+  currently advertises three), eight GPUs per `ai` node, and four A100 GPUs on
+  the one-hour `test` partition. Only a one-GPU `test` allocation has been run.
+- The project association permits `normal` and `lowpri` QOS, with `normal` as
+  the default, and reports GPU-hour balance available. This does not establish
+  an agreed budget for training runs or validate multi-node execution.
+- `apptainer --version` reports 1.4.4. Module listings also expose Singularity,
+  CUDA, and PyTorch environments, including PyTorch 2.4.1. Listing a module does
+  not establish compatibility with the pinned Slime stack.
+- Project storage has byte and file-count headroom. Scratch storage is at its
+  hard file-count limit (330,000 files); new files there may fail. Establish a
+  working cache, temporary-file, and output layout before staging software or
+  model weights. Existing project data has not been removed.
+
+## Single-GPU inventory evidence
+
+Slurm job `14640312` used one GPU, two CPU cores, and 4 GiB RAM on `test`, with a
+two-minute walltime limit. Accounting reports `COMPLETED`, elapsed `00:00:01`,
+and exit code `0:0`. Substitute an authorized project account in the command:
+
+```sh
+srun --immediate=10 --account=<project-account> --partition=test \
+  --nodes=1 --ntasks=1 --cpus-per-task=2 --mem=4G --gpus=1 \
+  --time=00:02:00 --job-name=opcd-inventory \
+  nvidia-smi --query-gpu=index,name,memory.total,driver_version --format=csv,noheader
+```
+
+Observed output:
+
+```text
+0, NVIDIA A100-SXM4-40GB, 40960 MiB, 615.71.09
+```
+
+This verifies access to an allocated GPU and its driver, not model execution,
+BF16 kernels, container GPU passthrough, Slime compatibility, or OPCD correctness.
 
 ## A100 compatibility findings
 
@@ -22,9 +58,9 @@ does not establish the cluster's available compute resources or runtime.
 
 ## Proposed validation sequence
 
-1. Complete Komondor authentication through the existing gateway setup; inspect project permissions, partitions, allocation limits, storage, and supported runtimes on the cluster. On an allocated compute node, confirm GPU model, VRAM, GPU count, driver, interconnect, and supported container runtime.
+1. Complete the resource inventory beyond the single-GPU probe above: verify the intended node/GPU counts, interconnect, storage layout, and container GPU passthrough on allocated resources.
 2. Select and pin a compatible runtime; validate required native extensions on A100.
 3. Start with BF16, short sequences, and a small compatible model pair for a correctness check. Final DeepSeek checkpoints remain undecided.
 4. Verify student generation, teacher token scoring, and one training update on one node, then repeat across nodes.
 
-Local work can proceed on separate context construction, response-token alignment, the top-256 objective, and data transport. GPU execution requires cluster access and a validated runtime; final sizing remains deferred.
+Local work can proceed on separate context construction, response-token alignment, the top-256 objective, and data transport. GPU training still requires a validated runtime and storage layout; final sizing remains deferred.
