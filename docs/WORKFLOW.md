@@ -183,7 +183,7 @@ check-publication interfaces used by the caller. Both disclosures to the OpenAI 
 by the user. The private checkout is never published as review context.
 
 The merge gate uses the shared actions' existing checks on the PR head. The
-separate polling comparison workflow is removed; there is no test-merge review
+separate polling comparison workflow is disabled; there is no test-merge review
 check or additional agent review. Strict up-to-date branch protection remains
 enabled: when `main` advances, update the PR branch and obtain new reviews on
 its resulting commit. Only the latest reviewed PR commit may merge.
@@ -338,7 +338,7 @@ every new commit requires fresh reviews. The prepared
 `Project checks`, `Documentation reviewer`, and `Implementation reviewer`, each
 bound to GitHub Actions, with strict up-to-date checking. `Current review
 comparison` and `Agent reviews completed` are no longer selected as requirements.
-The polling workflow and optional completion-check invocation are removed.
+The polling workflow is disabled and the optional completion-check invocation is removed.
 Private experiment audits are outside the public-change review unless explicitly
 included; their unavailable evidence is reported as unverified coverage.
 
@@ -347,7 +347,9 @@ Readback confirmed all three names bound to GitHub Actions, strict up-to-date
 checking, and identical settings for every other branch protection, including
 administrator enforcement, PRs, resolved conversations, and force-push/deletion
 restrictions. The obsolete comparison workflow was disabled through GitHub's
-workflow configuration while its file removal awaits merge. The shared reviewer
+workflow configuration. Its unchanged source file remains available because the
+accepted reviewer configuration still reads it during this transition; the new
+configuration stops collecting that retired workflow. The shared reviewer
 implementation and pin remain unchanged. Updated scope customization takes effect
 only after this configuration PR is accepted on the default branch; an existing
 incomplete report does not silently become successful.
