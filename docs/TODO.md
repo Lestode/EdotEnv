@@ -83,6 +83,9 @@ pilot; it does not implement OPCD training or establish distillability.
 - [x] Add synthetic CPU tests for condition differences, changed inputs,
   rejected/missing/corrupt scores, valid zero/negative scores, cost stops, and
   repeat-execution refusal; validate the pinned Harbor instruction/config contract.
+- [x] Isolate cloud cleanup from result collection and reporting; add offline
+  regressions for disk-full execution/summary writes after successful and failed
+  trials, result-collection errors, and client closure after cleanup-report failure.
 - [x] Implement collection of final hidden IC, failure counts, and per-trial evidence;
   keep the licensed task and private run outputs out of the public repository.
 - [x] Validate Docker builds, MCP connectivity, submission artifact transfer, and

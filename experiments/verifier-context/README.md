@@ -187,7 +187,13 @@ Every sandbox is labelled with its study ID and configured for deletion on
 completion, with a 30-minute inactivity stop and immediate deletion after stop
 as a fallback. On completion or interruption the runner also deletes remaining
 sandboxes bearing that study’s label and verifies none remain, writing
-`cloud-cleanup.json`. Cleanup failures must be resolved in Daytona. Auto-stop
+`cloud-cleanup.json`. Result collection or report-writing failures cannot skip
+this cleanup attempt; reporting errors still propagate, and a failed cleanup
+report write cannot prevent the Daytona client from closing. Offline regression
+tests inject disk-full failures for execution metadata and each summary output,
+after successful and failed trials, plus result-collection and cleanup-report
+failures. These tests do not establish live deletion during a controller disk
+failure. Cleanup failures must be resolved in Daytona. Auto-stop
 measures inactivity, not total runtime, and is not a spending cap. A killed
 launcher can leave resources until fallback cleanup occurs.
 

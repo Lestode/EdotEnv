@@ -3,6 +3,7 @@
 import asyncio
 from builtins import ExceptionGroup
 import copy
+import errno
 import importlib.util
 import os
 from pathlib import Path
@@ -318,6 +319,107 @@ class ComparisonTests(unittest.TestCase):
         cleanup.assert_awaited_once_with(self.root, self.plan)
         execution = comparison.read_json(self.root / "execution.json")
         self.assertAlmostEqual(execution["observed_cost_usd"], 0.03)
+
+    def test_reporting_write_failures_still_clean_up_cloud_resources(self):
+        open_path = Path.open
+        for filename in ("execution.json", "summary.json", "summary.md", "scores.csv"):
+            for trial_fails in (False, True):
+                with self.subTest(filename=filename, trial_fails=trial_fails):
+                    self.root = self.base / f"{filename}-{trial_fails}"
+                    plan = comparison.prepare(
+                        self.source, self.root, "openai/test-model", backend="daytona"
+                    )
+                    failed_path = self.root / filename
+
+                    def fail_report(path, mode="r", *args, **kwargs):
+                        # Allow the initial exclusive execution marker and trial
+                        # artifacts; fail the real final report write only.
+                        if path == failed_path and mode == "w":
+                            raise OSError(errno.ENOSPC, "No space left", str(path))
+                        return open_path(path, mode, *args, **kwargs)
+
+                    async def fake_trial(root, plan, trial):
+                        self.result(trial, cost=0.03)
+                        if trial_fails:
+                            raise RuntimeError("trial failed")
+
+                    with (
+                        patch.object(comparison, "preflight"),
+                        patch.object(comparison, "run_trial", side_effect=fake_trial),
+                        patch.object(Path, "open", new=fail_report),
+                        patch.object(
+                            comparison, "cleanup_daytona", new_callable=AsyncMock
+                        ) as cleanup,
+                    ):
+                        with self.assertRaises(OSError) as raised:
+                            asyncio.run(comparison.execute(self.root, plan, 0.01))
+                    self.assertEqual(raised.exception.errno, errno.ENOSPC)
+                    self.assertEqual(raised.exception.filename, str(failed_path))
+                    if trial_fails:
+                        self.assertIsInstance(
+                            raised.exception.__context__, ExceptionGroup
+                        )
+                    cleanup.assert_awaited_once_with(self.root, plan)
+
+    def test_final_result_collection_failure_still_cleans_up_cloud_resources(self):
+        self.plan["environment"] = {"type": "daytona", "delete": True}
+        collect_trial = comparison.collect_trial
+        calls = 0
+
+        def fail_final_collection(root, trial):
+            nonlocal calls
+            calls += 1
+            if calls > 1:
+                raise OSError(errno.EIO, "Cannot read trial artifacts")
+            return collect_trial(root, trial)
+
+        async def fake_trial(root, plan, trial):
+            self.result(trial, cost=0.03)
+
+        with (
+            patch.object(comparison, "preflight"),
+            patch.object(comparison, "run_trial", side_effect=fake_trial),
+            patch.object(
+                comparison, "collect_trial", side_effect=fail_final_collection
+            ),
+            patch.object(
+                comparison, "cleanup_daytona", new_callable=AsyncMock
+            ) as cleanup,
+        ):
+            with self.assertRaisesRegex(OSError, "Cannot read trial artifacts"):
+                asyncio.run(comparison.execute(self.root, self.plan, 0.01))
+        cleanup.assert_awaited_once_with(self.root, self.plan)
+
+    def test_cleanup_report_failure_still_closes_client_after_deletion(self):
+        from types import SimpleNamespace
+
+        sandbox = SimpleNamespace(
+            id="owned-sandbox",
+            delete=AsyncMock(),
+            labels={"edot.study": self.plan["study_id"]},
+        )
+        calls = 0
+
+        async def listed(query, request_timeout):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                yield sandbox
+
+        client = SimpleNamespace(list=listed, close=AsyncMock())
+        with (
+            patch("daytona.AsyncDaytona", return_value=client),
+            patch.object(
+                comparison,
+                "write_json",
+                side_effect=OSError(errno.ENOSPC, "No space left"),
+            ),
+        ):
+            with self.assertRaises(OSError):
+                asyncio.run(comparison.cleanup_daytona(self.root, self.plan))
+        sandbox.delete.assert_awaited_once_with(timeout=60, wait=True)
+        self.assertEqual(calls, 2)
+        client.close.assert_awaited_once()
 
     def test_daytona_cleanup_filters_study_and_verifies_deletion(self):
         from types import SimpleNamespace

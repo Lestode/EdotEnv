@@ -413,15 +413,17 @@ async def cleanup_daytona(root, plan):
             raise RuntimeError(f"Study sandboxes remain after cleanup: {remaining}")
         status = "verified_empty"
     finally:
-        write_json(
-            root / "cloud-cleanup.json",
-            {
-                "status": status,
-                "deleted": deleted,
-                "remaining": remaining,
-            },
-        )
-        await client.close()
+        try:
+            write_json(
+                root / "cloud-cleanup.json",
+                {
+                    "status": status,
+                    "deleted": deleted,
+                    "remaining": remaining,
+                },
+            )
+        finally:
+            await client.close()
 
 
 async def execute(root, plan, max_total_cost):
@@ -465,26 +467,30 @@ async def execute(root, plan, max_total_cost):
         state = "interrupted_or_failed"
         raise
     finally:
-        rows = [collect_trial(root, trial) for trial in plan["trials"]]
-        # Include calls made by a cancelled trial when Harbor saved its usage.
-        spent = sum(row["cost_usd"] or 0 for row in rows)
-        write_json(
-            root / "execution.json",
-            {
-                "max_total_cost_usd": max_total_cost,
-                "state": state,
-                "observed_cost_usd": spent,
-                "cost_scope": "reported model API usage only; excludes cloud hosting",
-                "unknown_cost_trials": [
-                    row["id"]
-                    for row in rows
-                    if row["status"] != "not_run" and row["cost_usd"] is None
-                ],
-            },
-        )
-        summarize(root, plan)
-        if plan.get("environment", {}).get("type") == "daytona":
-            await cleanup_daytona(root, plan)
+        try:
+            rows = [collect_trial(root, trial) for trial in plan["trials"]]
+            # Include calls made by a cancelled trial when Harbor saved its usage.
+            spent = sum(row["cost_usd"] or 0 for row in rows)
+            write_json(
+                root / "execution.json",
+                {
+                    "max_total_cost_usd": max_total_cost,
+                    "state": state,
+                    "observed_cost_usd": spent,
+                    "cost_scope": "reported model API usage only; excludes cloud hosting",
+                    "unknown_cost_trials": [
+                        row["id"]
+                        for row in rows
+                        if row["status"] != "not_run" and row["cost_usd"] is None
+                    ],
+                },
+            )
+            summarize(root, plan)
+        finally:
+            # Reporting can fail (for example, on a full controller disk).
+            # Resource deletion must still run and surface any cleanup failure.
+            if plan.get("environment", {}).get("type") == "daytona":
+                await cleanup_daytona(root, plan)
 
 
 def main():
