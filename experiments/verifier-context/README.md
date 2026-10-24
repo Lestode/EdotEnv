@@ -356,7 +356,25 @@ transient conflict, checks final absence, and fails if any owned resource remain
 This cleanup-only fix follows the completed study; prepare a fresh study for any
 new paid run rather than rewriting its frozen runner hash.
 
-### Astra follow-up
+### Corrected-budget Astra rerun
+
+The user authorized a fresh Astra comparison on 2026-10-24: 20 rollouts per arm,
+a $40 model-API spending target, and modest Daytona hosting extra. The private
+study is `runs/astra-03`; its operator scripts, reference checks, and controller
+records live together under `ops/`. Historical studies remain separate.
+
+Both arms receive the corrected runtime notice, including possible study-wide
+spending or infrastructure interruptions. Settings are 30 turns, 1,800 agent
+seconds, 4,096 output tokens per response, and six concurrent trials. Each trial
+uses 4 CPUs, 8 GiB RAM, and 10 GiB disk within the account's sandbox limits.
+The reused detached supervisor monitors usage, checks actual initial prompts,
+and retains results on the stopped controller until verified download and deletion.
+Its live usage guard is $30 to leave room below the $40 target for in-flight
+calls; neither amount is a hard billing cap. Reference validation must pass
+before paid agent rollouts start. This preparation is not a claim of completed
+rollouts or improved results.
+
+### Historical Astra follow-up
 
 The user requested a separate comparison with `openai/gpt-6-astra`: 20 baseline
 rollouts and 20 with the same research Markdown. The fresh study preserves the

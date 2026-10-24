@@ -73,6 +73,9 @@ def runtime_limits_text(plan):
         "and waiting during agent execution consume the time budget. "
         "No automatic remaining-turn or remaining-time countdown is provided.",
         "",
+        "Study-wide spending safeguards or infrastructure failures can interrupt "
+        "a trial earlier. Such interruptions are reported separately from task outcomes.",
+        "",
         "Register the final model with submit_model before either limit is reached. "
         "Research-tool attempt allowances are separate and do not extend these limits.",
     ]
