@@ -62,6 +62,7 @@ Completion evidence: single-worker and distributed runs agree on loss/gradients 
 ### 5. Validate progressively
 
 - [ ] Run local tests for context separation, alignment, objective gradients, and tensor transport using synthetic inputs and a mock scorer.
+- [ ] Complete Komondor authentication through the existing gateway setup under the [protected-infrastructure rule](../AGENTS.md#protected-infrastructure-greengoblin); confirm project permissions, allocation limits, supported runtimes, and storage on the cluster before preparing a GPU run.
 - [ ] Execute the [GPU validation sequence](HARDWARE.md#proposed-validation-sequence), checking teacher immutability, fresh student rollouts, and context separation throughout.
 - [ ] Record working commands, pinned dependencies/checkpoints, and measured memory/throughput.
 

@@ -14,6 +14,24 @@ Keep supporting project documentation in `docs/` and follow [documentation rules
 
 Track implementation gaps and validation work in [the OPCD TODO](docs/TODO.md).
 
+## Protected infrastructure: greengoblin
+
+**Never modify anything on greengoblin.** It is an existing SSH gateway to the
+Komondor cluster, not a project execution host. Only read-only inspection and
+transit through its existing SSH setup are permitted.
+
+- Do not create, edit, or delete files on greengoblin, including temporary files,
+  repositories, caches, SSH keys, known-hosts files, or SSH configuration.
+- Do not install, update, or remove software; change accounts, permissions,
+  services, containers, networking, or firewall settings; or restart services.
+- Do not run builds, student generation, teacher scoring, or training workloads
+  on greengoblin. Prepare artifacts locally and use authorized Komondor compute
+  allocations for cluster execution.
+- Use SSH transit settings that preserve gateway state; do not automatically
+  add host keys or create persistent SSH control sockets on the gateway.
+- If an operation would require a gateway change, stop that operation, report
+  the limitation, and pursue an approach that respects this restriction.
+
 ## Development workflow
 
 Use a `codex/` feature branch and a pull request for every change after the initial repository bootstrap. Follow [the development workflow](docs/WORKFLOW.md) for required checks, review requests, acceptance, and merge conditions. Do not push changes directly to `main` or merge without explicit user acceptance of the PR.
@@ -29,7 +47,7 @@ Use a `codex/` feature branch and a pull request for every change after the init
 
 ## Working assumptions
 
-- A100 GPU nodes may be available; hardware and access are unconfirmed. See [hardware planning](docs/HARDWARE.md).
+- A100 GPU nodes may be available on Komondor; compute-node hardware and allocation permissions remain unverified. See [hardware planning](docs/HARDWARE.md).
 
 ## Open questions
 
@@ -39,7 +57,7 @@ These do not block local design and implementation. Resolve each before the run 
 - Scope: system-prompt distillation, experiential-knowledge distillation, or both? If experiential, how is knowledge generated and accumulated?
 - Context/data: which datasets and teacher-only contexts, who grants access, and where may they be processed and stored?
 - Teacher scoring: which backend exposes probabilities for the student's top-256 token IDs at every response position? See [implementation work](docs/TODO.md). Is a separate scalar grading reward also wanted?
-- Compute access: which cluster, GPU types/VRAM/count, allocation budget, job limits, SSH access, and scheduler permissions?
+- Compute access: which Komondor GPU types/VRAM/count, allocation budget, job limits, project access, and scheduler permissions?
 - Runtime: which GPU container runtime/images are permitted, and can we install modified code and fetch dependencies/model weights?
 - Distribution: one managed cluster or independent sites? Are concurrent multi-node jobs and Ray/NCCL/teacher-service connections permitted?
 - Storage: where do model caches, checkpoints, rollouts, and logs live? What quotas and worker access are available?
