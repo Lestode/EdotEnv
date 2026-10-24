@@ -22,6 +22,7 @@ from uuid import uuid4
 HERE = Path(__file__).resolve().parent
 HARBOR_VERSION = "0.20.0"
 METRIC = "weighted_pearson_ic"
+MAX_OUTPUT_TOKENS = 4096
 
 
 def read_json(path):
@@ -50,6 +51,39 @@ def fingerprint(root):
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def runtime_limits_text(plan):
+    """Common execution facts, independent of the research-guidance treatment."""
+    lines = [
+        "# Actual execution limits for this comparison",
+        "",
+        "These runner-enforced limits override any different time or turn "
+        "allowance stated earlier in the task description.",
+        "",
+        f"- Maximum agent turns: {plan['max_turns']}.",
+        f"- Agent execution time limit: {plan['agent_seconds']} seconds "
+        f"({plan['agent_seconds'] / 60:g} minutes), starting when agent execution begins.",
+        f"- Maximum output tokens per model response: {MAX_OUTPUT_TOKENS}.",
+        "",
+        "A turn is one agent response in the execution loop. Responses used to "
+        "poll, wait, debug, or confirm completion count toward the same turn limit. "
+        "A response can contain multiple shell commands. Model calls, commands, "
+        "and waiting during agent execution consume the time budget. "
+        "No automatic remaining-turn or remaining-time countdown is provided.",
+        "",
+        "Register the final model with submit_model before either limit is reached. "
+        "Research-tool attempt allowances are separate and do not extend these limits.",
+    ]
+    resources = plan.get("environment", {})
+    for field, label in (
+        ("override_cpus", "CPUs"),
+        ("override_memory_mb", "memory in MiB"),
+        ("override_storage_mb", "storage in MiB"),
+    ):
+        if field in resources:
+            lines.append(f"- Configured sandbox {label}: {resources[field]}.")
+    return "\n".join(lines) + "\n"
 
 
 def prepare(
@@ -118,7 +152,7 @@ def prepare(
                 {"id": f"{study_id}-pair-{pair:02d}-{arm}", "pair": pair, "arm": arm}
             )
     plan = {
-        "schema_version": 1,
+        "schema_version": 2,
         "study_id": study_id,
         "harbor_version": HARBOR_VERSION,
         "model": model,
@@ -132,6 +166,9 @@ def prepare(
         "guidance_sha256": digest(destination / "guidance.md"),
         "trials": trials,
     }
+    runtime_limits = destination / "runtime-limits.md"
+    runtime_limits.write_text(runtime_limits_text(plan))
+    plan["runtime_limits_sha256"] = digest(runtime_limits)
     write_json(destination / "plan.json", plan)
     return plan
 
@@ -147,6 +184,15 @@ def verify_frozen(root, plan):
         raise ValueError("Task changed after preparation; prepare a new comparison")
     if digest(root / "guidance.md") != plan["guidance_sha256"]:
         raise ValueError("Guidance changed after preparation; prepare a new comparison")
+    limits = root / "runtime-limits.md"
+    if (
+        not limits.is_file()
+        or digest(limits) != plan.get("runtime_limits_sha256")
+        or limits.read_text() != runtime_limits_text(plan)
+    ):
+        raise ValueError(
+            "Runtime limits changed or are not disclosed; prepare a new comparison"
+        )
 
 
 def trial_config(root, plan, trial):
@@ -164,13 +210,16 @@ def trial_config(root, plan, trial):
                 "use_responses_api": True,
                 "enable_summarize": False,
                 "reasoning_effort": "low",
-                "llm_call_kwargs": {"max_output_tokens": 4096},
+                "llm_call_kwargs": {"max_output_tokens": MAX_OUTPUT_TOKENS},
             },
         },
         "environment": plan.get("environment", {"type": "docker", "delete": True}),
+        # Append the common correction last, after the original task and any
+        # treatment, so neither arm retains a misleading task-level allowance.
         "extra_instruction_paths": (
             [str(root / "guidance.md")] if trial["arm"] == "B" else []
-        ),
+        )
+        + [str(root / "runtime-limits.md")],
     }
 
 

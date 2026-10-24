@@ -22,7 +22,7 @@ contains reference baselines, but no completed agent trial results.
 
 | Condition | What the agent receives |
 | --- | --- |
-| A: baseline | The existing task instructions, public data, tools, and existing task documentation. |
+| A: baseline | The existing task instructions, public data, tools, existing task documentation, and a shared notice of actual execution limits. |
 | B: additional research guidance | Everything in A, plus the [research guidance](research-guidance.md). |
 
 The baseline keeps the documentation already supplied with the task.
@@ -72,9 +72,12 @@ be distilled or that the guidelines help on other tasks.
 The [runner](compare.py) uses Harbor 0.20.0 and its existing Terminus 2 agent.
 The agent has a terminal in the task container and receives the task's MCP
 server address. Both arms use the OpenAI Responses API, low reasoning effort,
-and the same loop. Harbor appends the frozen Markdown to B's task instruction;
-A receives the original instruction. No extra behavioral coaching is added by
-this runner. The original public-data Docker build and separate hidden verifier
+and the same loop. Harbor appends the frozen research guidance only to B's task
+instruction. Newly prepared studies append the same `runtime-limits.md` notice
+last in both arms. It overrides conflicting task-level allowances and discloses
+turns, agent time, output-token limits, and configured resource overrides, plus
+how waiting and debugging consume the budget. No live countdown is provided.
+The original public-data Docker build and separate hidden verifier
 are preserved. The reference solution is omitted from the snapshot.
 
 Use Python 3.12. Local execution requires Docker with Compose; Daytona execution
@@ -102,9 +105,11 @@ does not silently select a model. Run commands from the repository root:
 These are editable pilot defaults, not validated success criteria. This creates
 four fresh trials listed A, B, B, A. With parallel execution this is the
 launch order, not a promise about completion order. A pair is an execution block, not a shared
-random seed. The runner freezes a private task copy, the guidance, file hashes,
-model, backend, concurrency, order, and resource settings in `plan.json`. It checks for changed task,
-guidance, runner, or dependency declarations before execution and each trial.
+random seed. The runner freezes a private task copy, the guidance, the common
+runtime notice, file hashes, model, backend, concurrency, order, and resource
+settings in `plan.json`. It checks for changed task,
+guidance, runtime notice, runner, or dependency declarations before execution
+and each trial. It also checks that the notice matches the configured limits.
 Prepare a new directory to change these inputs. Use only the supplied trusted
 task package; its Dockerfiles and Compose configuration execute on the selected backend.
 The task package and `runs/` outputs are gitignored. Keep all run directories
@@ -393,7 +398,7 @@ trial is restarted.
 
 ### Execution-budget disclosure finding
 
-The original task tells the agent it has four hours. Both pilots instead enforce
+The original task tells the agent it has four hours. Both historical pilots enforced
 30 agent turns and a 1,800-second agent timeout. The observed prompts disclose
 neither those actual limits nor a remaining-turn countdown. Harbor's artificial
 turn-limit warning is operator logging, not a message to the model. Keeping the
@@ -402,10 +407,20 @@ same hidden cap in both conditions does not establish that either agent knew it.
 All four initially inspected Astra `missing_submission` rejections reached the
 30-turn cutoff while still researching or waiting for operations. Those failures
 must not be described as ignoring a known turn budget. Preserve the pilot's plans,
-prompts, and raw outcomes with this qualification. Before a fresh paid comparison,
-validate that both arms receive the same accurate execution-budget information;
-only their research guidance should differ. This follows the
+prompts, and raw outcomes with this qualification.
+
+The updated runner prepares schema-version-2 studies with the shared runtime
+notice described above. Offline tests assemble both initial prompts using the
+pinned Harbor task loader and Terminus 2 prompt template. They verify that the
+actual limits override the four-hour allowance and that only research guidance
+differs between arms. Existing pilot records remain unchanged; prepare a new
+directory to use the corrected runner. This follows the
 [agent-awareness documentation rules](../../docs/DOCUMENTATION.md).
+
+This change addresses disclosure. It has not been validated in a fresh paid
+cloud rollout, and it does not repair the server/DNS failures observed in the
+stopped study. Diagnose those failures and verify the delivered prompt in any
+authorized follow-up before interpreting its results.
 
 Offline tests use synthetic task and verifier fixtures. Run all project tests
 with the installed runner dependencies to include the Harbor instruction/schema

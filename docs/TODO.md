@@ -109,10 +109,15 @@ pilot; it does not implement OPCD training or establish distillability.
   and frozen inputs before any follow-up. The stopped study's archive is downloaded
   and checksum-verified, and all cloud resources are independently verified deleted;
   the experiment records the disclosure finding and incomplete comparison.
-- [ ] Resolve the experiment's execution-budget disclosure mismatch before a fresh
-  paid comparison: make actual turn/time limits visible equally in both arms and
-  verify the delivered prompts against the enforced limits. Preserve the existing
-  pilot evidence and distinguish undisclosed truncation from informed agent behavior.
+- [x] Correct execution-budget disclosure for newly prepared comparisons: freeze
+  a common notice of actual turn/time/output/resource limits and append it last
+  in both arms. Offline tests verify Harbor's assembled initial prompts and
+  reject notice/configuration drift; preserve the historical pilot evidence.
+- [ ] Diagnose the stopped study's server/DNS failures before a follow-up. In any
+  newly authorized cloud validation, verify that the delivered prompt contains
+  the corrected limits and that research tools work; distinguish undisclosed
+  historical truncation from informed agent behavior. No new paid run is launched
+  by the disclosure fix.
 
 ## Repository workflow validation
 

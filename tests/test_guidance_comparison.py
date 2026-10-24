@@ -77,14 +77,57 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual([t["arm"] for t in (a, b, b2, a2)], ["A", "B", "B", "A"])
         config_a = comparison.trial_config(self.root, self.plan, a)
         config_b = comparison.trial_config(self.root, self.plan, b)
-        self.assertEqual(config_a.pop("extra_instruction_paths"), [])
         self.assertEqual(
-            config_b.pop("extra_instruction_paths"), [str(self.root / "guidance.md")]
+            config_a.pop("extra_instruction_paths"),
+            [str(self.root / "runtime-limits.md")],
+        )
+        self.assertEqual(
+            config_b.pop("extra_instruction_paths"),
+            [str(self.root / "guidance.md"), str(self.root / "runtime-limits.md")],
         )
         config_a.pop("trial_name")
         config_b.pop("trial_name")
         self.assertEqual(config_a, config_b)
         self.assertNotIn("mounts", config_a["environment"])
+
+    def test_runtime_limits_match_enforced_settings_and_reject_drift(self):
+        other = self.base / "different-limits"
+        plan = comparison.prepare(
+            self.source,
+            other,
+            "openai/test-model",
+            turns=12,
+            seconds=420,
+            cpus=4,
+            memory_gb=8,
+            storage_gb=10,
+        )
+        notice = (other / "runtime-limits.md").read_text()
+        config = comparison.trial_config(other, plan, plan["trials"][0])
+        self.assertIn(
+            f"Maximum agent turns: {config['agent']['kwargs']['max_turns']}", notice
+        )
+        self.assertIn(
+            f"time limit: {config['agent']['override_timeout_sec']} seconds (7 minutes)",
+            notice,
+        )
+        self.assertIn("output tokens per model response: 4096", notice)
+        self.assertIn("sandbox CPUs: 4", notice)
+        self.assertIn("sandbox memory in MiB: 8192", notice)
+        self.assertIn("sandbox storage in MiB: 10240", notice)
+        comparison.verify_frozen(other, plan)
+        for field, value in (("max_turns", 13), ("agent_seconds", 600)):
+            changed = copy.deepcopy(plan)
+            changed[field] = value
+            with self.assertRaisesRegex(ValueError, "Runtime limits"):
+                comparison.verify_frozen(other, changed)
+        changed = copy.deepcopy(plan)
+        changed["environment"]["override_memory_mb"] = 16384
+        with self.assertRaisesRegex(ValueError, "Runtime limits"):
+            comparison.verify_frozen(other, changed)
+        (other / "runtime-limits.md").write_text("Incorrect execution budget")
+        with self.assertRaisesRegex(ValueError, "Runtime limits"):
+            comparison.verify_frozen(other, plan)
 
     def test_separate_studies_use_different_container_session_names(self):
         other = comparison.prepare(
@@ -573,13 +616,59 @@ class ComparisonTests(unittest.TestCase):
         task_b = Task(
             config_b.task.path, extra_instruction_paths=config_b.extra_instruction_paths
         )
-        self.assertEqual(task_a.instruction, "ORIGINAL TASK")
+        limits = (self.root / "runtime-limits.md").read_text()
+        self.assertEqual(task_a.instruction, "ORIGINAL TASK\n\n" + limits)
         self.assertEqual(
             task_b.instruction,
-            task_a.instruction + "\n\n" + (self.root / "guidance.md").read_text(),
+            "ORIGINAL TASK\n\n"
+            + (self.root / "guidance.md").read_text()
+            + "\n\n"
+            + limits,
         )
         self.assertEqual(task_a.config, task_b.config)
         self.assertEqual(copy.deepcopy(config_a.agent), config_b.agent)
+
+    def test_harbor_initial_prompts_disclose_override_to_both_arms(self):
+        try:
+            from harbor.agents.terminus_2.terminus_2 import Terminus2
+            from harbor.models.task.task import Task
+            from harbor.models.trial.config import TrialConfig
+        except ImportError:
+            self.skipTest("Optional Harbor dependency is not installed")
+
+        original = "ORIGINAL TASK\nYou have 4 hours of wall-clock time."
+        (self.source / "instruction.md").write_text(original)
+        root = self.base / "prompt-check"
+        plan = comparison.prepare(self.source, root, "openai/test-model")
+        # Exercise Harbor's actual prompt template without constructing an LLM,
+        # starting an environment, or making an API call.
+        agent = object.__new__(Terminus2)
+        agent._parser_name = "json"
+        template = agent._get_prompt_template_path().read_text()
+        prompts = {}
+        for trial in plan["trials"][:2]:
+            config = TrialConfig.model_validate(
+                comparison.trial_config(root, plan, trial)
+            )
+            task = Task(
+                config.task.path, extra_instruction_paths=config.extra_instruction_paths
+            )
+            prompt = template.format(
+                instruction=task.instruction, terminal_state="/app$"
+            )
+            prompts[trial["arm"]] = prompt
+            self.assertIn("Maximum agent turns: 30", prompt)
+            self.assertIn("1800 seconds (30 minutes)", prompt)
+            self.assertIn("override any different time or turn allowance", prompt)
+            self.assertGreater(
+                prompt.index("# Actual execution limits"),
+                prompt.index("You have 4 hours"),
+            )
+            self.assertNotIn("HIDDEN", prompt)
+            self.assertNotIn("ORACLE", prompt)
+        guidance = (root / "guidance.md").read_text()
+        self.assertEqual(prompts["B"].replace(guidance + "\n\n", ""), prompts["A"])
+        self.assertEqual((root / "task/instruction.md").read_text(), original)
 
     def test_responses_adapter_reaches_http_boundary_without_network(self):
         # LiteLLM's mock_response shortcut skips MCP dispatch; intercept the
