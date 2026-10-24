@@ -9,7 +9,7 @@ const AsyncFunction = Object.getPrototypeOf(async function() {}).constructor;
 const verify = new AsyncFunction('github', 'context', 'core', 'setTimeout', source);
 
 function fixture({ findings = false, missing = null, stale = false, finalized = true,
-  projectFailed = false, wrongParents = false, moveDuringPublication = false,
+  projectFailed = false, sourceChanged = false, wrongParents = false, moveDuringPublication = false,
   eventName = 'workflow_dispatch', permission = 'write' } = {}) {
   const pull = { number: 6, state: 'open', head: { sha: 'head' }, base: { sha: 'base', ref: 'main' }, merge_commit_sha: 'merge' };
   const names = ['Project checks', 'Agent reviews completed', 'Documentation reviewer', 'Implementation reviewer'];
@@ -17,6 +17,10 @@ function fixture({ findings = false, missing = null, stale = false, finalized = 
     app: { slug: 'github-actions' }, status: 'completed', conclusion: 'success',
     external_id: `${name}:complete`, html_url: `https://github.com/example/checks/${index + 1}`,
     output: { text: JSON.stringify({ pullNumber: 6 }) } }));
+  checks[0].output.text = JSON.stringify({ pullNumber: 6, sourceNativeCheckId: 10, base: 'base', baseRef: 'main' });
+  const native = { id: sourceChanged ? 11 : 10, name: 'Run project verification', head_sha: 'head',
+    app: { slug: 'github-actions' }, status: 'completed', conclusion: projectFailed ? 'failure' : 'success',
+    html_url: 'https://github.com/example/native-project-result' };
   if (findings) checks[2].conclusion = 'failure';
   if (projectFailed) checks[0].conclusion = 'failure';
   if (!finalized) checks[2].external_id = 'unfinalized';
@@ -34,9 +38,13 @@ function fixture({ findings = false, missing = null, stale = false, finalized = 
     } },
     git: { getCommit: async () => ({ data: { parents: (wrongParents ? ['old-base', 'head'] : ['base', 'head']).map(sha => ({ sha })) } }) },
     repos: { getCollaboratorPermissionLevel: async () => ({ data: { permission } }) },
+    actions: { getJobForWorkflowRun: async () => ({ data: { id: native.id, name: native.name, run_id: 44,
+      status: native.status, conclusion: native.conclusion } }),
+    getWorkflowRun: async () => ({ data: { path: '.github/workflows/verify.yml', event: 'pull_request', head_sha: 'head',
+      pull_requests: [{ number: 6, head: { sha: 'head' }, base: { sha: 'base', ref: 'main' } }] } }) },
     issues: { listComments: 'comments' },
     checks: { listForRef: 'checks', create: async value => {
-      const check = { id: 100 + created.length, ...value };
+      const check = { id: 100 + created.length, app: { slug: 'github-actions' }, conclusion: null, ...value };
       created.push(check);
       return { data: check };
     }, update: async value => { updated.push(value); return { data: value }; } },
@@ -44,7 +52,7 @@ function fixture({ findings = false, missing = null, stale = false, finalized = 
     if (method === 'comments') return comments;
     assert.equal(method, 'checks');
     assert.equal(args.ref, 'head');
-    return checks.filter(check => check.name !== missing);
+    return [...checks, ...(missing === 'Project checks' ? [] : [native])].filter(check => check.name !== missing);
   } };
   return { created, updated, failures, checks, get pullReads() { return pullReads; }, get sleeps() { return sleeps; },
     run: () => verify(github, { repo: { owner: 'example', repo: 'project' }, eventName,
@@ -80,7 +88,7 @@ test('every required source check must be present and passing', async () => {
   for (const missing of ['Project checks', 'Agent reviews completed', 'Documentation reviewer', 'Implementation reviewer']) {
     const f = fixture({ missing });
     await f.run();
-    assert.equal(f.created.length, 1, missing);
+    assert.ok(!f.created.some(check => check.head_sha === 'merge' && check.conclusion === 'success'), missing);
     assert.equal(f.updated.at(-1).conclusion, 'failure', missing);
   }
   const failed = fixture({ projectFailed: true });
@@ -123,4 +131,75 @@ test('comparison and reviewer publication use the same non-canceling queue', () 
   assert.ok(reviewer.includes('group: documentation-review-${{ github.event.pull_request.number || github.event.issue.number || inputs.pull_request_number }}'));
   assert.ok(workflow.includes('group: documentation-review-${{ needs.authorize.outputs.number }}'));
   assert.ok(workflow.includes('queue: max\n      cancel-in-progress: false'));
+});
+
+const reviewerWorkflow = readFileSync(`${__dirname}/../.github/workflows/documentation-review.yml`, 'utf8');
+const resolverSource = reviewerWorkflow.split('          script: |\n')[1].split(/\n {6}- /)[0]
+  .split('\n').map(line => line.replace(/^ {12}/, '')).join('\n');
+const resolveReview = new AsyncFunction('github', 'context', 'core', resolverSource);
+
+async function invalidate({ permission = 'write', stale = false, wrongParents = false } = {}) {
+  const created = [];
+  const github = { rest: {
+    pulls: { get: async () => ({ data: { state: 'open', head: { sha: 'head' },
+      base: { sha: 'base' }, merge_commit_sha: 'merge' } }) },
+    repos: { getBranch: async () => ({ data: { commit: { sha: 'accepted' } } }),
+      getCollaboratorPermissionLevel: async () => ({ data: { permission } }) },
+    git: { getCommit: async () => ({ data: { parents: (wrongParents ? ['head', 'old-base'] : ['head', 'base']).map(sha => ({ sha })) } }) },
+    checks: { create: async value => { created.push(value); return { data: value }; } },
+  } };
+  const head = stale ? 'b'.repeat(40) : 'a'.repeat(40);
+  github.rest.pulls.get = async () => ({ data: { state: 'open', head: { sha: 'a'.repeat(40) },
+    base: { sha: 'base' }, merge_commit_sha: 'merge' } });
+  github.rest.git.getCommit = async () => ({ data: { parents: [
+    { sha: 'a'.repeat(40) }, { sha: wrongParents ? 'old-base' : 'base' },
+  ] } });
+  await resolveReview(github, { repo: { owner: 'example', repo: 'project' }, eventName: 'pull_request_target',
+    payload: { pull_request: { number: 6, head: { sha: head } }, sender: { type: 'User', login: 'human' },
+      repository: { default_branch: 'main' } } }, { setOutput() {} });
+  return created;
+}
+
+test('authorized reassessment invalidates all five merge checks before changing any head result', async () => {
+  const created = await invalidate();
+  assert.equal(created.length, 5);
+  assert.ok(created.every(check => check.head_sha === 'merge' && check.status === 'in_progress' && !check.conclusion));
+  assert.ok(created.some(check => check.name === 'Current review comparison'));
+});
+
+test('unauthorized or stale requests and wrong merge parents cannot invalidate merge checks', async () => {
+  for (const options of [{ permission: 'read' }, { stale: true }, { wrongParents: true }]) {
+    assert.deepEqual(await invalidate(options), []);
+  }
+});
+
+test('completion of project verification refreshes comparison after tests finish last', async () => {
+  assert.ok(workflow.includes('workflows: [API agent reviews, Verify project]'));
+  const authorizationSource = workflow.split('          script: |\n')[1].split(/\n\s*comparison:/)[0]
+    .split('\n').map(line => line.replace(/^ {12}/, '')).join('\n');
+  const authorize = new AsyncFunction('github', 'context', 'core', authorizationSource);
+  const outputs = {};
+  await authorize({ rest: { pulls: { get: async () => ({ data: { state: 'open', head: { sha: 'head' } } }) },
+    repos: { getCollaboratorPermissionLevel: async () => ({ data: { permission: 'write' } }) } } },
+    { repo: { owner: 'example', repo: 'project' }, eventName: 'workflow_run', payload: {
+      workflow_run: { path: '.github/workflows/verify.yml', event: 'pull_request', head_sha: 'head',
+        pull_requests: [{ number: 6 }], actor: { type: 'User', login: 'human' } },
+    } }, { setOutput: (key, value) => { outputs[key] = value; } });
+  assert.equal(outputs.number, '6');
+  assert.equal(outputs.allowed, 'true');
+});
+
+test('project reassessment invalidates merge copies before changing its required head result', async () => {
+  const f = fixture({ projectFailed: true, sourceChanged: true });
+  await f.run();
+  const headUpdate = f.created.findIndex(check => check.name === 'Project checks' && check.head_sha === 'head');
+  assert.ok(headUpdate > 0);
+  assert.equal(f.created[headUpdate].conclusion, 'failure');
+  for (const name of ['Project checks', 'Agent reviews completed', 'Documentation reviewer', 'Implementation reviewer']) {
+    assert.ok(f.created.slice(0, headUpdate).some(check => check.name === name && check.head_sha === 'merge' && check.status === 'in_progress'));
+  }
+  assert.equal(f.updated.at(-1).conclusion, 'failure');
+  const verification = readFileSync(`${__dirname}/../.github/workflows/verify.yml`, 'utf8');
+  assert.ok(verification.includes('name: Run project verification'));
+  assert.ok(!verification.includes('checks: write'), 'Untrusted test execution must retain read-only permissions.');
 });

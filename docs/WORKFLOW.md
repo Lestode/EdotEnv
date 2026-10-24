@@ -174,9 +174,20 @@ checks; leaving four required names only on the head results in “4 of 5 requir
 status checks are expected.” See [GitHub's check-source rules](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks).
 
 Comparison publication shares the reviewer's authorized, non-canceling per-PR
-queue so the source checks cannot change during publication. It fails promptly
+queue so reviewer results cannot change during publication. Before an authorized
+review request can change a head check, its resolver invalidates all five merge
+attestations on the verified current merge. Unauthorized and stale-head review
+requests cannot invalidate them. Native tests run separately as
+`Run project verification` with read-only permissions. The serialized comparison
+writer verifies that native job's workflow path, run event, and exact head, then
+updates the required `Project checks` result only after invalidating its merge
+copies. Thus both reviewer and project-result writers coordinate through the
+same queue without giving test code check-write credentials. Native verification
+start/completion events for the current PR may refresh this read-only evidence
+flow, including fork and bot runs; this grants no paid-review or PR-code-execution
+authority. Stale native runs cannot refresh a different head. It fails promptly
 when sources are not ready, releasing the queue for reviews; reviewer completion
-requests another comparison. Manual dispatch with `pull_request_number` can
+and project-verification completion each request another comparison. Manual dispatch with `pull_request_number` can
 retry verification without calling a model. It makes no model calls, uses no
 secrets, and executes no PR code. Authorized reviewer commands and
 completion of `API agent reviews` refresh it automatically. Preserve the run
@@ -288,8 +299,9 @@ bootstrap and review records. Every new PR revision still requires complete,
 clear assessments from both named reviewers before acceptance. The merged
 workflow files alone do not establish finding-blocking branch protection.
 
-The isolated completed-review case was subsequently verified on the same head
-and base: [review da37c140caa8](https://github.com/Lestode/EdotEnv/pull/6#issuecomment-6382279321)
+The isolated completed-review case was subsequently verified on head
+`5c2ac9163413d8d444f5a2774e8dce0eded91719` against base
+`5ec1822c6cefee4717529cb4727ed139878b19b4`: [review da37c140caa8](https://github.com/Lestode/EdotEnv/pull/6#issuecomment-6382279321)
 completed, `Agent reviews completed` passed, the named documentation check failed
 with unresolved F1, and GitHub still reported `blocked`. After the user's merge
 direction accepted the remaining testing limitation, the shared mechanism

@@ -12,10 +12,11 @@ on:
   issue_comment:
     types: [created]
   workflow_run:
-    workflows: [API agent reviews]
-    types: [completed]
+    workflows: [API agent reviews, Verify project]
+    types: [in_progress, completed]
 
 permissions:
+  actions: read
   contents: read
   pull-requests: read
   checks: write
@@ -43,16 +44,31 @@ jobs:
         with:
           script: |
             const run = context.payload.workflow_run;
+            let projectRun = false;
             let number = context.payload.pull_request?.number || context.payload.issue?.number ||
               Number(context.payload.inputs?.pull_request_number);
             let actor = context.eventName === 'issue_comment' ? context.payload.comment.user : context.payload.sender;
             if (context.eventName === 'workflow_run') {
               const path = run.path?.split('@')[0];
-              if (!['.github/workflows/documentation-review.yml'].includes(path)) return;
-              number = Number(/^Review PR #([1-9][0-9]*)$/.exec(run.display_title || '')?.[1]);
+              if (!['.github/workflows/documentation-review.yml', '.github/workflows/verify.yml'].includes(path)) return;
+              projectRun = path === '.github/workflows/verify.yml';
+              if (!projectRun && run.status !== 'completed') return;
+              number = projectRun
+                ? Number(run.pull_requests?.[0]?.number)
+                : Number(/^Review PR #([1-9][0-9]*)$/.exec(run.display_title || '')?.[1]);
               actor = run.actor;
             }
-            if (!Number.isSafeInteger(number) || number <= 0 || actor?.type !== 'User') return;
+            if (!Number.isSafeInteger(number) || number <= 0) return;
+            if (projectRun) {
+              // A native verification event may originate from a fork or bot.
+              // It is not permission to call a model or execute any PR code.
+              const { data: pull } = await github.rest.pulls.get({ ...context.repo, pull_number: number });
+              if (run.event !== 'pull_request' || pull.state !== 'open' || pull.head.sha !== run.head_sha) return;
+              core.setOutput('number', String(number));
+              core.setOutput('allowed', 'true');
+              return;
+            }
+            if (actor?.type !== 'User') return;
             const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
               ...context.repo, username: actor.login,
             });
@@ -79,6 +95,7 @@ jobs:
             const repo = context.repo;
             const number = context.payload.pull_request?.number || context.payload.issue?.number ||
               Number(context.payload.inputs?.pull_request_number) ||
+              Number(context.payload.workflow_run?.pull_requests?.[0]?.number) ||
               Number(/^Review PR #([1-9][0-9]*)$/.exec(context.payload.workflow_run?.display_title || '')?.[1]);
             if (context.eventName === 'issue_comment') {
               const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
@@ -127,7 +144,69 @@ jobs:
                     } catch { return []; }
                   });
                   const reviewerChecks = await github.paginate(github.rest.checks.listForRef, { ...repo, ref: pull.head.sha, per_page: 100, filter: 'all' });
-                  const reviewSources = new Map();
+                  const latestHead = name => reviewerChecks.filter(check =>
+                    check.name === name && check.app?.slug === 'github-actions' &&
+                    check.head_sha === pull.head.sha).sort((a, b) => b.id - a.id)[0];
+                  // Test execution keeps a read-only token in its own job. This
+                  // serialized writer owns the required Project checks result.
+                  const native = latestHead('Run project verification');
+                  let sourceStatus = 'in_progress', sourceConclusion;
+                  if (native) {
+                    const { data: job } = await github.rest.actions.getJobForWorkflowRun({ ...repo, job_id: native.id });
+                    const { data: run } = await github.rest.actions.getWorkflowRun({ ...repo, run_id: job.run_id });
+                    if (job.id !== native.id || job.name !== 'Run project verification' ||
+                        run.path?.split('@')[0] !== '.github/workflows/verify.yml' ||
+                        run.event !== 'pull_request' || run.head_sha !== pull.head.sha ||
+                        !run.pull_requests?.some(item => item.number === number &&
+                          item.head.sha === pull.head.sha && item.base.sha === pull.base.sha &&
+                          item.base.ref === pull.base.ref)) {
+                      throw new Error('The project result is not from the current verification workflow.');
+                    }
+                    if (native.status === 'completed' && job.status === 'completed') {
+                      sourceStatus = 'completed';
+                      sourceConclusion = native.conclusion === 'success' && job.conclusion === 'success'
+                        ? 'success' : 'failure';
+                    }
+                  }
+                  let project = reviewerChecks.filter(check => {
+                    if (check.name !== 'Project checks' || check.app?.slug !== 'github-actions' ||
+                        check.head_sha !== pull.head.sha) return false;
+                    try { return JSON.parse(check.output?.text || 'null')?.pullNumber === number; }
+                    catch { return false; }
+                  }).sort((a, b) => b.id - a.id)[0];
+                  let receipt;
+                  try { receipt = JSON.parse(project?.output?.text || 'null'); } catch {}
+                  const nativeId = native?.id ?? null;
+                  if (receipt?.sourceNativeCheckId !== nativeId || receipt?.base !== pull.base.sha ||
+                      receipt?.baseRef !== pull.base.ref || project?.status !== sourceStatus ||
+                      project?.conclusion !== (sourceConclusion ?? null)) {
+                    // Invalidate before changing this required head result. All
+                    // required source writers use this same authorized queue.
+                    for (const name of ['Project checks', 'Agent reviews completed', ...required]) {
+                      await github.rest.checks.create({ ...repo, name, head_sha: checkMerge,
+                        status: 'in_progress', output: {
+                          title: 'Project verification is being refreshed',
+                          summary: 'Current source checks must be verified before these attestations pass.',
+                        },
+                      });
+                    }
+                    const { data: updatedProject } = await github.rest.checks.create({ ...repo,
+                      name: 'Project checks', head_sha: pull.head.sha, status: sourceStatus,
+                      ...(sourceConclusion ? { conclusion: sourceConclusion } : {}),
+                      external_id: `project-verification:${number}:${nativeId}`,
+                      ...(native?.html_url ? { details_url: native.html_url } : {}),
+                      output: {
+                        title: native ? 'Verified native project result' : 'Waiting for native project verification',
+                        summary: 'This result is derived from Run project verification; no PR code executes in this writer.',
+                        text: JSON.stringify({ version: 1, pullNumber: number,
+                          sourceNativeCheckId: nativeId, head: pull.head.sha,
+                          base: pull.base.sha, baseRef: pull.base.ref }),
+                      },
+                    });
+                    reviewerChecks.push(updatedProject);
+                    project = updatedProject;
+                  }
+                  const reviewSources = new Map([['Project checks', project]]);
                   const complete = required.every(name => {
                     const checks = reviewerChecks.filter(check => {
                       if (check.name !== name || check.app?.slug !== 'github-actions' ||

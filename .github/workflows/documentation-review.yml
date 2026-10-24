@@ -63,6 +63,34 @@ jobs:
               ...context.repo, branch: context.payload.repository.default_branch,
             });
             core.setOutput('sha', data.commit.sha);
+            // Invalidate every merge attestation before a new assessment can
+            // change its head check. This job shares the comparison's queue.
+            const actor = context.eventName === 'issue_comment'
+              ? context.payload.comment.user : context.payload.sender;
+            if (actor?.type === 'User' && head === pull.head.sha && pull.merge_commit_sha) {
+              const { data: access } = await github.rest.repos.getCollaboratorPermissionLevel({
+                ...context.repo, username: actor.login,
+              });
+              if (['write', 'maintain', 'admin'].includes(access.permission)) {
+                const { data: merge } = await github.rest.git.getCommit({
+                  ...context.repo, commit_sha: pull.merge_commit_sha,
+                });
+                const parents = merge.parents.map(parent => parent.sha);
+                if (parents.length === 2 && parents.includes(pull.head.sha) && parents.includes(pull.base.sha)) {
+                  for (const name of ['Project checks', 'Agent reviews completed',
+                    'Documentation reviewer', 'Implementation reviewer', 'Current review comparison']) {
+                    await github.rest.checks.create({ ...context.repo, name,
+                      head_sha: pull.merge_commit_sha, status: 'in_progress',
+                      output: { title: 'A review request is being assessed',
+                        summary: 'Previous merge attestations are invalid until current source checks and reviews are verified again.',
+                        text: JSON.stringify({ version: 1, pullNumber: number,
+                          head: pull.head.sha, base: pull.base.sha, baseRef: pull.base.ref }),
+                      },
+                    });
+                  }
+                }
+              }
+            }
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ steps.reviewer.outputs.sha }}
