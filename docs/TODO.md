@@ -73,6 +73,56 @@ Use `--custom-generate-function-path` if rollout capture needs customization; `-
 
 These are integration points, not a claim that hooks alone cover every requirement. The [batch builder](../slime/slime/data/batch_builder.py), [training batch loader](../slime/slime/backends/megatron_utils/model.py), and [actor tensor handling](../slime/slime/backends/megatron_utils/actor.py) have explicit field handling that must be checked when adding OPCD tensors.
 
+## Markdown guidance final-score comparison
+
+The [experiment](../experiments/verifier-context/README.md) defines the comparison,
+execution commands, result semantics, and validation status. It is a task-level
+pilot; it does not implement OPCD training or establish distillability.
+
+- [x] Implement frozen task/guidance preparation, identical Harbor settings for
+  both arms, alternating trial order, explicit paid execution, and cost stop
+  handling without claiming a hard billing cap.
+- [x] Add synthetic CPU tests for condition differences, changed inputs,
+  rejected/missing/corrupt scores, valid zero/negative scores, cost stops, and
+  repeat-execution refusal; validate the pinned Harbor instruction/config contract.
+- [x] Isolate cloud cleanup from result collection and reporting; add offline
+  regressions for disk-full execution/summary writes after successful and failed
+  trials, result-collection errors, and client closure after cleanup-report failure.
+- [x] Preserve chained cleanup failures in command output; test simultaneous
+  sandbox-deletion and cleanup-report disk errors without cloud calls.
+- [x] Implement collection of final hidden IC, failure counts, and per-trial evidence;
+  keep the licensed task and private run outputs out of the public repository.
+- [x] Validate Docker builds, MCP connectivity, submission artifact transfer, and
+  separate verifier execution locally with the reference solution; record the
+  host dependency startup failure and adapter regression test in the experiment.
+- [x] Select GPT-6 Luna and obtain authorization for the small local pilot and
+  API budget; the experiment records equal limits and the spending stop threshold.
+- [x] Preserve the cancelled local pilot and stop its containers/VM; obtain
+  authorization for paid Daytona hosting.
+- [x] Validate Harbor’s native Daytona Compose path, artifact transfer, separate
+  hidden verification, 20-sandbox capacity, and reference/probe cleanup for this
+  task; record equal cloud allocations and the larger study’s API target.
+- [x] Run and inspect the fresh 20-rollout cloud comparison: ten accepted
+  submissions per arm, prompt/frozen-input audits passed, private results
+  downloaded, and independent controller/trial deletion verified. Record and fix
+  the final cleanup transition conflict without rewriting the completed study.
+- [x] Prepare the separate Astra comparison with 20 rollouts per arm and a
+  detached private cloud supervisor; validate controller disk retention across
+  stop/start and archive verification before eventual deletion.
+- [ ] Inspect the Astra comparison's scores, failures, usage, context conditions,
+  and frozen inputs before any follow-up. The stopped study's archive is downloaded
+  and checksum-verified, and all cloud resources are independently verified deleted;
+  the experiment records the disclosure finding and incomplete comparison.
+- [x] Correct execution-budget disclosure for newly prepared comparisons: freeze
+  a common notice of actual turn/time/output/resource limits and append it last
+  in both arms. Offline tests verify Harbor's assembled initial prompts and
+  reject notice/configuration drift; preserve the historical pilot evidence.
+- [ ] Diagnose the stopped study's server/DNS failures before a follow-up. In any
+  newly authorized cloud validation, verify that the delivered prompt contains
+  the corrected limits and that research tools work; distinguish undisclosed
+  historical truncation from informed agent behavior. No new paid run is launched
+  by the disclosure fix.
+
 ## Repository workflow validation
 
 The authoritative policy and integration details are in [the development workflow](WORKFLOW.md).
