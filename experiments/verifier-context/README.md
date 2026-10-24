@@ -18,6 +18,15 @@ agents research features, train an Elastic Net model to forecast next-minute
 volume changes, and submit it for evaluation on hidden market data. The package
 contains reference baselines, but no completed agent trial results.
 
+## Scope
+
+This is a small exploratory experiment on one task. Keep implementation,
+infrastructure, analysis, and validation simple and proportionate. Focus on a
+fair A/B comparison, clear final scores and failure counts, modest costs, and
+reliable sandbox cleanup. Reuse existing tools and fix issues that could
+invalidate the comparison; broader infrastructure and deeper research remain
+future work.
+
 ## Proposed comparison
 
 | Condition | What the agent receives |
