@@ -17,6 +17,7 @@ import signal
 import statistics
 import subprocess
 import sys
+import traceback
 from uuid import uuid4
 
 HERE = Path(__file__).resolve().parent
@@ -607,7 +608,9 @@ def main():
         importlib.metadata.PackageNotFoundError,
         subprocess.SubprocessError,
     ) as exc:
-        print(f"{type(exc).__name__}: {exc}", file=sys.stderr)
+        # Preserve chained failures, including a deletion error followed by a
+        # full-disk error while saving the cleanup report.
+        traceback.print_exception(exc)
         raise SystemExit(1) from None
 
 

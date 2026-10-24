@@ -86,6 +86,8 @@ pilot; it does not implement OPCD training or establish distillability.
 - [x] Isolate cloud cleanup from result collection and reporting; add offline
   regressions for disk-full execution/summary writes after successful and failed
   trials, result-collection errors, and client closure after cleanup-report failure.
+- [x] Preserve chained cleanup failures in command output; test simultaneous
+  sandbox-deletion and cleanup-report disk errors without cloud calls.
 - [x] Implement collection of final hidden IC, failure counts, and per-trial evidence;
   keep the licensed task and private run outputs out of the public repository.
 - [x] Validate Docker builds, MCP connectivity, submission artifact transfer, and
@@ -132,6 +134,11 @@ The authoritative policy and integration details are in [the development workflo
 - [x] Provision a read-only deploy key restricted to `Lestode/review-agents` and store its private part as `REVIEW_AGENTS_READ_KEY` in EdotEnv Actions secrets; verify scope and secret metadata without logging credentials.
 - [x] Confirm shared reviewer PR #4 is merged and pin its accepted commit; verify its file tree matches the head that passed all 92 tests.
 - [x] Validate private checkout, API execution, report publication, and a passing exact-head agent check through the feature-branch bootstrap run recorded in the development workflow.
-- [x] Activate the consumer workflow after user acceptance without bypassing its required completion gate; EdotEnv PR #4 was merged on 2026-10-23.
+- [x] Activate the documentation-only consumer workflow after user acceptance without bypassing its required completion gate; EdotEnv PR #4 was merged on 2026-10-23. The later automatic review on PR #5 confirms the accepted workflow runs after an update; see the activation record in the development workflow.
 - [ ] Verify a real completed review passes only for its captured PR head, a new push automatically requests another review, duplicate completed requests do not repeat billing, and stale, skipped, failed, or unpublished reviews cannot allow merging. Confirm merge blocking through GitHub's merge state without attempting an unauthorized merge or direct push.
 - [ ] Add CPU regression tests alongside each OPCD implementation step and extend CI for its dependencies; retain separate GPU/distributed run evidence.
+- [ ] After accepting and merging the reviewer freshness workflow, run it manually and record its Actions URL; verify the scheduled run and the live alert lifecycle when an upstream update is available. Git-history and alert-lifecycle regression tests run in `Project checks`.
+- [x] Exercise private checkout, execution, publication, and exact-head checks for both shared PR #3 reviewer actions on EdotEnv PR #5 using explicit bootstrap; the initial results and final-review requirement are recorded in the development workflow.
+- [ ] After user acceptance and merge of PR #5, validate automatic implementation review, a fresh review after an update, `/review-implementation` discussion, and the no-model implementation assessment for a Markdown-only PR.
+- [x] Verify all five prepared reviewer/project/comparison requirements and strict up-to-date protection on `main`; read-only GitHub API inspection confirmed the settings on 2026-10-24.
+- [ ] Confirm missing, incomplete, or unresolved reviews block the live merge state; record evidence without attempting an unauthorized merge.

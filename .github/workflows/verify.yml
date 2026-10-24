@@ -31,11 +31,13 @@ jobs:
         run: pre-commit run --all-files
       - name: Check project documentation and review configuration
         run: python scripts/check_project.py
-      - name: Run project CPU tests when present
+      - name: Test reviewer freshness detection and alert lifecycle
+        run: node --test tests/*.test.cjs
+      - name: Run project Python CPU tests when present
         shell: bash
         run: |
-          if [ -d tests ]; then
+          if [ -d tests ] && [ -n "$(find tests -name 'test_*.py' -type f -print -quit)" ]; then
             python -m unittest discover -s tests -p 'test_*.py' -v
           else
-            echo 'No project CPU tests yet; OPCD implementation and GPU validation remain pending.'
+            echo 'No Python CPU tests yet; OPCD implementation and GPU validation remain pending.'
           fi

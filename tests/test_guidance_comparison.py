@@ -5,6 +5,7 @@ from builtins import ExceptionGroup
 import copy
 import errno
 import importlib.util
+import io
 import os
 from pathlib import Path
 import tempfile
@@ -462,6 +463,61 @@ class ComparisonTests(unittest.TestCase):
                 asyncio.run(comparison.cleanup_daytona(self.root, self.plan))
         sandbox.delete.assert_awaited_once_with(timeout=60, wait=True)
         self.assertEqual(calls, 2)
+        client.close.assert_awaited_once()
+
+    def test_command_shows_deletion_failure_when_cleanup_report_also_fails(self):
+        from types import SimpleNamespace
+
+        self.plan["environment"] = {"type": "daytona", "delete": True}
+        comparison.write_json(self.root / "plan.json", self.plan)
+        sandbox = SimpleNamespace(
+            id="owned-sandbox",
+            labels={"edot.study": self.plan["study_id"]},
+            delete=AsyncMock(side_effect=RuntimeError("sandbox deletion denied")),
+        )
+
+        async def listed(query, request_timeout):
+            yield sandbox
+
+        async def run_trial(root, plan, trial):
+            self.result(trial)
+
+        original_write = comparison.write_json
+
+        def write_unless_cleanup_report(path, value):
+            if path.name == "cloud-cleanup.json":
+                raise OSError(errno.ENOSPC, "No space left")
+            original_write(path, value)
+
+        client = SimpleNamespace(list=listed, close=AsyncMock())
+        stderr = io.StringIO()
+        with (
+            patch("daytona.AsyncDaytona", return_value=client),
+            patch.object(comparison, "preflight"),
+            patch.object(comparison, "run_trial", side_effect=run_trial),
+            patch.object(
+                comparison, "write_json", side_effect=write_unless_cleanup_report
+            ),
+            patch.object(comparison.sys, "stderr", stderr),
+            patch.object(
+                comparison.sys,
+                "argv",
+                [
+                    str(SCRIPT),
+                    "run",
+                    str(self.root),
+                    "--allow-paid",
+                    "--max-total-cost-usd",
+                    "0.1",
+                ],
+            ),
+        ):
+            with self.assertRaises(SystemExit) as caught:
+                comparison.main()
+        self.assertEqual(caught.exception.code, 1)
+        self.assertIn("RuntimeError: sandbox deletion denied", stderr.getvalue())
+        self.assertIn("No space left", stderr.getvalue())
+        sandbox.delete.assert_awaited_once()
         client.close.assert_awaited_once()
 
     def test_daytona_cleanup_filters_study_and_verifies_deletion(self):
