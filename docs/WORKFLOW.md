@@ -63,10 +63,10 @@ shared mechanism for the applicable assessment and comparison, following
 A proposed dismissal or prose record cannot substitute for a required check.
 
 A completed review establishes that a report was published. It does not establish
-that its findings were resolved or dismissed. This escalation policy does not
-close the separate enforcement gap: the named reviewer and current-comparison
-requirements still need live activation and verification, preserving existing
-protection. This remains open in
+that its findings were resolved or dismissed. Both named reviewer checks and
+the current-comparison check are now required by live branch protection, as
+recorded in [activation and enforcement status](#activation-and-enforcement-status).
+Remaining validation scenarios are tracked in
 [the workflow TODO](TODO.md#repository-workflow-validation).
 
 ## Reviewer operation
@@ -238,11 +238,30 @@ enforced. The documentation-only consumer workflow was accepted and merged in
 reviewer, comparison workflow, and daily update-alert workflow were adopted in
 [EdotEnv PR #5](https://github.com/Lestode/EdotEnv/pull/5), merged on 2026-10-23
 as `5ec1822c6cefee4717529cb4727ed139878b19b4`. Those workflows are present on
-`main`; the additional named-reviewer and current-comparison requirements have
-not yet been activated or verified. GitHub's required-status-checks API was
-checked on 2026-10-24 and still listed only `Project checks` and
-`Agent reviews completed`. The historical private API review evidence remains
-separate from the public-consumer bootstrap evidence.
+`main`. On 2026-10-24, the user authorized activation of finding-blocking
+protection. GitHub's required-status-checks endpoint was updated with the
+accepted [five-check configuration](../.github/review-required-checks.json):
+`Project checks`, `Agent reviews completed`, `Documentation reviewer`,
+`Implementation reviewer`, and `Current review comparison`, each bound to the
+GitHub Actions app. Readback confirmed all five requirements, strict up-to-date
+checking, and unchanged settings for every other branch protection, including
+administrator enforcement, PRs, conversation resolution, and force-push/deletion
+restrictions. The historical private API review evidence remains separate from
+the public-consumer bootstrap evidence.
+
+Live blocking was verified on [PR #6](https://github.com/Lestode/EdotEnv/pull/6)
+at 08:36:46 UTC on 2026-10-24. Its head was `74004941c8294dfe1a0b70930fa13aed37f658a3`,
+its base was `5ec1822c6cefee4717529cb4727ed139878b19b4`, and its test merge was
+`057c6f19345d1f4c0f6d349a3cd640beb9b7c1c7`; the merge parents matched that head
+and base. `Project checks` and `Implementation reviewer` passed, while the
+[documentation check](https://github.com/Lestode/EdotEnv/runs/120827261236)
+failed with [unresolved F1 and an incomplete assessment](https://github.com/Lestode/EdotEnv/pull/6#issuecomment-6382068184).
+The completion check also failed and the current-comparison check remained
+pending. GitHub reported the PR conflict-free but its merge state `blocked`.
+No check was fabricated, no finding was dismissed, and no merge was attempted.
+This verifies blocking for that combined unresolved/incomplete case; it does
+not isolate a completed review with findings while completion passes, or verify
+a successful human dismissal. Those scenarios remain explicitly pending.
 The accepted documentation-only workflow also produced a
 [successful automatic run](https://github.com/Lestode/EdotEnv/actions/runs/39983355266)
 after PR #5 was updated to `f22949c`, confirming that update-triggered review is
@@ -256,15 +275,12 @@ bootstrap and review records. Every new PR revision still requires complete,
 clear assessments from both named reviewers before acceptance. The merged
 workflow files alone do not establish finding-blocking branch protection.
 
-With PR #5 merged, run both reviewers and the comparison workflow on an open PR
-while preserving all existing branch protections. Then add the three new
-required checks using the prepared
-[required-check settings](../.github/review-required-checks.json), which retain
-both existing requirements and bind all five checks to GitHub Actions. Apply
-these settings to the existing required-status-checks endpoint; preserve all
-other protections. Confirm the settings and live merge state before claiming
-finding-blocking enforcement. Track these activation steps in
-[the workflow TODO](TODO.md#repository-workflow-validation).
+The activation above used the prepared required-check settings through the
+existing required-status-checks endpoint. Preserve all five required checks and
+all other protections when changing this integration. A future reviewer or
+comparison update still needs its own current-review evidence; the activation
+snapshot does not certify later revisions. Track remaining live-validation work
+in [the workflow TODO](TODO.md#repository-workflow-validation).
 
 For bootstrap validation of an authorized workflow upgrade, manually dispatch
 this workflow from its feature branch for its own PR once the shared dependency
