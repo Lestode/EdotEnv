@@ -159,6 +159,14 @@ checkout supplies both actions, serialized per PR. An implementation assessment
 still runs when documentation findings fail the preceding action. Each agent's
 own command selects that reviewer for comment requests.
 
+Documentation-review scope is defined by its supported `instructionsPath`
+configuration. It checks documentation consistency and consequential claims
+relevant to the proposal; dependency evidence does not impose a comprehensive
+audit of unchanged CI. Implementation review checks code and workflow changes
+and receives relevant unchanged caller/configuration source through its supported
+`contextPaths` setting. Missing evidence for a consequential requirement remains
+blocking in either review.
+
 Both reviews include the accepted shared action manifests, integration contract,
 known limitations, and upstream validation references in bounded private
 model context. Normal runs prepend accepted project customization; bootstrap runs
@@ -303,7 +311,8 @@ The documentation check then passed and `Current review comparison` passed.
 A normal protected merge was nevertheless rejected with “4 of 5 required status
 checks are expected.” The four head checks were not published on the test
 merge alongside the comparison check. That separate integration issue remains
-open; no protection was weakened. PR #6 retains the accepted workflow files
+open; no protection was weakened. PR #6 removes the unconditional caller audit
+from documentation review, configures the relevant implementation source context,
 and does not add custom reviewer capability or check-publication code. Route
 the needed change through documented configuration under the
 [supported-interface policy](#supported-interfaces-for-user-and-company-systems); report any configuration
