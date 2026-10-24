@@ -183,7 +183,6 @@ jobs:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           allow-public-repository: 'true'
           expected-head-sha: ${{ steps.reviewer.outputs.head }}
-          completion-check-name: Agent reviews completed
       - name: Review implementation with the shared API agent
         # A documentation finding must not prevent the implementation assessment.
         if: >-
