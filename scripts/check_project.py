@@ -22,7 +22,15 @@ def check_review_configuration(root: Path) -> list[str]:
             "markerPrefix": f"edotenv-{reviewer}-review",
         }
         if reviewer == "implementation":
-            expected["contextPaths"] = [".github/documentation-review.json"]
+            expected["contextPaths"] = [
+                ".github/documentation-review.json",
+                ".github/implementation-review.json",
+                ".github/review-required-checks.json",
+                ".github/workflows/documentation-review.yml",
+                ".github/workflows/review-comparison.yml",
+                ".github/workflows/verify.yml",
+                "scripts/check_project.py",
+            ]
         try:
             config = json.loads(path.read_text())
         except (OSError, ValueError):

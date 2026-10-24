@@ -16,6 +16,13 @@ Compare model-visible instructions with enforced behavior when evidence is suppl
 If that evidence is unavailable, flag the awareness check as unverified rather than
 assuming that an agent received the information documented for operators.
 
+Review documentation consistency and claims relevant to the proposed changes.
+Use the supplied evidence to check consequential claims; identify specific missing
+evidence when it prevents that assessment. Do not turn a documentation review
+into a comprehensive code audit of unchanged CI or shared dependencies merely
+because the documentation describes them. Implementation review checks code and
+workflow changes against the accepted requirements and proposal.
+
 For workflow changes, inspect [the development workflow](../docs/WORKFLOW.md).
 Distinguish a completed documentation review, passing deterministic checks, human
 acceptance, and evidence that training works. Highlight any proposal that conflates

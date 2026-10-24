@@ -92,6 +92,10 @@ test('bootstrap supplies the approved contracts to both agents without proposed 
   assert.ok(!f.reads.includes('.github/implementation-review.md'));
   assert.ok(docs.includes('do not reproduce private source'));
   assert.ok(impl.includes('do not reproduce private source'));
+  assert.ok(!docs.includes('Review EdotEnv caller integration'),
+    'Dependency evidence must not widen the configured documentation assignment.');
+  assert.ok(impl.includes('Review EdotEnv caller integration'));
+  assert.ok(impl.includes('require an Incomplete assessment'));
 });
 
 test('normal mode uses accepted implementation settings and fails if customization is missing', async () => {

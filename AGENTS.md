@@ -22,6 +22,8 @@ Use a `codex/` feature branch and a pull request for every change after the init
 
 - The teacher will be an accessible model.
 - For now, the user manages collaboration and access in this repository.
+- Always bring conflicting information to the user for review before resolving it, including conflicts introduced by a new request. Follow the [finding-resolution and conflict policy](docs/WORKFLOW.md#finding-resolution-and-conflicts) for review findings, consequences, and recorded decisions.
+- When using tools or systems developed by the user or the company, use their documented configuration and supported interfaces. Report limitations before changing their implementation or adding local capabilities; follow the [supported-interface policy](docs/WORKFLOW.md#supported-interfaces-for-user-and-company-systems).
 - The documentation and implementation reviewers use the user's OpenAI API key on a GitHub-hosted runner; setup and activation are tracked in [the development workflow](docs/WORKFLOW.md).
 - This repository is public. Keep the shared reviewer repository private and fetch its pinned source in CI using a dedicated read-only deploy key. Require completed agent reviews on the latest PR commit before merging; activation is tracked in [the development workflow](docs/WORKFLOW.md).
 
