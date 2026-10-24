@@ -333,7 +333,11 @@ in [the workflow TODO](TODO.md#repository-workflow-validation).
 
 On 2026-10-24, the user explicitly replaced the five-check/test-merge policy:
 both reviewers must finish without blocking findings on the latest PR commit;
-every new commit requires fresh reviews. The prepared
+every new commit requires fresh reviews. The user explicitly accepted that a
+change of target branch without a new commit need not invalidate existing head
+reviews, because retargeting is not currently used; see the
+[recorded owner decision](https://github.com/Lestode/EdotEnv/pull/8#issuecomment-6383893448).
+This policy does not claim the previous current-target guarantee. The prepared
 [required-check configuration](../.github/review-required-checks.json) contains
 `Project checks`, `Documentation reviewer`, and `Implementation reviewer`, each
 bound to GitHub Actions, with strict up-to-date checking. `Current review
