@@ -69,13 +69,19 @@ recorded in [activation and enforcement status](#activation-and-enforcement-stat
 Remaining validation scenarios are tracked in
 [the workflow TODO](TODO.md#repository-workflow-validation).
 
-## Reviewer interface policy
+## Supported interfaces for user and company systems
 
-Configure `review-agents` through its documented configuration and supported
-integration inputs. Do not directly edit the shared implementation or add custom
-reviewer capabilities in consumer workflows to work around a configuration gap.
-If the documented configuration cannot express what is needed, explain the
-limitation to the user before proceeding with work that depends on it.
+When using tools or systems developed by the user or the company, use their
+documented configuration and supported interfaces. This includes `review-agents`.
+Do not change the underlying implementation or recreate or extend its capabilities
+in a consuming project to work around a configuration or interface gap.
+
+If the supported configuration or interfaces cannot express what is needed,
+explain the limitation and any proposed shared change to the user before
+proceeding with work that depends on it. Development explicitly requested for
+the underlying tool or system remains within scope; this rule governs its use
+from consuming projects. Keep reusable capabilities in the shared system so
+other projects can use the same supported behavior.
 
 ## Reviewer operation
 
@@ -300,7 +306,7 @@ merge alongside the comparison check. That separate integration issue remains
 open; no protection was weakened. PR #6 retains the accepted workflow files
 and does not add custom reviewer capability or check-publication code. Route
 the needed change through documented configuration under the
-[reviewer interface policy](#reviewer-interface-policy); report any configuration
+[supported-interface policy](#supported-interfaces-for-user-and-company-systems); report any configuration
 limitation to the user before expanding the integration. Verify a normal
 protected merge before claiming that merging works.
 
