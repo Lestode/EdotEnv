@@ -7,9 +7,10 @@ branch and open a PR against `main`. Update that PR as work progresses. Do not
 push changes directly to `main`. Agents may prepare and push changes within the
 user's authorized task; merging requires explicit user acceptance of the PR.
 
-EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/0b7cc867d1899bbdffcb1a93b1f41b5fe881fc65/WORKFLOW.md)
-and [documentation review procedure](https://github.com/Lestode/review-agents/blob/0b7cc867d1899bbdffcb1a93b1f41b5fe881fc65/documentation-review/SKILL.md)
-at the same revision as the action. Project scope remains in [AGENTS.md](../AGENTS.md).
+EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/WORKFLOW.md),
+[documentation review procedure](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/documentation-review/SKILL.md),
+and [implementation review procedure](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/implementation-review/SKILL.md)
+at the same revision as both actions. Project scope remains in [AGENTS.md](../AGENTS.md).
 Update the action pin and these links together through a reviewed PR.
 
 Before merging:
@@ -17,10 +18,16 @@ Before merging:
 1. `Project checks` must pass on the latest PR revision. It checks project file
    hygiene, Python lint/format, local documentation links, review configuration,
    and project CPU tests when present. Slime's upstream test suite is separate.
-2. `Agent reviews completed` must pass on that exact PR head. It certifies that
-   the configured documentation agent completed its review and published its
-   report. Resolve findings under the [finding-resolution and conflict policy](#finding-resolution-and-conflicts).
-   Completion is not model approval or human acceptance.
+2. `Agent reviews completed` must pass on that exact PR head. It certifies
+   documentation-review completion and publication. Under the new blocking
+   integration, `Documentation reviewer` and `Implementation reviewer` must
+   also pass on the current head, and `Current review comparison` must pass on
+   GitHub's current test merge commit. Fix findings or have an authorized human
+   dismiss specific findings with a recorded reason under the
+   [finding-resolution and conflict policy](#finding-resolution-and-conflicts). Incomplete reviews cannot
+   be dismissed. See the activation transition below; publishing workflow files
+   does not activate the new branch requirements. Completion and disposition of
+   findings do not establish human acceptance or training correctness.
 3. Run relevant implementation tests and record their commands, results, and
    coverage limits in the PR. Use [the OPCD TODO](TODO.md) for feature evidence
    and [hardware planning](HARDWARE.md) for GPU/distributed validation.
@@ -50,29 +57,35 @@ to satisfy a review finding. Dismissing a finding requires the user's explicit
 decision on that finding, including its rationale; general PR acceptance alone
 is not a specific dismissal. Record the finding and review IDs when available,
 the reviewed revision/comparison, the reason, and a reference to the user's
-decision in the PR. Once the shared dismissal mechanism is active, also record
-the decision through that mechanism for the applicable assessment and comparison.
+decision in the PR. Have an authorized human record the dismissal through the
+shared mechanism for the applicable assessment and comparison, following
+[reviewer operation](#reviewer-operation).
 A proposed dismissal or prose record cannot substitute for a required check.
 
 A completed review establishes that a report was published. It does not establish
 that its findings were resolved or dismissed. This escalation policy does not
-close the separate enforcement gap: both named finding-blocking reviewer checks
-and `Current review comparison` are still required additions, preserving
-`Project checks`. Implementation and live enforcement verification are tracked
-in [the workflow TODO](TODO.md#repository-workflow-validation).
+close the separate enforcement gap: the named reviewer and current-comparison
+requirements still need live activation and verification, preserving existing
+protection. This remains open in
+[the workflow TODO](TODO.md#repository-workflow-validation).
 
 ## Reviewer operation
 
 The [workflow](../.github/workflows/documentation-review.yml) fetches the private
 `Lestode/review-agents` repository at its pinned immutable revision, then invokes
-its local composite action. Public-consumer support was accepted in
-[shared reviewer PR #4](https://github.com/Lestode/review-agents/pull/4).
-[Project settings](../.github/documentation-review.json) select this documentation
-index and [project review instructions](../.github/documentation-review.md).
+both local composite actions. Public-consumer support was accepted in
+[shared reviewer PR #4](https://github.com/Lestode/review-agents/pull/4);
+implementation review and finding-blocking checks were accepted in
+[shared reviewer PR #3](https://github.com/Lestode/review-agents/pull/3).
+[Documentation settings](../.github/documentation-review.json) select this documentation
+index and [documentation instructions](../.github/documentation-review.md).
+[Implementation settings](../.github/implementation-review.json) select the same
+index, a separate command and marker, optional unchanged source paths, and
+[implementation instructions](../.github/implementation-review.md).
 The shared action defines the model, collection limits, authorization, execution,
-and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/0b7cc867d1899bbdffcb1a93b1f41b5fe881fc65/README.md).
+and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/README.md).
 
-The action runs on a GitHub-hosted Ubuntu runner with `auth-mode: api-key` and
+Both actions run on a GitHub-hosted Ubuntu runner with `auth-mode: api-key` and
 explicit public-repository opt-in. Fetch it with `REVIEW_AGENTS_READ_KEY`, a
 dedicated SSH deploy key restricted to read-only access on `Lestode/review-agents`.
 Store its private part as a repository Actions secret in
@@ -85,23 +98,33 @@ Create an `OPENAI_API_KEY` repository Actions secret in
 Pass it only through the action's `openai-api-key` input. Do not put the key in
 project files or PR comments. The API project needs billing and access to the
 shared action's pinned model; this mode uses OpenAI API billing and needs no
-local Mac runner or ChatGPT sign-in. The shared action makes a tool-free
+local Mac runner or ChatGPT sign-in. Each shared action makes a tool-free
 Responses API request using the same bounded review context as its ChatGPT mode.
 Proposed PR code runs only in the separate verification job; the privileged
 reviewer uses accepted default-branch settings and never executes PR code.
 Keep the review job's per-PR concurrency group and queued execution so repeated
 automatic events cannot invoke paid reviews concurrently for the same revision.
 
-Human collaborators with write access receive an automatic review on PR open,
-reopen, ready-for-review, and every `synchronize` update. An external contributor's
-PR requires a human collaborator to request review with `/review-docs`.
-Use `/review-docs <question>` for follow-up discussion or retries. A manual
-workflow dispatch takes an open `pull_request_number`. The shared action
-verifies the requester before invoking a paid model.
-It also verifies authorization before creating a check, so an external comment
+Human collaborators with write access receive both reviews on PR open,
+reopen, ready-for-review, every `synchronize` update, and PR retargeting.
+When the target branch advances, update the PR branch to obtain fresh automatic
+assessments and satisfy strict up-to-date protection. Authorized review requests
+can also reassess the current comparison; a target-branch push alone does not
+start either reviewer.
+Implementation includes any non-Markdown path, including tests, configuration,
+and workflows. A PR changing only Markdown receives an explicit successful
+not-applicable implementation assessment without a model call.
+An external contributor's PR requires a human collaborator to request each
+review with `/review-docs` and `/review-implementation`. Each command also
+supports follow-up discussion, retries, and finding dismissals. Use the report's
+copyable dismissal command with its review ID, selected finding IDs, and reason;
+dismissals apply only to that assessment and exact head/base comparison.
+A manual workflow dispatch takes an open `pull_request_number` and invokes both
+reviewers. The shared actions verify the requester before invoking a paid model.
+They also verify authorization before creating a check, so an external comment
 cannot overwrite a valid result. Follow-up questions in this gated workflow
 require a full review of the captured revision as well as an answer.
-This workflow authorizes the reviewer's PR reports and requested follow-up replies.
+This workflow authorizes both reviewers' PR reports and requested follow-up replies.
 
 Each request captures the intended PR head. The action creates
 `Agent reviews completed` on that exact commit, not on the workflow's base commit.
@@ -112,14 +135,72 @@ or a failed checkout leave the required check absent, which also blocks merging.
 A new commit cannot inherit an older commit's passing check. Queued superseded
 events do not review newer code under an older request, and duplicate completed
 requests do not repeat billing. Legacy or incomplete response markers do not
-count as completion evidence.
+count as completion evidence. Interrupted runs and publication failures may
+require a retry; serialization and deduplication are not an exactly-once billing
+guarantee.
+
+The combined workflow keeps its existing filename, but is named `API agent
+reviews` and gives runs the title `Review PR #<number>`. One immutable private
+checkout supplies both actions, serialized per PR. An implementation assessment
+still runs when documentation findings fail the preceding action. Each agent's
+own command selects that reviewer for comment requests.
+
+Both reviews include the accepted shared action manifests, integration contract,
+known limitations, and upstream validation references in bounded private
+model context. Normal runs prepend accepted project customization; bootstrap runs
+do not activate proposed customization. Temporary context/configuration stays in
+the ignored private checkout and is never uploaded. Reports may cite dependency
+paths and the pin but must not reproduce private source. This supplies evidence
+for checking caller compatibility; the shared runtime remains a separately
+reviewed dependency, not a new consumer audit of its internals. Missing caller
+source or interface details needed for a consequential integration requirement
+still make the assessment incomplete. If the evidence exceeds the shared 32 KB
+instruction bound, preparation fails rather than silently truncating it.
+Documentation review also receives the adopted implementation procedure and
+accepted caller configuration/resolver. Both receive the narrow helper and
+check-publication interfaces used by the caller. Both disclosures to the OpenAI API were explicitly authorized
+by the user. The private checkout is never published as review context.
+
+The [comparison workflow](../.github/workflows/review-comparison.yml) verifies
+the two published assessments and named checks against the current head, target
+commit, and target branch. It publishes `Current review comparison` only on a
+test merge commit whose parents match that comparison. It makes no model calls,
+uses no secrets, and executes no PR code. Authorized reviewer commands and
+completion of `API agent reviews` refresh it automatically. Preserve the run
+title, workflow path, and completion-trigger name together when renaming them.
+The shared revision's [known limitations](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/KNOWN_ISSUES.md)
+remain upstream; this integration does not claim to fix them.
+
+### Reviewer update alerts
+
+The [freshness workflow](../.github/workflows/reviewer-freshness.yml) checks the
+accepted pin against the private reviewer's default-branch head every day at
+07:23 UTC, and can also be run manually from Actions. It reuses the read-only
+deploy key and requires only project contents read access and issue write access.
+It reads Git history without executing upstream code or calling the model API.
+
+When the pin is an ancestor of a newer upstream revision, it creates one tracking
+issue containing the two revisions and a private comparison link. Unchanged runs
+do not edit the issue or add comments. Later upstream changes update that issue;
+catching up closes it. Closing the alert while still behind causes the next run
+to reopen it. Private source and commit messages are not published. Review and
+update the pin and matching links through a PR under the acceptance policy above;
+the alert does not install updates or establish compatibility.
+
+Failed private checkout, a missing pin, unexpected Git history, or API errors fail
+the workflow rather than reporting a successful freshness check. Inspect failed
+Actions runs for these cases. The schedule activates only after this workflow is
+merged to the default branch. GitHub may disable schedules in public repositories
+after [60 days without repository activity](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows);
+re-enable the workflow in Actions if needed.
 
 ## Activation and enforcement status
 
 The initial API-key support was accepted and merged in
 [review-agents PR #2](https://github.com/Lestode/review-agents/pull/2). Its original
 private-consumer pin was `f4db0e334f6fc2216c583fe796638b096a5abbfe`.
-The new public-consumer pin above is the accepted merge commit of shared reviewer PR #4.
+Public-consumer support arrived in shared reviewer PR #4. The new pin above
+is the accepted merge commit of shared reviewer PR #3, which includes that support.
 
 [EdotEnv PR #1](https://github.com/Lestode/EdotEnv/pull/1) activated the initial
 private-repository workflow on the default branch. The repository's
@@ -151,17 +232,50 @@ report publication, and an exact-head passing check were verified in a
 [feature-branch bootstrap run](https://github.com/Lestode/EdotEnv/actions/runs/39959766619)
 for `a6deb6646aee9849a8de7b1ec1a6c6ba07672cea`.
 
-The required agent check is enforced. The shared dependency is merged and the
-public-consumer runtime is validated on the feature branch. Automatic review
-after updates on `main` still needs acceptance and merge of this consumer workflow.
-The historical private API review evidence is separate from the bootstrap evidence.
+The existing `Project checks` and `Agent reviews completed` requirements remain
+enforced. The documentation-only consumer workflow was accepted and merged in
+[EdotEnv PR #4](https://github.com/Lestode/EdotEnv/pull/4). The shared implementation
+reviewer is now accepted upstream. Adoption of that reviewer, the new comparison
+workflow, and daily update alerts is proposed in
+[EdotEnv PR #5](https://github.com/Lestode/EdotEnv/pull/5); these additions are not
+active on `main` until acceptance and merge. The historical private API review
+evidence is separate from the public-consumer bootstrap evidence.
+The accepted documentation-only workflow also produced a
+[successful automatic run](https://github.com/Lestode/EdotEnv/actions/runs/39983355266)
+after PR #5 was updated to `f22949c`, confirming that update-triggered review is
+already active for that rollout.
+The [initial dual-review bootstrap](https://github.com/Lestode/EdotEnv/actions/runs/39983388029)
+on `f22949c` published both assessments and exact-head checks. Documentation
+findings blocked its named check while completion passed; implementation
+assessment was incomplete because private dependency contracts were unavailable.
+The subsequent revision corrects the wording and supplies bounded interface
+evidence. Both named checks still need a complete, clear assessment of the
+latest PR revision before acceptance; consult PR #5 for the current results.
+
+For this activation transition, validate both reviewers on the setup PR using
+the manual bootstrap below while preserving all existing branch protections.
+After acceptance and merge, run both reviewers and the comparison workflow on
+an open PR. Then add the three new required checks using the prepared
+[required-check settings](../.github/review-required-checks.json), which retain
+both existing requirements and bind all five checks to GitHub Actions. Apply
+these settings to the existing required-status-checks endpoint; preserve all
+other protections. Confirm the settings and live merge state before claiming
+finding-blocking enforcement. Track these activation steps in
+[the workflow TODO](TODO.md#repository-workflow-validation).
 
 For bootstrap validation of an authorized workflow upgrade, manually dispatch
 this workflow from its feature branch for its own PR once the shared dependency
 is accepted. The registered workflow path already exists on `main`. The job still
 reads accepted default-branch project configuration and the accepted shared
 reviewer, and must publish a real completed review before the required gate can
-pass. This one-off validation does not activate automatic review on `main` or
+pass. When bootstrapping implementation review before its configuration exists
+on `main`, set `bootstrap_implementation: true`. This explicit mode derives only
+the documentation index from accepted documentation settings and uses shared
+implementation defaults with a separate command and marker. It does not load
+proposed implementation customization or execute PR code. Once accepted
+implementation configuration exists, bootstrap mode refuses to override it;
+normal runs always require that accepted configuration and its instructions.
+This one-off validation does not activate automatic review on `main` or
 authorize merging. Obtain user acceptance before merging. Do not remove
 protection or fabricate a successful check to merge setup.
 If manual dispatch is unavailable before merge, leave the gate blocking and
@@ -171,13 +285,14 @@ and stale-head blocking. See [the activation tasks](TODO.md#repository-workflow-
 
 ## Local verification
 
-Initialize Slime with `git submodule update --init slime`, then run:
+Initialize Slime with `git submodule update --init slime`. The reviewer freshness
+tests require Node.js. Then run:
 
 ```sh
 python -m pip install pre-commit==4.2.0
 pre-commit run --all-files
 python scripts/check_project.py
-# Once project CPU tests exist:
+node --test tests/*.test.cjs
 python -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
