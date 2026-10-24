@@ -22,6 +22,8 @@ This is proposed guidance, not a validated improvement. It is inspired by the
 an undertrained CNN baseline and repeated learning-rate tuning. The experiment
 purpose advice is an inference from those observations.
 
-This draft is separate from the
-[current comparison treatment](../experiments/verifier-context/research-guidance.md)
-and is not loaded by the experiment runner.
+This guidance is separate from the
+[original comparison treatment](../experiments/verifier-context/research-guidance.md).
+The [new Sol comparison](experiments/research-judgment-sol/README.md) uses the
+heading and three rules above as its additional agent context. This provenance
+and status section is not part of that treatment.
