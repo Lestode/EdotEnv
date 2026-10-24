@@ -14,6 +14,8 @@ Keep supporting project documentation in `docs/` and follow [documentation rules
 
 Track implementation gaps and validation work in [the OPCD TODO](docs/TODO.md).
 
+Follow [experiment guidance](docs/EXPERIMENTS.md) when planning and running experiments.
+
 ## Protected infrastructure: greengoblin
 
 **Never modify anything on greengoblin.** It is an existing SSH gateway to the
