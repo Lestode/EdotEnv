@@ -234,12 +234,15 @@ for `a6deb6646aee9849a8de7b1ec1a6c6ba07672cea`.
 
 The existing `Project checks` and `Agent reviews completed` requirements remain
 enforced. The documentation-only consumer workflow was accepted and merged in
-[EdotEnv PR #4](https://github.com/Lestode/EdotEnv/pull/4). The shared implementation
-reviewer is now accepted upstream. Adoption of that reviewer, the new comparison
-workflow, and daily update alerts is proposed in
-[EdotEnv PR #5](https://github.com/Lestode/EdotEnv/pull/5); these additions are not
-active on `main` until acceptance and merge. The historical private API review
-evidence is separate from the public-consumer bootstrap evidence.
+[EdotEnv PR #4](https://github.com/Lestode/EdotEnv/pull/4). The implementation
+reviewer, comparison workflow, and daily update-alert workflow were adopted in
+[EdotEnv PR #5](https://github.com/Lestode/EdotEnv/pull/5), merged on 2026-10-23
+as `5ec1822c6cefee4717529cb4727ed139878b19b4`. Those workflows are present on
+`main`; the additional named-reviewer and current-comparison requirements have
+not yet been activated or verified. GitHub's required-status-checks API was
+checked on 2026-10-24 and still listed only `Project checks` and
+`Agent reviews completed`. The historical private API review evidence remains
+separate from the public-consumer bootstrap evidence.
 The accepted documentation-only workflow also produced a
 [successful automatic run](https://github.com/Lestode/EdotEnv/actions/runs/39983355266)
 after PR #5 was updated to `f22949c`, confirming that update-triggered review is
@@ -248,14 +251,14 @@ The [initial dual-review bootstrap](https://github.com/Lestode/EdotEnv/actions/r
 on `f22949c` published both assessments and exact-head checks. Documentation
 findings blocked its named check while completion passed; implementation
 assessment was incomplete because private dependency contracts were unavailable.
-The subsequent revision corrects the wording and supplies bounded interface
-evidence. Both named checks still need a complete, clear assessment of the
-latest PR revision before acceptance; consult PR #5 for the current results.
+Later revisions supplied bounded interface evidence; PR #5 preserves those
+bootstrap and review records. Every new PR revision still requires complete,
+clear assessments from both named reviewers before acceptance. The merged
+workflow files alone do not establish finding-blocking branch protection.
 
-For this activation transition, validate both reviewers on the setup PR using
-the manual bootstrap below while preserving all existing branch protections.
-After acceptance and merge, run both reviewers and the comparison workflow on
-an open PR. Then add the three new required checks using the prepared
+With PR #5 merged, run both reviewers and the comparison workflow on an open PR
+while preserving all existing branch protections. Then add the three new
+required checks using the prepared
 [required-check settings](../.github/review-required-checks.json), which retain
 both existing requirements and bind all five checks to GitHub Actions. Apply
 these settings to the existing required-status-checks endpoint; preserve all
