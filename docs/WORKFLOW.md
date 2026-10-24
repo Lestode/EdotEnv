@@ -11,23 +11,23 @@ EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-
 [documentation review procedure](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/documentation-review/SKILL.md),
 and [implementation review procedure](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/implementation-review/SKILL.md)
 at the same revision as both actions. Project scope remains in [AGENTS.md](../AGENTS.md).
-Update the action pin and these links together through a reviewed PR.
+Update the action pin and these links together through a reviewed PR. EdotEnv uses
+the user-selected latest-head merge policy below in place of the earlier shared
+example's five-check/test-merge integration.
 
 Before merging:
 
 1. `Project checks` must pass on the latest PR revision. It checks project file
    hygiene, Python lint/format, local documentation links, review configuration,
    and project CPU tests when present. Slime's upstream test suite is separate.
-2. `Agent reviews completed` must pass on that exact PR head. It certifies
-   documentation-review completion and publication. Under the new blocking
-   integration, `Documentation reviewer` and `Implementation reviewer` must
-   also pass on the current head, and `Current review comparison` must pass on
-   GitHub's current test merge commit. Fix findings or have an authorized human
-   dismiss specific findings with a recorded reason under the
-   [finding-resolution and conflict policy](#finding-resolution-and-conflicts). Incomplete reviews cannot
-   be dismissed. See the activation transition below; publishing workflow files
-   does not activate the new branch requirements. Completion and disposition of
-   findings do not establish human acceptance or training correctness.
+2. `Documentation reviewer` and `Implementation reviewer` must both pass on
+   the exact latest PR commit. Each reviewer must finish and have no unresolved
+   blocking findings; a new commit requires fresh checks and reviews. Missing,
+   running, failed, or unpublished reviews do not pass. Fix findings or have an
+   authorized human dismiss specific findings with a recorded reason under the
+   [finding-resolution and conflict policy](#finding-resolution-and-conflicts).
+   There is no separate `Current review comparison` or completion-only merge gate.
+   Human acceptance and training correctness remain separate from reviewer results.
 3. Run relevant implementation tests and record their commands, results, and
    coverage limits in the PR. Use [the OPCD TODO](TODO.md) for feature evidence
    and [hardware planning](HARDWARE.md) for GPU/distributed validation.
@@ -63,9 +63,10 @@ shared mechanism for the applicable assessment and comparison, following
 A proposed dismissal or prose record cannot substitute for a required check.
 
 A completed review establishes that a report was published. It does not establish
-that its findings were resolved or dismissed. Both named reviewer checks and
-the current-comparison check are now required by live branch protection, as
-recorded in [activation and enforcement status](#activation-and-enforcement-status).
+that its findings were resolved or dismissed. The target branch requirements are
+`Project checks`, `Documentation reviewer`, and `Implementation reviewer`, on the
+latest PR commit. Activation and historical requirements are recorded in
+[activation and enforcement status](#activation-and-enforcement-status).
 Remaining validation scenarios are tracked in
 [the workflow TODO](TODO.md#repository-workflow-validation).
 
@@ -140,18 +141,16 @@ cannot overwrite a valid result. Follow-up questions in this gated workflow
 require a full review of the captured revision as well as an answer.
 This workflow authorizes both reviewers' PR reports and requested follow-up replies.
 
-Each request captures the intended PR head. The action creates
-`Agent reviews completed` on that exact commit, not on the workflow's base commit.
-It passes only after a model review is completed and published, or an existing
-completed report for the same request and revision is verified. Skipped, closed,
-superseded, failed, and incomplete requests cannot pass. Missing read credentials
-or a failed checkout leave the required check absent, which also blocks merging.
-A new commit cannot inherit an older commit's passing check. Queued superseded
-events do not review newer code under an older request, and duplicate completed
-requests do not repeat billing. Legacy or incomplete response markers do not
-count as completion evidence. Interrupted runs and publication failures may
-require a retry; serialization and deduplication are not an exactly-once billing
-guarantee.
+Each request captures the intended PR head. Each shared action publishes its
+named finding-blocking check on that exact commit. The check passes only after
+its report is completed and finalized with no unresolved blocking findings.
+Missing read credentials, skipped or failed review execution, missing reports,
+and unpublished results cannot pass. A new commit has no reviewer checks until
+reviewed; it cannot inherit the previous commit's success. Paid-review requests
+remain authorized and serialized, with existing deduplication and finding-ledger
+behavior unchanged. Incomplete assessments within the agreed scope remain
+blocking; out-of-scope private audits are coverage notes rather than prerequisites.
+No separate completion-only check is requested.
 
 The combined workflow keeps its existing filename, but is named `API agent
 reviews` and gives runs the title `Review PR #<number>`. One immutable private
@@ -183,15 +182,18 @@ accepted caller configuration/resolver. Both receive the narrow helper and
 check-publication interfaces used by the caller. Both disclosures to the OpenAI API were explicitly authorized
 by the user. The private checkout is never published as review context.
 
-The [comparison workflow](../.github/workflows/review-comparison.yml) verifies
-the two published assessments and named checks against the current head, target
-commit, and target branch. It publishes `Current review comparison` only on a
-test merge commit whose parents match that comparison. It makes no model calls,
-uses no secrets, and executes no PR code. Authorized reviewer commands and
-completion of `API agent reviews` refresh it automatically. Preserve the run
-title, workflow path, and completion-trigger name together when renaming them.
-The shared revision's [known limitations](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/KNOWN_ISSUES.md)
-remain upstream; this integration does not claim to fix them.
+The merge gate uses the shared actions' existing checks on the PR head. The
+separate polling comparison workflow is disabled; there is no test-merge review
+check or additional agent review. Strict up-to-date branch protection remains
+enabled: when `main` advances, update the PR branch and obtain new reviews on
+its resulting commit. Only the latest reviewed PR commit may merge.
+
+Review scope is the public proposal and supplied interfaces. Operator-reported
+private outcomes and unavailable private operations are explicitly unverified
+coverage limits unless the PR includes that audit. Neither reviewer must prove
+historical private experiments merely to complete a public implementation or
+documentation review. Consequential requirements within the agreed public-change
+scope still require evidence and blocking findings still prevent merging.
 
 ### Reviewer update alerts
 
@@ -254,7 +256,7 @@ report publication, and an exact-head passing check were verified in a
 [feature-branch bootstrap run](https://github.com/Lestode/EdotEnv/actions/runs/39959766619)
 for `a6deb6646aee9849a8de7b1ec1a6c6ba07672cea`.
 
-The existing `Project checks` and `Agent reviews completed` requirements remain
+At that stage, `Project checks` and `Agent reviews completed` remained
 enforced. The documentation-only consumer workflow was accepted and merged in
 [EdotEnv PR #4](https://github.com/Lestode/EdotEnv/pull/4). The implementation
 reviewer, comparison workflow, and daily update-alert workflow were adopted in
@@ -262,7 +264,7 @@ reviewer, comparison workflow, and daily update-alert workflow were adopted in
 as `5ec1822c6cefee4717529cb4727ed139878b19b4`. Those workflows are present on
 `main`. On 2026-10-24, the user authorized activation of finding-blocking
 protection. GitHub's required-status-checks endpoint was updated with the
-accepted [five-check configuration](../.github/review-required-checks.json):
+then-current five-check configuration:
 `Project checks`, `Agent reviews completed`, `Documentation reviewer`,
 `Implementation reviewer`, and `Current review comparison`, each bound to the
 GitHub Actions app. Readback confirmed all five requirements, strict up-to-date
@@ -314,17 +316,47 @@ merge alongside the comparison check. That separate integration issue remains
 open; no protection was weakened. PR #6 removes the unconditional caller audit
 from documentation review, configures the relevant implementation source context,
 and does not add custom reviewer capability or check-publication code. Route
-the needed change through documented configuration under the
-[supported-interface policy](#supported-interfaces-for-user-and-company-systems); report any configuration
-limitation to the user before expanding the integration. Verify a normal
-protected merge before claiming that merging works.
+any future shared capability change through documented configuration under the
+[supported-interface policy](#supported-interfaces-for-user-and-company-systems).
+The user subsequently selected the simpler latest-head policy below instead
+of requiring this test-merge integration to be repaired for EdotEnv.
 
 The activation above used the prepared required-check settings through the
-existing required-status-checks endpoint. Preserve all five required checks and
-all other protections when changing this integration. A future reviewer or
+existing required-status-checks endpoint. This five-check rollout is historical;
+the latest-head policy below supersedes its check selection while preserving
+other protections. A future reviewer or
 comparison update still needs its own current-review evidence; the activation
 snapshot does not certify later revisions. Track remaining live-validation work
 in [the workflow TODO](TODO.md#repository-workflow-validation).
+
+### Latest-head policy transition
+
+On 2026-10-24, the user explicitly replaced the five-check/test-merge policy:
+both reviewers must finish without blocking findings on the latest PR commit;
+every new commit requires fresh reviews. The user explicitly accepted that a
+change of target branch without a new commit need not invalidate existing head
+reviews, because retargeting is not currently used; see the
+[recorded owner decision](https://github.com/Lestode/EdotEnv/pull/8#issuecomment-6383893448).
+This policy does not claim the previous current-target guarantee. The prepared
+[required-check configuration](../.github/review-required-checks.json) contains
+`Project checks`, `Documentation reviewer`, and `Implementation reviewer`, each
+bound to GitHub Actions, with strict up-to-date checking. `Current review
+comparison` and `Agent reviews completed` are no longer selected as requirements.
+The polling workflow is disabled and the optional completion-check invocation is removed.
+Private experiment audits are outside the public-change review unless explicitly
+included; their unavailable evidence is reported as unverified coverage.
+
+The three-check selection was activated on 2026-10-24 at the user's direction.
+Readback confirmed all three names bound to GitHub Actions, strict up-to-date
+checking, and identical settings for every other branch protection, including
+administrator enforcement, PRs, resolved conversations, and force-push/deletion
+restrictions. The obsolete comparison workflow was disabled through GitHub's
+workflow configuration. Its unchanged source file remains available because the
+accepted reviewer configuration still reads it during this transition; the new
+configuration stops collecting that retired workflow. The shared reviewer
+implementation and pin remain unchanged. Updated scope customization takes effect
+only after this configuration PR is accepted on the default branch; an existing
+incomplete report does not silently become successful.
 
 For bootstrap validation of an authorized workflow upgrade, manually dispatch
 this workflow from its feature branch for its own PR once the shared dependency

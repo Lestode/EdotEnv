@@ -27,7 +27,6 @@ def check_review_configuration(root: Path) -> list[str]:
                 ".github/implementation-review.json",
                 ".github/review-required-checks.json",
                 ".github/workflows/documentation-review.yml",
-                ".github/workflows/review-comparison.yml",
                 ".github/workflows/verify.yml",
                 "scripts/check_project.py",
             ]

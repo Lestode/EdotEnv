@@ -32,4 +32,9 @@ The Slime source is a pinned submodule. Its internal Markdown is not part of thi
 repository's collected documentation snapshot; report that coverage limit when it
 matters. Use project documentation to assess intent and avoid claiming a code audit.
 
+Use the public-change scope in [reviewer operation](../docs/WORKFLOW.md#reviewer-operation).
+Treat operator-reported private experiment outcomes and operations as unverified
+coverage unless auditing them is explicitly part of this PR. Do not make an
+out-of-scope private audit a prerequisite for completing the public-change review.
+
 This customization authorizes no edits, merges, or execution of proposed code.
