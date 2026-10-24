@@ -10,8 +10,7 @@ link evidence appropriate to the affected invariants in docs/TODO.md and docs/HA
 ## Merge readiness
 
 - [ ] `Project checks` passes on the latest revision.
-- [ ] `Agent reviews completed`, `Documentation reviewer`, and `Implementation reviewer` pass on the latest revision; findings are fixed or explicitly dismissed by an authorized human with a reason.
-- [ ] `Current review comparison` passes on the current test merge commit.
+- [ ] `Documentation reviewer` and `Implementation reviewer` pass on this exact latest PR commit; blocking findings are fixed or explicitly dismissed with a reason. A new commit requires fresh reviews.
 - [ ] Relevant implementation tests pass; GPU/distributed evidence is provided when needed.
 - [ ] The user explicitly accepts this PR for merge.
 

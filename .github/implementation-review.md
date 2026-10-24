@@ -14,9 +14,14 @@ and gradient handling. Use the [implementation TODO](../docs/TODO.md) and
 and GPU/distributed evidence. Do not claim that source inspection proves a run.
 
 For workflow changes, check authorization before paid reviews or check writes,
-accepted configuration and immutable reviewer pins, exact head/base comparison,
-findings and completion checks, failed or missing evidence, and private source
+accepted configuration and immutable reviewer pins, reviews on the exact latest
+PR head, blocking findings, failed or missing review execution, and private source
 and credential handling. Workflow files alone do not prove branch enforcement.
+
+Use the public-change scope in [reviewer operation](../docs/WORKFLOW.md#reviewer-operation).
+Treat operator-reported private experiment outcomes and operations as unverified
+coverage unless auditing them is explicitly part of this PR. Do not make an
+out-of-scope private audit a prerequisite for completing the public-change review.
 
 Slime is a pinned submodule. Its source is not in this repository's collected
 implementation context. Name specific missing sources or runtime evidence when
