@@ -1,6 +1,12 @@
 name: Review comparison
 
 on:
+  workflow_dispatch:
+    inputs:
+      pull_request_number:
+        description: Open PR whose real checks should be verified on its test merge
+        required: true
+        type: string
   pull_request_target:
     types: [opened, reopened, ready_for_review, synchronize, edited]
   issue_comment:
@@ -24,6 +30,7 @@ jobs:
       (github.event_name == 'pull_request_target' &&
        (github.event.action != 'edited' || github.event.changes.base)) ||
       github.event_name == 'workflow_run' ||
+      github.event_name == 'workflow_dispatch' ||
       (github.event.issue.pull_request && github.event.comment.user.type == 'User' &&
        (startsWith(github.event.comment.body, '/review-docs') ||
         startsWith(github.event.comment.body, '/review-implementation')))
@@ -36,7 +43,8 @@ jobs:
         with:
           script: |
             const run = context.payload.workflow_run;
-            let number = context.payload.pull_request?.number || context.payload.issue?.number;
+            let number = context.payload.pull_request?.number || context.payload.issue?.number ||
+              Number(context.payload.inputs?.pull_request_number);
             let actor = context.eventName === 'issue_comment' ? context.payload.comment.user : context.payload.sender;
             if (context.eventName === 'workflow_run') {
               const path = run.path?.split('@')[0];
@@ -57,10 +65,12 @@ jobs:
     if: needs.authorize.outputs.allowed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Only authorized jobs can enter this cancellation group.
+    # Serialize with the reviewer job so its source checks cannot change
+    # while this job verifies and publishes test-merge attestations.
     concurrency:
-      group: review-comparison-${{ needs.authorize.outputs.number }}
-      cancel-in-progress: true
+      group: documentation-review-${{ needs.authorize.outputs.number }}
+      queue: max
+      cancel-in-progress: false
     steps:
       # No checkout, model call, or secrets: only verify GitHub evidence.
       - uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
@@ -68,6 +78,7 @@ jobs:
           script: |
             const repo = context.repo;
             const number = context.payload.pull_request?.number || context.payload.issue?.number ||
+              Number(context.payload.inputs?.pull_request_number) ||
               Number(/^Review PR #([1-9][0-9]*)$/.exec(context.payload.workflow_run?.display_title || '')?.[1]);
             if (context.eventName === 'issue_comment') {
               const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
@@ -78,7 +89,8 @@ jobs:
             const required = ['Documentation reviewer', 'Implementation reviewer'];
             let comparison;
             let checkId;
-            for (let attempt = 0; attempt < 52; attempt++) {
+            let checkMerge;
+            for (let attempt = 0; attempt < 5; attempt++) {
               const { data: pull } = await github.rest.pulls.get({ ...repo, pull_number: number });
               const key = JSON.stringify([pull.head.sha, pull.base.sha, pull.base.ref]);
               if (pull.state !== 'open' || (comparison && comparison !== key)) {
@@ -95,12 +107,13 @@ jobs:
                 const { data: merge } = await github.rest.git.getCommit({ ...repo, commit_sha: pull.merge_commit_sha });
                 const parents = merge.parents.map(parent => parent.sha);
                 if (parents.length === 2 && parents.includes(pull.head.sha) && parents.includes(pull.base.sha)) {
-                  if (!checkId) {
+                  if (!checkId || checkMerge !== pull.merge_commit_sha) {
                     const { data } = await github.rest.checks.create({ ...repo,
                       name: 'Current review comparison', head_sha: pull.merge_commit_sha, status: 'in_progress',
                       output: { title: 'Waiting for both reviewers', summary: 'Reviews must match the current head, target commit, and target branch.' },
                     });
                     checkId = data.id;
+                    checkMerge = pull.merge_commit_sha;
                   }
                   const comments = await github.paginate(github.rest.issues.listComments, { ...repo, issue_number: number, per_page: 100 });
                   const assessments = comments.flatMap(comment => {
@@ -114,23 +127,64 @@ jobs:
                     } catch { return []; }
                   });
                   const reviewerChecks = await github.paginate(github.rest.checks.listForRef, { ...repo, ref: pull.head.sha, per_page: 100, filter: 'all' });
+                  const reviewSources = new Map();
                   const complete = required.every(name => {
                     const checks = reviewerChecks.filter(check => {
-                      if (check.name !== name || check.app?.slug !== 'github-actions') return false;
+                      if (check.name !== name || check.app?.slug !== 'github-actions' ||
+                          check.head_sha !== pull.head.sha) return false;
                       try { return JSON.parse(check.output?.text || 'null')?.pullNumber === number; }
                       catch { return false; }
                     });
                     const latest = checks.sort((a, b) => b.id - a.id)[0];
+                    reviewSources.set(name, latest);
                     const assessment = assessments.filter(report => report.checkId === latest?.id).at(-1);
                     return latest?.status === 'completed' && latest.conclusion === 'success' &&
                       assessment && latest.external_id === `${assessment.id}:complete` &&
                       ['clear', 'findings'].includes(assessment.outcome);
                   });
-                  if (complete) {
+                  // GitHub selects the test merge's checks once it has any status.
+                  // Keep the head checks authoritative, and attest their verified results
+                  // on that same test merge instead of leaving required names Expected.
+                  const names = ['Project checks', 'Agent reviews completed', ...required];
+                  const sources = names.map(name => reviewSources.has(name) ? reviewSources.get(name) : reviewerChecks.filter(check =>
+                    check.name === name && check.app?.slug === 'github-actions' &&
+                    check.head_sha === pull.head.sha).sort((a, b) => b.id - a.id)[0]);
+                  const sourceChecksPassed = sources.every(check =>
+                    check?.status === 'completed' && check.conclusion === 'success');
+                  // Never hold the shared queue waiting for a reviewer behind us.
+                  // Reviewer completion will request a fresh comparison job.
+                  if (!complete || !sourceChecksPassed) break;
+                  if (complete && sourceChecksPassed) {
                     // Recheck after reading reports/checks; never certify a moving comparison.
                     const { data: current } = await github.rest.pulls.get({ ...repo, pull_number: number });
                     if (current.state === 'open' && current.merge_commit_sha === pull.merge_commit_sha &&
                         JSON.stringify([current.head.sha, current.base.sha, current.base.ref]) === comparison) {
+                      for (const source of sources) {
+                        await github.rest.checks.create({ ...repo, name: source.name,
+                          head_sha: checkMerge, status: 'completed', conclusion: 'success',
+                          external_id: `comparison:${number}:${source.id}:${checkMerge}`,
+                          details_url: source.html_url,
+                          output: {
+                            title: 'Verified result for this test merge',
+                            summary: `The real ${source.name} check passed on ${pull.head.sha}. ` +
+                              `Both finalized reviews cover target ${pull.base.sha} (${pull.base.ref}). ` +
+                              'This attestation does not execute tests or waive findings.',
+                            text: JSON.stringify({ version: 1, pullNumber: number,
+                              sourceCheckId: source.id, head: pull.head.sha,
+                              base: pull.base.sha, baseRef: pull.base.ref, testMerge: checkMerge }),
+                          },
+                        });
+                      }
+                      // Publication can take time. Do not certify a comparison that moved.
+                      const { data: published } = await github.rest.pulls.get({ ...repo, pull_number: number });
+                      if (published.state !== 'open' || published.merge_commit_sha !== checkMerge ||
+                          JSON.stringify([published.head.sha, published.base.sha, published.base.ref]) !== comparison) {
+                        await github.rest.checks.update({ ...repo, check_run_id: checkId,
+                          status: 'completed', conclusion: 'failure', output: {
+                            title: 'PR changed during publication', summary: 'Fresh verification is required.',
+                          } });
+                        return;
+                      }
                       await github.rest.checks.update({ ...repo, check_run_id: checkId, status: 'completed', conclusion: 'success',
                         output: { title: 'Both reviews match this comparison', summary: 'Both reviews are complete with no unresolved findings, including recorded human dismissals.' } });
                       return;
@@ -138,11 +192,11 @@ jobs:
                   }
                 }
               }
-              if (attempt < 51) await new Promise(resolve => setTimeout(resolve, 15000));
+              if (attempt < 4) await new Promise(resolve => setTimeout(resolve, 1500));
             }
             if (checkId) await github.rest.checks.update({ ...repo, check_run_id: checkId,
               status: 'completed', conclusion: 'failure', output: {
                 title: 'Current comparison still needs review',
-                summary: 'A reviewer is missing, incomplete, or has unresolved findings. Fix and push, retry the reviewer, or explicitly dismiss findings. A review command refreshes this check.',
+                summary: 'A required head check or current review is missing, failed, incomplete, or has unresolved findings. Reviewer completion refreshes verification; manual dispatch can retry without a model call.',
               } });
             core.setFailed('Both reviewers have not passed for the current PR comparison.');

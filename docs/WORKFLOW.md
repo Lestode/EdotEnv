@@ -164,8 +164,21 @@ by the user. The private checkout is never published as review context.
 The [comparison workflow](../.github/workflows/review-comparison.yml) verifies
 the two published assessments and named checks against the current head, target
 commit, and target branch. It publishes `Current review comparison` only on a
-test merge commit whose parents match that comparison. It makes no model calls,
-uses no secrets, and executes no PR code. Authorized reviewer commands and
+test merge commit whose parents match that comparison. On that same commit it
+also publishes linked attestations of the four successful head checks, including
+`Project checks` and completion. Each attestation identifies its real source
+check; it neither reruns tests nor waives findings. Missing, failed, stale, or
+unfinalized sources cannot produce a passing attestation. This is necessary
+because GitHub evaluates the test merge's required checks once that commit has
+checks; leaving four required names only on the head results in “4 of 5 required
+status checks are expected.” See [GitHub's check-source rules](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks).
+
+Comparison publication shares the reviewer's authorized, non-canceling per-PR
+queue so the source checks cannot change during publication. It fails promptly
+when sources are not ready, releasing the queue for reviews; reviewer completion
+requests another comparison. Manual dispatch with `pull_request_number` can
+retry verification without calling a model. It makes no model calls, uses no
+secrets, and executes no PR code. Authorized reviewer commands and
 completion of `API agent reviews` refresh it automatically. Preserve the run
 title, workflow path, and completion-trigger name together when renaming them.
 The shared revision's [known limitations](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/KNOWN_ISSUES.md)
@@ -274,6 +287,20 @@ Later revisions supplied bounded interface evidence; PR #5 preserves those
 bootstrap and review records. Every new PR revision still requires complete,
 clear assessments from both named reviewers before acceptance. The merged
 workflow files alone do not establish finding-blocking branch protection.
+
+The isolated completed-review case was subsequently verified on the same head
+and base: [review da37c140caa8](https://github.com/Lestode/EdotEnv/pull/6#issuecomment-6382279321)
+completed, `Agent reviews completed` passed, the named documentation check failed
+with unresolved F1, and GitHub still reported `blocked`. After the user's merge
+direction accepted the remaining testing limitation, the shared mechanism
+recorded reasoned dismissals for [the earlier F1](https://github.com/Lestode/EdotEnv/pull/6#issuecomment-6382319182)
+and [the complete review's F1](https://github.com/Lestode/EdotEnv/pull/6#issuecomment-6382321402).
+The documentation check then passed and `Current review comparison` passed.
+A normal protected merge was nevertheless rejected with “4 of 5 required status
+checks are expected,” exposing the separate check-placement issue described
+above. That rejection is not evidence of a bypass. No protection was weakened.
+The attestations and shared-queue change address check placement; their own
+current reviews and protected merge must still pass.
 
 The activation above used the prepared required-check settings through the
 existing required-status-checks endpoint. Preserve all five required checks and
