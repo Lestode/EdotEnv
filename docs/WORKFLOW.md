@@ -23,7 +23,8 @@ Before merging:
    integration, `Documentation reviewer` and `Implementation reviewer` must
    also pass on the current head, and `Current review comparison` must pass on
    GitHub's current test merge commit. Fix findings or have an authorized human
-   dismiss specific findings with a recorded reason. Incomplete reviews cannot
+   dismiss specific findings with a recorded reason under the
+   [finding-resolution and conflict policy](#finding-resolution-and-conflicts). Incomplete reviews cannot
    be dismissed. See the activation transition below; publishing workflow files
    does not activate the new branch requirements. Completion and disposition of
    findings do not establish human acceptance or training correctness.
@@ -38,6 +39,49 @@ Before merging:
 The sole bootstrap exception is the initial commit containing the existing
 project documents and pinned upstream Slime source. The review integration
 itself is proposed through the first PR.
+
+## Finding resolution and conflicts
+
+Fix routine implementation findings autonomously when the agreed requirements
+and evidence determine the correction without conflicting information.
+Always bring conflicting instructions, requirements, documentation, or factual
+claims to the user for review before choosing a resolution. This also applies
+when a new user request conflicts with an established rule or assumption, or an
+existing decision appears to resolve the conflict. Explain the affected sources,
+likely consequences, and recommended correction. Obtain the user's decision
+before dependent work proceeds; independent work may continue.
+
+Flag significant consequences the user may not have intended before taking the
+affected action. Do not silently change a high-level rule or accept an exception
+to satisfy a review finding. Dismissing a finding requires the user's explicit
+decision on that finding, including its rationale; general PR acceptance alone
+is not a specific dismissal. Record the finding and review IDs when available,
+the reviewed revision/comparison, the reason, and a reference to the user's
+decision in the PR. Have an authorized human record the dismissal through the
+shared mechanism for the applicable assessment and comparison, following
+[reviewer operation](#reviewer-operation).
+A proposed dismissal or prose record cannot substitute for a required check.
+
+A completed review establishes that a report was published. It does not establish
+that its findings were resolved or dismissed. Both named reviewer checks and
+the current-comparison check are now required by live branch protection, as
+recorded in [activation and enforcement status](#activation-and-enforcement-status).
+Remaining validation scenarios are tracked in
+[the workflow TODO](TODO.md#repository-workflow-validation).
+
+## Supported interfaces for user and company systems
+
+When using tools or systems developed by the user or the company, use their
+documented configuration and supported interfaces. This includes `review-agents`.
+Do not change the underlying implementation or recreate or extend its capabilities
+in a consuming project to work around a configuration or interface gap.
+
+If the supported configuration or interfaces cannot express what is needed,
+explain the limitation and any proposed shared change to the user before
+proceeding with work that depends on it. Development explicitly requested for
+the underlying tool or system remains within scope; this rule governs its use
+from consuming projects. Keep reusable capabilities in the shared system so
+other projects can use the same supported behavior.
 
 ## Reviewer operation
 
@@ -114,6 +158,14 @@ reviews` and gives runs the title `Review PR #<number>`. One immutable private
 checkout supplies both actions, serialized per PR. An implementation assessment
 still runs when documentation findings fail the preceding action. Each agent's
 own command selects that reviewer for comment requests.
+
+Documentation-review scope is defined by its supported `instructionsPath`
+configuration. It checks documentation consistency and consequential claims
+relevant to the proposal; dependency evidence does not impose a comprehensive
+audit of unchanged CI. Implementation review checks code and workflow changes
+and receives relevant unchanged caller/configuration source through its supported
+`contextPaths` setting. Missing evidence for a consequential requirement remains
+blocking in either review.
 
 Both reviews include the accepted shared action manifests, integration contract,
 known limitations, and upstream validation references in bounded private
@@ -204,12 +256,34 @@ for `a6deb6646aee9849a8de7b1ec1a6c6ba07672cea`.
 
 The existing `Project checks` and `Agent reviews completed` requirements remain
 enforced. The documentation-only consumer workflow was accepted and merged in
-[EdotEnv PR #4](https://github.com/Lestode/EdotEnv/pull/4). The shared implementation
-reviewer is now accepted upstream. Adoption of that reviewer, the new comparison
-workflow, and daily update alerts is proposed in
-[EdotEnv PR #5](https://github.com/Lestode/EdotEnv/pull/5); these additions are not
-active on `main` until acceptance and merge. The historical private API review
-evidence is separate from the public-consumer bootstrap evidence.
+[EdotEnv PR #4](https://github.com/Lestode/EdotEnv/pull/4). The implementation
+reviewer, comparison workflow, and daily update-alert workflow were adopted in
+[EdotEnv PR #5](https://github.com/Lestode/EdotEnv/pull/5), merged on 2026-10-23
+as `5ec1822c6cefee4717529cb4727ed139878b19b4`. Those workflows are present on
+`main`. On 2026-10-24, the user authorized activation of finding-blocking
+protection. GitHub's required-status-checks endpoint was updated with the
+accepted [five-check configuration](../.github/review-required-checks.json):
+`Project checks`, `Agent reviews completed`, `Documentation reviewer`,
+`Implementation reviewer`, and `Current review comparison`, each bound to the
+GitHub Actions app. Readback confirmed all five requirements, strict up-to-date
+checking, and unchanged settings for every other branch protection, including
+administrator enforcement, PRs, conversation resolution, and force-push/deletion
+restrictions. The historical private API review evidence remains separate from
+the public-consumer bootstrap evidence.
+
+Live blocking was verified on [PR #6](https://github.com/Lestode/EdotEnv/pull/6)
+at 08:36:46 UTC on 2026-10-24. Its head was `74004941c8294dfe1a0b70930fa13aed37f658a3`,
+its base was `5ec1822c6cefee4717529cb4727ed139878b19b4`, and its test merge was
+`057c6f19345d1f4c0f6d349a3cd640beb9b7c1c7`; the merge parents matched that head
+and base. `Project checks` and `Implementation reviewer` passed, while the
+[documentation check](https://github.com/Lestode/EdotEnv/runs/120827261236)
+failed with [unresolved F1 and an incomplete assessment](https://github.com/Lestode/EdotEnv/pull/6#issuecomment-6382068184).
+The completion check also failed and the current-comparison check remained
+pending. GitHub reported the PR conflict-free but its merge state `blocked`.
+No check was fabricated, no finding was dismissed, and no merge was attempted.
+This verifies blocking for that combined unresolved/incomplete case; it does
+not isolate a completed review with findings while completion passes, or verify
+a successful human dismissal. The subsequent isolated test is recorded below.
 The accepted documentation-only workflow also produced a
 [successful automatic run](https://github.com/Lestode/EdotEnv/actions/runs/39983355266)
 after PR #5 was updated to `f22949c`, confirming that update-triggered review is
@@ -218,20 +292,39 @@ The [initial dual-review bootstrap](https://github.com/Lestode/EdotEnv/actions/r
 on `f22949c` published both assessments and exact-head checks. Documentation
 findings blocked its named check while completion passed; implementation
 assessment was incomplete because private dependency contracts were unavailable.
-The subsequent revision corrects the wording and supplies bounded interface
-evidence. Both named checks still need a complete, clear assessment of the
-latest PR revision before acceptance; consult PR #5 for the current results.
+Later revisions supplied bounded interface evidence; PR #5 preserves those
+bootstrap and review records. Every new PR revision still requires complete,
+clear assessments from both named reviewers before acceptance. The merged
+workflow files alone do not establish finding-blocking branch protection.
 
-For this activation transition, validate both reviewers on the setup PR using
-the manual bootstrap below while preserving all existing branch protections.
-After acceptance and merge, run both reviewers and the comparison workflow on
-an open PR. Then add the three new required checks using the prepared
-[required-check settings](../.github/review-required-checks.json), which retain
-both existing requirements and bind all five checks to GitHub Actions. Apply
-these settings to the existing required-status-checks endpoint; preserve all
-other protections. Confirm the settings and live merge state before claiming
-finding-blocking enforcement. Track these activation steps in
-[the workflow TODO](TODO.md#repository-workflow-validation).
+The isolated completed-review case was subsequently verified on head
+`5c2ac9163413d8d444f5a2774e8dce0eded91719` against base
+`5ec1822c6cefee4717529cb4727ed139878b19b4`: [review da37c140caa8](https://github.com/Lestode/EdotEnv/pull/6#issuecomment-6382279321)
+completed, `Agent reviews completed` passed, the named documentation check failed
+with unresolved F1, and GitHub still reported `blocked`. After the user's merge
+direction accepted the remaining testing limitation, the shared mechanism
+recorded reasoned dismissals for [the earlier F1](https://github.com/Lestode/EdotEnv/pull/6#issuecomment-6382319182)
+and [the complete review's F1](https://github.com/Lestode/EdotEnv/pull/6#issuecomment-6382321402).
+After the first dismissal, [the dismissal run](https://github.com/Lestode/EdotEnv/actions/runs/40080491156)
+still failed because the second finding remained unresolved.
+The documentation check then passed and `Current review comparison` passed.
+A normal protected merge was nevertheless rejected with “4 of 5 required status
+checks are expected.” The four head checks were not published on the test
+merge alongside the comparison check. That separate integration issue remains
+open; no protection was weakened. PR #6 removes the unconditional caller audit
+from documentation review, configures the relevant implementation source context,
+and does not add custom reviewer capability or check-publication code. Route
+the needed change through documented configuration under the
+[supported-interface policy](#supported-interfaces-for-user-and-company-systems); report any configuration
+limitation to the user before expanding the integration. Verify a normal
+protected merge before claiming that merging works.
+
+The activation above used the prepared required-check settings through the
+existing required-status-checks endpoint. Preserve all five required checks and
+all other protections when changing this integration. A future reviewer or
+comparison update still needs its own current-review evidence; the activation
+snapshot does not certify later revisions. Track remaining live-validation work
+in [the workflow TODO](TODO.md#repository-workflow-validation).
 
 For bootstrap validation of an authorized workflow upgrade, manually dispatch
 this workflow from its feature branch for its own PR once the shared dependency

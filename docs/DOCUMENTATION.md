@@ -7,4 +7,4 @@
 - Distinguish confirmed decisions, tentative assumptions, open questions, and deferred decisions.
 - Move answered questions into confirmed decisions and update affected documents; do not leave resolved questions open.
 - Use agreed decisions and the reference paper to resolve settled details instead of asking again.
-- Flag contradictions, ambiguities, or other issues to the user, naming the affected documents and proposing a correction. Ask for clarification when existing decisions do not resolve the issue.
+- Always bring conflicting information to the user for review before choosing a resolution, even when a new request introduces the conflict or an existing decision suggests a correction. Name the affected sources, explain the consequences, and propose a correction under the [finding-resolution and conflict policy](WORKFLOW.md#finding-resolution-and-conflicts). Flag ambiguities and other issues; ask for clarification when existing decisions do not resolve them.
