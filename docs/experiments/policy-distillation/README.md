@@ -61,22 +61,40 @@ ahead of training, and when the serving student adopts new weights. The teacher
 stays frozen throughout. These are candidate comparisons, not a commitment to
 test every combination.
 
+Support below means present in our pinned Slime revision `18868a79b0b08`,
+not validated end to end on Komondor. It distinguishes Slime's built-in mechanisms
+from our adapter and additional work needed for a particular experimental policy.
+
 ### Scheduling
 
-| Strategy | What happens | Proposed scope |
-| --- | --- | --- |
-| Round-synchronous | Collect a batch, train on it, publish weights, then collect the next batch. Generation and scoring can still run concurrently within a round. | Learning reference. |
-| Bounded pipeline overlap | Generate and score future responses while training the current batch; allow at most one publication of policy lag. | First async comparison. |
-| Deeper asynchronous queue | Let more work run ahead, allowing greater policy lag. | Possible later comparison. |
-| Asynchronous optimizer updates | Training workers apply updates without the usual coordination. | Outside this experiment. |
+| Strategy | What happens | Slime support | Proposed scope |
+| --- | --- | --- | --- |
+| Round-synchronous | Collect a batch, train on it, publish weights, then collect the next batch. Generation and scoring can still run concurrently within a round. | Built-in default rollout and training loop. | Learning reference. |
+| Bounded pipeline overlap | Generate and score future responses while training the current batch; allow at most one publication of policy lag. | Built-in async producer and bounded queues. Our adapter adds the strict lag check; the queue bound alone is insufficient. | First async comparison. |
+| Deeper asynchronous queue | Let more work run ahead, allowing greater policy lag. | Built-in configurable prefetch pool; our launcher currently fixes its factor to 1. Queue depth and permitted lag need separate configuration. | Possible later comparison. |
+| Asynchronous optimizer updates | Training workers apply updates without the usual coordination. | Not provided by the inspected training path; its `async_train` RPC is awaited each round. | Outside this experiment. |
 
 ### Updating the serving student during a response
 
-| Weight-update policy | What a response uses | What it lets us test |
-| --- | --- | --- |
-| Finish with original weights | One student version for the entire response; publish at a suitable boundary or retain the original serving snapshot. | Pipeline overlap and stale responses without changing weights mid-response. |
-| Pause, update, rebuild cache, continue | Earlier tokens come from the old version; later tokens use new weights after rebuilding the prefix's KV cache. | The additional effect of mixing policy versions within a response. |
-| Pause, update, retain cache, continue | New weights continue from KV state computed with older weights. | An additional cache-reuse shortcut; defer initially. |
+| Weight-update policy | What a response uses | Slime support | What it lets us test |
+| --- | --- | --- | --- |
+| Finish with original weights | One student version for the entire response; publish at a suitable boundary or retain the original serving snapshot. | Available for completed responses in the default synchronous path. Async workers have a drain primitive, but the publication path uses a non-draining pause; enforcing this during overlap needs integration and validation. | Pipeline overlap and stale responses without changing weights mid-response. |
+| Pause, update, rebuild cache, continue | Earlier tokens come from the old version; later tokens use new weights after rebuilding the prefix's KV cache. | Built-in async abort/flush/requeue path for flat token responses, with the default cache-flush setting. | The additional effect of mixing policy versions within a response. |
+| Pause, update, retain cache, continue | New weights continue from KV state computed with older weights. | Built-in in-place pause and cache-retention option; requires compatible SGLang and separate training/serving GPUs. Not selected by our launcher. | An additional cache-reuse shortcut; defer initially. |
+
+Slime exposes queue capacity through `--fully-async-group-prefetch-factor` and
+cache behavior through `--flush-cache-interval`: `1` aborts and flushes at every
+publication; `0` retains cache after the initial publication; larger positive
+values alternate retention with periodic flushing. Our `--max-policy-lag` checks
+consumed samples and aborts on excessive lag; it does not prevent stale work from
+being produced.
+
+Source anchors: Slime's [training loop](../../../slime/train.py),
+[async producer](../../../slime/slime/rollout/fully_async_rollout.py),
+[publication pause](../../../slime/slime/ray/rollout.py),
+[configuration](../../../slime/slime/utils/arguments.py), and
+[weight-update transport](../../../slime/slime/backends/megatron_utils/update_weight/update_weight_from_distributed.py);
+our [adapter](../../../distillation/hooks.py) and [launcher](../../../distillation/launch.py).
 
 Updates to serving weights must happen at a safe inference boundary. Training a
 separate student copy while generation continues is compatible with all three
