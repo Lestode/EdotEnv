@@ -65,22 +65,29 @@ Support below means present in our pinned Slime revision `18868a79b0b08`,
 not validated end to end on Komondor. It distinguishes Slime's built-in mechanisms
 from our adapter and additional work needed for a particular experimental policy.
 
-### Scheduling
+### Concrete comparisons
 
-| Strategy | What happens | Slime support | Proposed scope |
-| --- | --- | --- | --- |
-| Round-synchronous | Collect a batch, train on it, publish weights, then collect the next batch. Generation and scoring can still run concurrently within a round. | Built-in default rollout and training loop. | Learning reference. |
-| Bounded pipeline overlap | Generate and score future responses while training the current batch; allow at most one publication of policy lag. | Built-in async producer and bounded queues. Our adapter adds the strict lag check; the queue bound alone is insufficient. | First async comparison. |
-| Deeper asynchronous queue | Let more work run ahead, allowing greater policy lag. | Built-in configurable prefetch pool; our launcher currently fixes its factor to 1. Queue depth and permitted lag need separate configuration. | Possible later comparison. |
-| Asynchronous optimizer updates | Training workers apply updates without the usual coordination. | Not provided by the inspected training path; its `async_train` RPC is awaited each round. | Outside this experiment. |
+**Proposed first comparison: A versus B.** C–E are possible follow-ups, not an
+exhaustive matrix or an agreed run schedule. None has produced training results;
+only the frozen-model baselines have completed. See the [checkpoint report](REPORT.md).
 
-### Updating the serving student during a response
+| Condition | Execution and permitted lag | Weights within one response | Question / comparison | Support and current status |
+| --- | --- | --- | --- | --- |
+| **A · Synchronous reference** | Collect → train → publish; no policy lag. Generation and scoring may run concurrently within collection. | One version throughout. | Does the reference implementation improve student quality? | Built-in Slime path. Smoke attempts stopped at startup, before training. |
+| **B · Bounded overlap, complete responses** | Generate and score while training; at most one publication of lag. | Finish with original weights before switching versions. | **B vs A:** does overlap with stale responses preserve quality? | Slime supplies overlap and a drain primitive; our adapter supplies the lag check. Enforcing the response boundary still needs integration and validation. Proposed first async condition; not run. |
+| **C · Mid-response update, rebuilt cache** | Same bounded-overlap and lag settings as B. | Pause, update, rebuild the prefix's KV cache, then continue; tokens can span versions. | **C vs B:** what changes when unfinished responses can switch policy? | Slime's built-in abort/flush/requeue path for flat responses; matches our current async configuration. Not run; candidate follow-up. |
+| **D · Mid-response update, retained cache** | Same bounded-overlap and lag settings as C. | Pause, update, continue using KV state computed with older weights. | **D vs C:** is retaining old cache an acceptable additional shortcut? | Slime option, requiring compatible SGLang and separate serving/training GPUs. Not selected by our launcher; deferred. |
+| **E · More work ahead** | Increase the queue capacity and permitted lag relative to B; values remain to be chosen. | Keep one version per response, as in B. | **E vs B:** is a more aggressive overlap regime still acceptable? | Slime has configurable prefetch; our launcher fixes its factor to 1. Needs configuration changes and B's response-boundary work; deferred. |
 
-| Weight-update policy | What a response uses | Slime support | What it lets us test |
-| --- | --- | --- | --- |
-| Finish with original weights | One student version for the entire response; publish at a suitable boundary or retain the original serving snapshot. | Available for completed responses in the default synchronous path. Async workers have a drain primitive, but the publication path uses a non-draining pause; enforcing this during overlap needs integration and validation. | Pipeline overlap and stale responses without changing weights mid-response. |
-| Pause, update, rebuild cache, continue | Earlier tokens come from the old version; later tokens use new weights after rebuilding the prefix's KV cache. | Built-in async abort/flush/requeue path for flat token responses, with the default cache-flush setting. | The additional effect of mixing policy versions within a response. |
-| Pause, update, retain cache, continue | New weights continue from KV state computed with older weights. | Built-in in-place pause and cache-retention option; requires compatible SGLang and separate training/serving GPUs. Not selected by our launcher. | An additional cache-reuse shortcut; defer initially. |
+These comparisons assess the practical policy changes together with their
+effects on queueing and sample selection. They do not isolate every causal
+mechanism; separate factors only if a result warrants it. E deliberately changes
+both queue capacity and allowed lag, so it cannot attribute a difference to either
+alone.
+
+**Asynchronous optimizer updates remain outside scope:** all conditions retain
+coordinated training updates. The inspected Slime loop awaits its `async_train`
+RPC each round; that name does not mean independently updating training workers.
 
 Slime exposes queue capacity through `--fully-async-group-prefetch-factor` and
 cache behavior through `--flush-cache-interval`: `1` aborts and flushes at every
@@ -97,8 +104,8 @@ Source anchors: Slime's [training loop](../../../slime/train.py),
 our [adapter](../../../distillation/hooks.py) and [launcher](../../../distillation/launch.py).
 
 Updates to serving weights must happen at a safe inference boundary. Training a
-separate student copy while generation continues is compatible with all three
-policies; it does not itself change the weights serving an unfinished response.
+separate student copy while generation continues does not itself change the
+weights serving an unfinished response.
 
 The proposed starting comparison is **round-synchronous versus bounded overlap,
 with one student version per response in both**. First ask whether student quality
