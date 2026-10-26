@@ -34,8 +34,9 @@ The user has authorized separate execution checks for
 [A, B and C](experiments/policy-distillation/README.md#concrete-comparisons), followed
 by separate measurements. The previous checkpoint hold is lifted for this bounded
 validation. Ray startup remains the shared blocker; diagnose it on allocated CPUs
-before another GPU attempt. B now has a proposed draining worker adapter and
-single-version enforcement, pending tests. Keep checkpoints and reports separate;
+before another GPU attempt. B's draining worker adapter and single-version
+enforcement passed CPU regressions in CI; full runtime integration remains
+unvalidated. A fresh Komondor eduID login is pending. Keep checkpoints and reports separate;
 do not start a sustained learning run merely because smoke checks pass.
 
 ## Markdown guidance final-score comparison

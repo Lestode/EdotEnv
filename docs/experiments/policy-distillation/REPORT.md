@@ -9,9 +9,9 @@ were paused and no jobs for this experiment remained running or queued.
 
 The user subsequently authorized separate A/B/C execution checks. Their current
 records are [A](A/REPORT.md), [B](B/REPORT.md), and [C](C/REPORT.md); the measured
-results below remain unchanged. The renewed work is preparing B's response-boundary
-enforcement and regression checks, with cluster authentication pending before
-diagnosing Ray startup on allocated CPUs.
+results below remain unchanged. B's response-boundary enforcement now passes
+[CPU regressions](B/REPORT.md), with cluster authentication pending before
+diagnosing Ray startup on allocated CPUs. No new GPU attempts have been submitted.
 
 ## Question and setup
 
