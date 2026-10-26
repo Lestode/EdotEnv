@@ -99,6 +99,64 @@ class ScoringTests(unittest.IsolatedAsyncioTestCase):
 
 
 class PolicyAgeTests(unittest.TestCase):
+    def test_b_preserves_slime_worker_dispatch_across_rounds(self):
+        # The actual factory and entrypoint must agree on the worker's type.
+        # A delegation-only wrapper incorrectly selects Slime's distributed path.
+        class Worker:
+            def __init__(self, args, source, *, concurrency):
+                self.concurrency = concurrency
+                self.start = Mock()
+
+        upstream = ROOT / "slime/slime/rollout/fully_async_rollout.py"
+        namespace = {
+            "AsyncRolloutWorker": Worker,
+            "DrainBeforePublication": DrainBeforePublication,
+            "get_rollout_num_engines": lambda _: 1,
+        }
+        path = ROOT / "distillation/rollout.py"
+        definitions = [
+            n
+            for n in ast.parse(path.read_text()).body
+            if isinstance(n, (ast.ClassDef, ast.FunctionDef))
+        ]
+        exec(
+            compile(ast.Module(body=definitions, type_ignores=[]), str(path), "exec"),
+            namespace,
+        )
+        entry = next(
+            n
+            for n in ast.parse(upstream.read_text()).body
+            if isinstance(n, ast.FunctionDef)
+            and n.name == "generate_rollout_fully_async"
+        )
+        source = SimpleNamespace(consumers={})
+        source.register_consumer = Mock(side_effect=source.consumers.__setitem__)
+        namespace.update(
+            _get_worker=lambda args, data: data.consumers["fully_async"],
+            _generate_rollout_async=lambda args, rollout_id, data: rollout_id,
+            run=lambda output: output,
+        )
+        exec(
+            compile(ast.Module(body=[entry], type_ignores=[]), str(upstream), "exec"),
+            namespace,
+        )
+        args = SimpleNamespace(
+            rollout_data_transport="object-store", sglang_server_concurrency=2
+        )
+        for rollout_id in (0, 1, 2):
+            namespace["ensure_complete_response_worker"](args, source)
+            self.assertEqual(
+                namespace["generate_rollout_fully_async"](args, rollout_id, source),
+                rollout_id,
+            )
+        source.register_consumer.assert_called_once()
+        worker = source.consumers["fully_async"]
+        worker.start.assert_called_once()
+        self.assertIsInstance(worker, Worker)
+        source.consumers["fully_async"] = Worker(args, source, concurrency=2)
+        with self.assertRaisesRegex(ValueError, "without draining enforcement"):
+            namespace["ensure_complete_response_worker"](args, source)
+
     def test_complete_responses_reject_mixed_versions_but_c_records_them(self):
         with self.assertRaisesRegex(ValueError, "spans policy versions"):
             validate_sample_policy(["2", "3"], 3, 1, complete_response=True)
@@ -131,22 +189,21 @@ class PolicyAgeTests(unittest.TestCase):
             compile(ast.Module(body=[pause], type_ignores=[]), str(path), "exec"),
             namespace,
         )
-        worker = SimpleNamespace(
-            condition=threading.Condition(),
-            paused=False,
-            running=True,
-            error=None,
-            admission_paused=True,
-            active=1,
-        )
         entered = threading.Event()
 
-        def real_pause(*, drain):
+        def real_pause(self, *, drain):
             entered.set()
-            return namespace["pause"](worker, drain=drain)
+            return namespace["pause"](self, drain=drain)
 
-        worker.pause = real_pause
-        policy = DrainBeforePublication(worker)
+        base = type("PinnedWorkerPause", (), {"pause": real_pause})
+        worker_type = type("CompleteResponseWorker", (DrainBeforePublication, base), {})
+        policy = worker_type()
+        policy.condition = threading.Condition()
+        policy.paused = False
+        policy.running = True
+        policy.error = None
+        policy.admission_paused = True
+        policy.active = 1
         returned = threading.Event()
         results = []
 
@@ -160,14 +217,14 @@ class PolicyAgeTests(unittest.TestCase):
             self.assertTrue(entered.wait(1))
             self.assertFalse(returned.wait(0.05))
         finally:
-            with worker.condition:
-                worker.active = 0
-                worker.condition.notify_all()
+            with policy.condition:
+                policy.active = 0
+                policy.condition.notify_all()
             thread.join(timeout=1)
         self.assertFalse(thread.is_alive())
         self.assertEqual(results, [False])
         self.assertTrue(policy.pause(drain=False))
-        worker.error = RuntimeError("generation failed")
+        policy.error = RuntimeError("generation failed")
         with self.assertRaisesRegex(RuntimeError, "generation failed"):
             policy.pause(drain=False)
 
@@ -272,14 +329,7 @@ class ConfigurationTests(unittest.TestCase):
         args.mode = "bounded_async"
         bounded = training_args(args, Path("/run"))
         self.assertEqual(
-            bounded[-2:],
-            [
-                "--data-source-path",
-                "distillation.data_source.CompleteResponseDataSource",
-            ],
-        )
-        self.assertEqual(
-            [(a, b) for a, b in zip(asynchronous, bounded[:-2], strict=True) if a != b],
+            [(a, b) for a, b in zip(asynchronous, bounded, strict=True) if a != b],
             [("distillation.hooks.fully_async", "distillation.hooks.bounded_async")],
         )
         changes = [(a, b) for a, b in zip(sync, asynchronous, strict=True) if a != b]

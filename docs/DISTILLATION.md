@@ -21,8 +21,8 @@ Sync and async share those settings. Async allows one publication of policy lag
 by default; sync allows none. Unknown, future, or excessively old policy versions
 abort the attempt rather than silently dropping examples. The bound is configurable
 with `--max-policy-lag`. It does not eliminate off-policy bias or guarantee stability.
-Condition B additionally drains active work through the custom data-source
-consumer interface before publication and rejects mixed-version responses.
+Condition B additionally drains active work through the custom rollout
+hook and a subclass of Slime's worker before publication and rejects mixed-version responses.
 Condition C permits and counts mixed-version responses. This new B integration
 still needs validation; see the [experiment conditions](experiments/policy-distillation/README.md#concrete-comparisons).
 The wrappers rely on the pinned fresh-run driver's one weight publication per

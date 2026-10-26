@@ -195,13 +195,6 @@ def training_args(args, output):
         "--save-debug-rollout-data",
         str(output / "rollouts/{rollout_id}.pt"),
     ]
-    if args.mode == "bounded_async":
-        command.extend(
-            [
-                "--data-source-path",
-                "distillation.data_source.CompleteResponseDataSource",
-            ]
-        )
     return command
 
 

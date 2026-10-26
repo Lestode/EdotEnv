@@ -155,8 +155,7 @@ def fully_async(args, rollout_id, data_buffer, evaluation=False):
 def bounded_async(args, rollout_id, data_buffer, evaluation=False):
     if evaluation:
         raise ValueError("Use the separate frozen-checkpoint evaluator")
-    from distillation.data_source import CompleteResponseDataSource
+    from distillation.rollout import ensure_complete_response_worker
 
-    if not isinstance(data_buffer, CompleteResponseDataSource):
-        raise ValueError("Condition B requires the draining data source")
+    ensure_complete_response_worker(args, data_buffer)
     return _generate(args, rollout_id, data_buffer, asynchronous=True)
