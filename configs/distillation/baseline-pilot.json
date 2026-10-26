@@ -1,0 +1,16 @@
+{
+  "purpose": "Development baseline pilot before any student weight updates; not a final quality-loss comparison",
+  "dataset": "HuggingFaceH4/MATH-500",
+  "revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+  "file": "test.jsonl",
+  "selection": "First 32 rows sorted by SHA256 of unique_id; reserve all other rows from this development pilot",
+  "count": 32,
+  "prompt_suffix": "\nPlease reason step by step and put your final answer within \\boxed{}.",
+  "temperature": 0,
+  "max_new_tokens": 8192,
+  "request_timeout_seconds": 600,
+  "scorer": "slime.rollout.rm_hub.math_utils.grade_answer_verl",
+  "roles": ["student", "teacher"],
+  "per_model_budget": {"gpus": 2, "wall_minutes": 30},
+  "interpretation": "Report accuracy over planned rows, failures and truncation for each model. Incomplete execution or substantial truncation requires revisiting this pilot before treating it as a useful baseline. Keep all attempts; do not use this sample to claim shortcut quality preservation."
+}

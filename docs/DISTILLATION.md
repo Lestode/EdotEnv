@@ -59,7 +59,7 @@ copy, [the A100 initializer](../scripts/init-distillation-a100.sh) builds the
 existing PyTorch. It removes unused FlashAttention-4, whose bundled CUTLASS API
 breaks Transformer Engine's eager import on this runtime. Set `RUNTIME_BUILD_RECORD`
 to a new directory; it retains setup, versions, build flags, and logs. The FA2
-build passed; native GPU execution is still being qualified. Source
+build and A100 kernel probe passed; actual model execution remains unvalidated. Source
 [the runtime environment](../scripts/distillation-runtime-env.sh) inside the
 container to make PyTorch and Transformer Engine use the same cuDNN libraries;
 the Slurm launcher does this for both driver and workers.
@@ -103,7 +103,8 @@ They are not a learning benchmark. For baseline and checkpoint evaluation,
 [the separate evaluator](../distillation/evaluate.py) accepts an SGLang endpoint,
 the served checkpoint path, and held-out JSONL with `prompt` and `answer` fields.
 It uses greedy generation and Slime's math grader by default, preserving failures
-and truncations. Select the task, decoding budget, and suitable scorer before
+and truncations. `--request-timeout` accommodates longer reasoning responses;
+the timeout is recorded alongside the decoding settings. Select the task, decoding budget, and suitable scorer before
 interpreting quality; use the same evaluation configuration for both models and
 trained checkpoints. Training checkpoints need Slime's supported HF export before
 serving them for evaluation.
@@ -119,6 +120,8 @@ Follow-up job `14650690` passed eleven tests, including the actual Slime serving
 configuration parser. Follow-up regressions bring this to thirteen passing tests,
 including the real `Sample` reward accessor and custom-configuration statements.
 A separate site-runtime NCCL probe passed across eight A100s on two nodes using
-one Slurm launcher per node. See the [journal](experiments/LOG.md) for attempts
+one Slurm launcher per node. The candidate Slime runtime now passes the A100
+packed-attention/reference, backward, RMSNorm and Adam kernel probe.
+See the [journal](experiments/LOG.md) for attempts
 and coverage limits. Actual Slime model execution, end-to-end async behavior,
 and learning-quality comparisons remain unvalidated.

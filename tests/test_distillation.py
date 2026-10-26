@@ -333,6 +333,8 @@ class EvaluationTests(unittest.TestCase):
                 str(root / "out"),
                 "--scorer",
                 "fixture.grade",
+                "--request-timeout",
+                "600",
             ]
             with (
                 patch("sys.argv", argv),
@@ -341,7 +343,7 @@ class EvaluationTests(unittest.TestCase):
                 patch(
                     "distillation.evaluate.request",
                     side_effect=[{"model_path": str(root)}, response],
-                ),
+                ) as request_mock,
                 patch(
                     "distillation.evaluate.importlib.import_module", return_value=grader
                 ),
@@ -356,6 +358,8 @@ class EvaluationTests(unittest.TestCase):
             self.assertTrue(record["truncated"])
             self.assertEqual(summary["truncated"], 1)
             self.assertEqual(summary["failed"], 1)
+            self.assertEqual(summary["request_timeout_seconds"], 600)
+            self.assertEqual(request_mock.call_args.kwargs["timeout"], 600)
 
 
 if __name__ == "__main__":

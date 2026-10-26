@@ -25,7 +25,10 @@ evaluation settings. [MATH-500](https://huggingface.co/datasets/HuggingFaceH4/MA
 is the proposed primary candidate, subject to a baseline check for useful teacher
 advantage and manageable evaluation cost.
 Keep development and final evaluation separate, and check for overlap with
-training problems. The benchmark and evaluation protocol are not yet fixed.
+training problems. A [fixed development pilot](../../../configs/distillation/baseline-pilot.json)
+selects 32 problems before model evaluation, with a common 8192-token greedy
+budget; the other 468 are reserved. This checks initial quality, truncation and
+evaluation cost. The final study protocol and acceptable quality loss remain open.
 
 Establish a validated synchronous reference that improves the student's held-out
 answer accuracy. Then assess whether shortcuts, including async execution,

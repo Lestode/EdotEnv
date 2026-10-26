@@ -3,6 +3,7 @@
 import argparse
 import importlib
 import json
+import math
 import os
 import time
 import urllib.request
@@ -11,12 +12,12 @@ from pathlib import Path
 from distillation.preflight import fingerprint
 
 
-def request(url, payload=None):
+def request(url, payload=None, *, timeout=180):
     data = None if payload is None else json.dumps(payload).encode()
     req = urllib.request.Request(
         url, data=data, headers={"Content-Type": "application/json"}
     )
-    with urllib.request.urlopen(req, timeout=180) as response:
+    with urllib.request.urlopen(req, timeout=timeout) as response:
         return json.load(response)
 
 
@@ -27,6 +28,7 @@ def main():
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--max-tokens", type=int, default=2048)
+    parser.add_argument("--request-timeout", type=float, default=180)
     parser.add_argument(
         "--scorer", default="slime.rollout.rm_hub.math_utils.grade_answer_verl"
     )
@@ -35,10 +37,12 @@ def main():
         raise ValueError("Evaluation requires a Slurm compute allocation")
     if args.max_tokens < 1:
         raise ValueError("max-tokens must be positive")
+    if not math.isfinite(args.request_timeout) or args.request_timeout <= 0:
+        raise ValueError("request-timeout must be finite and positive")
     from transformers import AutoTokenizer
 
     endpoint = args.endpoint.rstrip("/")
-    info = request(endpoint + "/get_model_info")
+    info = request(endpoint + "/get_model_info", timeout=args.request_timeout)
     if Path(info["model_path"]).resolve() != args.model.resolve():
         raise ValueError("Endpoint serves a different model")
     tokenizer = AutoTokenizer.from_pretrained(
@@ -59,6 +63,7 @@ def main():
         "data_sha256": fingerprint(args.data),
         "tokenizer_sha256": fingerprint(args.model / "tokenizer.json"),
         "generation": {"temperature": 0, "max_new_tokens": args.max_tokens},
+        "request_timeout_seconds": args.request_timeout,
         "scorer": args.scorer,
         "planned": len(rows),
         "attempted": 0,
@@ -86,6 +91,7 @@ def main():
                     response = request(
                         endpoint + "/generate",
                         {"input_ids": ids, "sampling_params": summary["generation"]},
+                        timeout=args.request_timeout,
                     )
                     record["response"] = response
                     truncated = (

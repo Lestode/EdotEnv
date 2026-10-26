@@ -8,12 +8,27 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
-### 2026-10-26 · distillation-flash2-native2-20261026 · running
+### 2026-10-26 · distillation-student-baseline-20261026-a1 · running
+
+- Question: What starting accuracy, truncation and evaluation cost does the student show under the fixed development protocol?
+- Setup: Pinned student, frozen inference only, prepared 32-example MATH-500 development subset; greedy generation up to 8192 tokens, Slime math grader, BF16 SGLang Triton TP2 with CUDA graphs disabled. Evaluator timeout patch passed CPU checks before launch.
+- Resources: Slurm `14651072`, two GPUs on one node, eight CPUs, 64 GiB RAM, 30-minute limit (at most one GPU-hour).
+- Evidence: Private `edotenv/distillation-check-20261026-a1/baseline-student-14651072/` and `baseline-student-14651072.log`; pending. Teacher baseline and training remain outstanding.
+
+### 2026-10-26 · distillation-baseline-prep-20261026 · completed
+
+- Question: Can the fixed development pilot be prepared reproducibly before either model is evaluated?
+- Setup: [Pilot protocol](../../configs/distillation/baseline-pilot.json), pinned MATH-500 source, first 32 rows by SHA256 of `unique_id`; remaining 468 reserved. No model execution.
+- Result: Slurm `14651063`, data prepared with source/evaluation hashes and selected/reserved IDs; thirteen CPU tests, Ruff and shell checks passed, including configurable generation-request timeout. Two seconds, two requested CPUs, 8 GiB RAM, no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/baseline-prep.tar.gz`, `baseline-prep.log`, `prepare-edot-baseline.py` and `baseline-data/manifest.json`.
+
+### 2026-10-26 · distillation-flash2-native2-20261026 · completed
 
 - Question: Can the native A100 probe execute after the unused FA4 import conflict is removed?
 - Setup: Same probe and runtime as `14650838`, with FA4 uninstalled by `14650955`; no other package changes.
-- Resources: Slurm `14651045`, one GPU, four CPUs, 16 GiB RAM, eight-minute limit.
-- Evidence: Private `edotenv/distillation-check-20261026-a1/flash2-native2.log`; pending. An earlier submission was rejected by the shared per-user job-count limit before allocation.
+- Result: BF16 matrix multiplication, packed GQA forward/reference agreement and backward, RMSNormLinear forward/backward, and the Megatron Adam update all passed on A100. This does not exercise model inference or training.
+- Resources: Slurm `14651045`, one GPU, four CPUs, 16 GiB RAM; 3m07s, exit `0:0`, approximately 0.052 GPU-hours.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/flash2-native2.log`. An earlier submission was rejected by the shared per-user job-count limit before allocation.
 
 ### 2026-10-26 · distillation-contract2-20261026 · completed
 
