@@ -1,5 +1,13 @@
 # Experiment guidance
 
+## Initial policy distillation pair
+
+- Frozen teacher: `deepseek-ai/DeepSeek-R1-Distill-Qwen-7B`.
+- Trainable student: `deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B`.
+
+This is our initial pair. Before training, verify tokenizer compatibility and
+establish baseline quality for both models on the chosen evaluation tasks.
+
 ## Validate before scaling
 
 Before expensive or distributed experiments, run a small number of inexpensive,

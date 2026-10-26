@@ -42,6 +42,7 @@ Use a `codex/` feature branch and a pull request for every change after the init
 
 - The next experimental stage validates classical policy distillation from a more capable frozen teacher to a student. The primary question is whether the implementation works and its shortcuts preserve quality within an acceptable loss; synchronous/asynchronous execution is one comparison, with speed and cost secondary. The [experiment design](docs/experiments/policy-distillation/README.md) records the provisional validation setup; resource sizing may evolve. This preliminary study preserves the longer-term OPCD scope and its context-separation requirements.
 - The teacher will be an accessible model.
+- The initial classical distillation model pair is selected in [experiment guidance](docs/EXPERIMENTS.md#initial-policy-distillation-pair); tokenizer compatibility and baseline quality still need validation before training.
 - Komondor is the target compute cluster; authenticated access and an A100 Slurm allocation have been verified. See [hardware planning](docs/HARDWARE.md) for evidence and remaining validation.
 - For now, the user manages collaboration and access in this repository.
 - Always bring conflicting information to the user for review before resolving it, including conflicts introduced by a new request. Follow the [finding-resolution and conflict policy](docs/WORKFLOW.md#finding-resolution-and-conflicts) for review findings, consequences, and recorded decisions.
@@ -53,7 +54,7 @@ Use a `codex/` feature branch and a pull request for every change after the init
 
 These do not block local design and implementation. Resolve each before the run or feature that depends on it.
 
-- Models: which teacher/student checkpoints and compatible tokenizers? DeepSeek is a tentative starting point.
+- Models: which teacher/student checkpoints should later OPCD experiments use?
 - Scope: system-prompt distillation, experiential-knowledge distillation, or both? If experiential, how is knowledge generated and accumulated?
 - Context/data: which datasets and teacher-only contexts, who grants access, and where may they be processed and stored?
 - Teacher scoring: which backend exposes probabilities for the student's top-256 token IDs at every response position? See [implementation work](docs/TODO.md). Is a separate scalar grading reward also wanted?

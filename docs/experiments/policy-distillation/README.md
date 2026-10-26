@@ -14,8 +14,7 @@ speed and cost are secondary. The longer-term OPCD goal remains in
 
 Compare against a trustworthy reference that demonstrably learns. Check both
 whether distillation improves the student and whether our shortcuts preserve
-that benefit. Agreement between two implementations is not enough if they
-share the same problematic shortcut.
+that benefit.
 
 Account for confounders and measure potentially distinct effects separately
 where useful, so we can understand why quality changes. Keep this proportionate
@@ -35,9 +34,11 @@ Eight GPUs across two Komondor nodes is the provisional initial validation
 setup; resources and topology can evolve. Multi-node execution and the complete
 distillation path still need validation under the [hardware constraints](../../HARDWARE.md).
 
-The model pair, distillation objective, dataset, acceptable quality loss, and
-run budgets remain open. Slime already has sync/async and OPD paths; that does
-not establish their correctness for this study or the later OPCD objective.
+The [initial model pair](../../EXPERIMENTS.md#initial-policy-distillation-pair)
+is selected, with tokenizer compatibility and baseline quality to validate
+before training. The distillation objective, dataset, acceptable quality loss,
+and run budgets remain open. Slime already has sync/async and OPD paths; that
+does not establish their correctness for this study or the later OPCD objective.
 
 Use the [experiment guidance](../../EXPERIMENTS.md), [run records](../LOG.md),
 and [current work](../../TODO.md#preliminary-policy-distillation-study) to
