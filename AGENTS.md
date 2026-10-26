@@ -4,7 +4,7 @@ Goal: validate classical policy distillation in Slime with distributed execution
 
 - Use Slime (`slime/`) as the training framework.
 - Distill from a more capable, frozen teacher into a trainable student.
-- Use teacher token-level scores on student-generated responses; the precise objective remains to be selected and validated.
+- Use Slime's sampled-token on-policy distillation for the initial study, with teacher token-level scores on student-generated responses. Its implementation still needs validation.
 - Support distributed student generation, teacher evaluation, and student training.
 - Prefer Slime's existing customization hooks and minimize core framework changes.
 
