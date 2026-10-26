@@ -86,7 +86,10 @@ def main():
                     if isinstance(messages, str):
                         messages = [{"role": "user", "content": messages}]
                     ids = tokenizer.apply_chat_template(
-                        messages, tokenize=True, add_generation_prompt=True
+                        messages,
+                        tokenize=True,
+                        add_generation_prompt=True,
+                        return_dict=False,
                     )
                     response = request(
                         endpoint + "/generate",

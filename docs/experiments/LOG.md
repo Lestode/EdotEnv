@@ -8,12 +8,36 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
-### 2026-10-26 · distillation-student-baseline-20261026-a1 · running
+### 2026-10-26 · distillation-baseline-retry-20261026 · running
+
+- Question: Can both frozen models complete the fixed development evaluation after the tokenizer and cleanup fixes?
+- Setup: Same pinned models and 32-example protocol as the failed student attempt. Explicit token-ID output passed the real-runtime CPU contract check; cleanup passed its failure fixture. Student and teacher run independently with identical settings and no weight updates.
+- Resources: Slurm `14651158` (student) and `14651159` (teacher), each two GPUs, eight CPUs, 64 GiB RAM and 30 minutes; at most two GPU-hours combined.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/baseline-{student,teacher}-<job-id>/` and corresponding job logs; pending.
+
+### 2026-10-26 · distillation-cleanup-20261026 · completed
+
+- Question: Does baseline cleanup terminate a server that ignores SIGTERM without retaining its allocation?
+- Setup: Bounded five-second grace period followed by SIGKILL to the owned process group; CPU fixture deliberately ignores SIGTERM.
+- Result: The SIGTERM-resistant fixture was killed and reaped within the bound; baseline shell syntax passed.
+- Resources: Slurm `14651153`, one CPU, 1 GiB RAM; five seconds, exit `0:0`, no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/cleanup-check.sh`, `baseline-cleanup.sh` and `cleanup-check.log`.
+
+### 2026-10-26 · distillation-evaluator-contract-20261026 · completed
+
+- Question: Does explicit token-ID output fix evaluation with the actual runtime tokenizer and grader?
+- Setup: Updated evaluator and regression test; CPU container check uses the pinned student tokenizer, a local fixture HTTP server and the real Slime math grader. This tests JSON transport without generating model answers.
+- Result: Actual tokenizer, JSON transport and grader passed; thirteen adapter tests, Ruff and shell checks also passed. The response was a fixture, not model inference.
+- Resources: Slurm `14651151`, two requested CPUs, 8 GiB RAM; 44 seconds, exit `0:0`, no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/evaluator-fix.tar.gz`, `evaluator-check.log` and `edot-evaluation-probe.py`.
+
+### 2026-10-26 · distillation-student-baseline-20261026-a1 · failed
 
 - Question: What starting accuracy, truncation and evaluation cost does the student show under the fixed development protocol?
 - Setup: Pinned student, frozen inference only, prepared 32-example MATH-500 development subset; greedy generation up to 8192 tokens, Slime math grader, BF16 SGLang Triton TP2 with CUDA graphs disabled. Evaluator timeout patch passed CPU checks before launch.
-- Resources: Slurm `14651072`, two GPUs on one node, eight CPUs, 64 GiB RAM, 30-minute limit (at most one GPU-hour).
-- Evidence: Private `edotenv/distillation-check-20261026-a1/baseline-student-14651072/` and `baseline-student-14651072.log`; pending. Teacher baseline and training remain outstanding.
+- Result: Model serving became healthy, but all 32 requests failed before generation: the runtime tokenizer defaults to `BatchEncoding`, which the evaluator cannot serialize as token IDs. No quality result was obtained. Server shutdown then stalled on `psutil.AccessDenied`; the allocation was cancelled manually.
+- Resources: Slurm `14651072`, two GPUs on one node, eight CPUs, 64 GiB RAM; 17m10s including stalled cleanup, approximately 0.572 GPU-hours; scheduler status cancelled.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/baseline-student-14651072/` and `baseline-student-14651072.log`. Teacher baseline and training remain outstanding. Retry requires explicit token-ID output and bounded cleanup.
 
 ### 2026-10-26 · distillation-baseline-prep-20261026 · completed
 

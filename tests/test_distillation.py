@@ -317,7 +317,12 @@ class EvaluationTests(unittest.TestCase):
                 "meta_info": {"finish_reason": {"type": "length"}},
             }
             tokenizer = Mock()
-            tokenizer.apply_chat_template.return_value = [1, 2]
+            # Transformers 5 defaults to a BatchEncoding; exercise the explicit
+            # token-ID request rather than silently assuming the old default.
+            def chat_template(messages, **kwargs):
+                return [1, 2] if kwargs.get("return_dict") is False else object()
+
+            tokenizer.apply_chat_template.side_effect = chat_template
             transformers = SimpleNamespace(AutoTokenizer=Mock())
             transformers.AutoTokenizer.from_pretrained.return_value = tokenizer
             grader = SimpleNamespace(grade=Mock(side_effect=ValueError("bad grade")))
@@ -360,6 +365,7 @@ class EvaluationTests(unittest.TestCase):
             self.assertEqual(summary["failed"], 1)
             self.assertEqual(summary["request_timeout_seconds"], 600)
             self.assertEqual(request_mock.call_args.kwargs["timeout"], 600)
+            self.assertEqual(request_mock.call_args.args[1]["input_ids"], [1, 2])
 
 
 if __name__ == "__main__":
