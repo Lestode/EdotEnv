@@ -2,7 +2,7 @@
 
 Status, 2026-10-24: Komondor login through the existing greengoblin gateway is
 verified. A one-GPU Slurm inventory job completed successfully on an A100.
-The Slime runtime, OPCD training, and distributed execution remain unvalidated.
+The Slime runtime, distillation training, and distributed execution remain unvalidated.
 
 ## Access boundary
 
@@ -47,7 +47,7 @@ Observed output:
 ```
 
 This verifies access to an allocated GPU and its driver, not model execution,
-BF16 kernels, container GPU passthrough, Slime compatibility, or OPCD correctness.
+BF16 kernels, container GPU passthrough, Slime compatibility, or distillation correctness.
 
 ## A100 compatibility findings
 
@@ -60,7 +60,7 @@ BF16 kernels, container GPU passthrough, Slime compatibility, or OPCD correctnes
 
 1. Complete the resource inventory beyond the single-GPU probe above: verify the intended node/GPU counts, interconnect, storage layout, and container GPU passthrough on allocated resources.
 2. Select and pin a compatible runtime; validate required native extensions on A100.
-3. Start with BF16, short sequences, and a small compatible model pair for a correctness check. Final DeepSeek checkpoints remain undecided.
+3. Start with BF16 and short sequences for a correctness check using the [initial model pair](EXPERIMENTS.md#initial-policy-distillation-pair), after verifying tokenizer compatibility.
 4. Verify student generation, teacher token scoring, and one training update on one node, then repeat across nodes.
 
-Local work can proceed on separate context construction, response-token alignment, the top-256 objective, and data transport. GPU training still requires a validated runtime and storage layout; final sizing remains deferred.
+GPU training still requires a validated runtime and storage layout; final sizing remains deferred.

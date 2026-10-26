@@ -1,5 +1,13 @@
 # Experiment guidance
 
+## Initial policy distillation pair
+
+- Frozen teacher: `deepseek-ai/DeepSeek-R1-Distill-Qwen-7B`.
+- Trainable student: `deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B`.
+
+This is our initial pair. Before training, verify tokenizer compatibility and
+establish baseline quality for both models on the chosen evaluation tasks.
+
 ## Validate before scaling
 
 Before expensive or distributed experiments, run a small number of inexpensive,
@@ -8,6 +16,18 @@ execution path. Keep validation proportional to uncertainty and cost, reuse
 applicable evidence, and avoid redundant checks. Investigate unexpected results
 before scaling. When unsure whether further validation or a larger run is
 warranted, ask the user.
+
+## Control confounders and distinguish regimes
+
+Make comparisons informative: account for important confounders, measure
+potentially distinct effects separately where useful, and investigate
+interactions when they matter. A result in one workload or learning regime
+need not generalize to another.
+
+Agree on what would count as success before judging results. Keep exploration
+distinct from validation, use credible comparisons and uncertainty, and retain
+failures. Document the reasoning and consequential choices; add methodological
+detail when a concrete experiment needs it.
 
 ## Maintain experiment continuity
 

@@ -29,7 +29,7 @@ Before merging:
    There is no separate `Current review comparison` or completion-only merge gate.
    Human acceptance and training correctness remain separate from reviewer results.
 3. Run relevant implementation tests and record their commands, results, and
-   coverage limits in the PR. Use [the OPCD TODO](TODO.md) for feature evidence
+   coverage limits in the PR. Use [the project TODO](TODO.md) for feature evidence
    and [hardware planning](HARDWARE.md) for GPU/distributed validation.
    CPU checks and model commentary alone cannot establish training correctness.
 4. Obtain explicit user acceptance of the PR. Each new commit requires fresh
@@ -393,7 +393,7 @@ node --test tests/*.test.cjs
 .venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
-Add deterministic CPU tests under `tests/` using unittest as OPCD is implemented;
+Add deterministic CPU tests under `tests/` using unittest as training code is implemented;
 extend CI dependencies and test commands through the same PR when necessary.
 Keep GPU and cluster jobs separate until compute access is confirmed. Changes
 inside `slime/` need a published submodule commit and a reviewed pointer update;
@@ -422,3 +422,10 @@ validation is a normal protected merge for this experimental repository.
 Broader failure-injection validation remains deferred. If a metadata-only edit
 hides a head check, publish a fresh PR commit and obtain fresh reviews before
 merging; do not manufacture a replacement result.
+
+The [PR #12 protected merge](https://github.com/Lestode/EdotEnv/pull/12) succeeded
+on 2026-10-26 after project checks and both [latest-head reviews](https://github.com/Lestode/EdotEnv/actions/runs/40321514804)
+passed on `7dcadc811ad227006f5efe993667708d7b1297fe`. The merge produced
+`3c1277bba93278e434e455926e930be75727febe`; strict protection and all unrelated
+settings were preserved. This verifies the normal merge path, not the deferred
+failure-injection scenarios.

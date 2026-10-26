@@ -4,7 +4,7 @@ Describe the problem, resulting behavior, and relevant specification or TODO ite
 
 ## Validation
 
-Give commands and results, including remaining validation limits. For OPCD code,
+Give commands and results, including remaining validation limits. For distillation code,
 link evidence appropriate to the affected invariants in docs/TODO.md and docs/HARDWARE.md.
 
 ## Merge readiness
