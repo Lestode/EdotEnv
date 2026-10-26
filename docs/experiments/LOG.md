@@ -8,6 +8,20 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-26 · distillation-flash2-native-20261026 · running
+
+- Question: Does the rebuilt runtime execute the student's packed GQA and RMSNorm kernels on A100?
+- Setup: Feature-branch probe with explicit flash backend and consistent cuDNN path; packed attention checked against FP32 causal-softmax reference, finite backward gradients, and a known Megatron Adam update. Queued only after successful build `14650836`.
+- Resources: Slurm `14650838`, one GPU, four CPUs, 16 GiB RAM, eight-minute limit.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/flash2-native.log`; pending. No model training in this probe.
+
+### 2026-10-26 · distillation-flash2-build2-20261026 · running
+
+- Question: Can the A100 extension build complete with an explicit resource budget?
+- Setup: Retry of `14650807` with six compiler workers and two NVCC threads each, overriding the image's inherited build settings. Existing CUDA/PyTorch retained.
+- Resources: Slurm `14650836`, thirteen CPUs, 48 GiB RAM, 45-minute limit; no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/flash2-build2.log` and `flash2-build2/`; pending.
+
 ### 2026-10-26 · distillation-uv-check2-20261026 · completed
 
 - Question: Does the reusable uv CPU initializer preserve passing adapter checks?
@@ -22,12 +36,12 @@ the earlier entry so failures remain visible.
 - Result: Environment setup succeeded; Ruff rejected an incorrectly written unused-import annotation after one second. Tests did not execute. The follow-up records the corrected probe's implementation module instead.
 - Evidence: Private `edotenv/distillation-check-20261026-a1/uv-cpu-check.log`.
 
-### 2026-10-26 · distillation-flash2-build-20261026 · running
+### 2026-10-26 · distillation-flash2-build-20261026 · cancelled
 
 - Question: Can FlashAttention-2 be built for A100 against the selected Slime runtime?
 - Setup: Owned writable runtime sandbox from the recorded OCI digest; uv, FlashAttention 2.8.3 source, sm80 only, existing PyTorch/CUDA retained. Reusable project initializer records provenance.
-- Resources: Slurm `14650807`, eight requested CPUs, 64 GiB RAM, 45-minute limit; no GPUs.
-- Evidence: Private `edotenv/distillation-check-20261026-a1/flash2-build.log` and `flash2-build/`; result pending. Build success alone will not establish native-kernel correctness.
+- Resources: Slurm `14650807`, initially eight requested CPUs and 64 GiB RAM; reduced while queued to thirteen allocated CPUs and 48 GiB RAM to fit available capacity. 45-minute limit; no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/flash2-build.log` and `flash2-build/`. Stopped after 1m15s when provenance showed the base image had supplied `MAX_JOBS=16`. Retry sets its own six-worker build budget; no GPU kernels ran.
 
 ### 2026-10-26 · distillation-fused-coherent-20261026 · failed
 

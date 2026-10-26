@@ -20,8 +20,9 @@ export CUDA_HOME=/usr/local/cuda
 export FLASH_ATTENTION_FORCE_BUILD=TRUE
 export FLASH_ATTN_CUDA_ARCHS=80
 export TORCH_CUDA_ARCH_LIST=8.0
-export MAX_JOBS=${MAX_JOBS:-8}
-export NVCC_THREADS=${NVCC_THREADS:-2}
+# The base image exports MAX_JOBS=16; do not inherit its build resource budget.
+export MAX_JOBS=${DISTILLATION_BUILD_JOBS:-6}
+export NVCC_THREADS=2
 "$uv" --version > "$RUNTIME_BUILD_RECORD/uv.txt"
 "$uv" pip freeze --python "$python" > "$RUNTIME_BUILD_RECORD/before.txt"
 cp "$root/requirements-distillation-a100.txt" "$RUNTIME_BUILD_RECORD/requirements.txt"

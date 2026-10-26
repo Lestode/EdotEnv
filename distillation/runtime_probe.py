@@ -21,12 +21,14 @@ def main():
         importlib.import_module(module)
     import torch
     from flash_attn import flash_attn_func
+    from megatron.core.optimizer import Adam
     from transformer_engine.pytorch import DotProductAttention, LayerNormLinear
 
     report = {
         "python": platform.python_version(),
         "cuda": torch.version.cuda,
         "flash_attention_implementation": flash_attn_func.__module__,
+        "adam_implementation": f"{Adam.__module__}.{Adam.__name__}",
         "packages": {},
         "gpus": [],
         "slurm_job_id": os.environ["SLURM_JOB_ID"],
@@ -124,6 +126,14 @@ def main():
                 value is None or not torch.isfinite(value).all() for value in checked
             ):
                 raise RuntimeError("Native attention/normalization probe was nonfinite")
+            # Megatron updates FP32 master parameters; exercise its selected optimizer.
+            parameter = torch.nn.Parameter(torch.ones(16, device=x.device))
+            optimizer = Adam(
+                [parameter], lr=0.001, betas=(0.0, 0.0), weight_decay=0.0, eps=1e-8
+            )
+            parameter.grad = torch.full_like(parameter, 2)
+            optimizer.step()
+            torch.testing.assert_close(parameter, torch.full_like(parameter, 0.999))
             report["gpus"].append(
                 {
                     "name": torch.cuda.get_device_name(index),
@@ -131,6 +141,7 @@ def main():
                     "bf16_matmul": "passed",
                     "packed_gqa_reference_and_backward": "passed",
                     "rmsnorm_linear_forward_backward": "passed",
+                    "adam_step": "passed",
                 }
             )
     print(json.dumps(report, indent=2))

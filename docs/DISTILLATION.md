@@ -63,6 +63,19 @@ build is being validated, not yet a qualified runtime. Source
 container to make PyTorch and Transformer Engine use the same cuDNN libraries;
 the Slurm launcher does this for both driver and workers.
 
+[The container initializer](../scripts/init-distillation-runtime.sh) assembles
+those steps in a CPU allocation:
+
+```sh
+RUNTIME_ROOT=/approved/shared/new-runtime bash scripts/init-distillation-runtime.sh
+```
+
+It refuses an existing destination, keeps caches on that shared storage, and
+builds a directory runtime at `$RUNTIME_ROOT/rootfs`. It defaults to six compiler
+workers; allocate memory/CPUs accordingly or set `DISTILLATION_BUILD_JOBS`.
+The combined initializer has not yet been exercised from a clean image download;
+the current qualification uses the same pinned image's preserved extraction.
+
 The launcher requires a compatible A100 Slime runtime, the initialized submodule,
 and identical shared paths on both nodes. The upstream container is being qualified;
 its presence or successful imports alone do not establish A100 kernel compatibility.
