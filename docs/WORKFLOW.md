@@ -386,22 +386,35 @@ the gate. A fresh commit on PR #10, followed by updating PR #11 against main,
 produced fresh passing checks; both PRs then merged with protection unchanged.
 
 The owner explicitly approved adopting the current shared fix and migrating the
-checks after being told that reviews would certify the current merge with main
+checks in the [recorded decision](https://github.com/Lestode/EdotEnv/pull/12#issuecomment-6413352763),
+after being told that reviews would certify the current merge with main
 instead of only the PR commit. Shared reviewer PR #7 is accepted at
 `53c57b9e8e81dbcf144544d24a3cdeb3aa755736`. This consumer upgrade pins that revision,
 selects `check-target: test-merge` for both actions, updates their required names,
 and removes the retired comparison workflow source. It uses supported upstream
 configuration; it adds no consumer-side check publisher or shared verdict.
 
-Migration is prepared, not yet activated. The live branch rule still requires
-the two legacy head checks until both real replacement checks are verified on
-the upgrade PR's current test merge. Then replace only those two requirements
-with `Documentation reviewer (test merge)` and `Implementation reviewer (test merge)`,
-keeping `Project checks`, strict up-to-date checking, and every other protection.
-Record readback and merge-panel evidence before declaring enforcement active.
+The replacement requirements were activated on 2026-10-26 after the
+[feature-branch review run](https://github.com/Lestode/EdotEnv/actions/runs/40303978069)
+passed on integration PR #12. Its head was `3d704f5c56705558604512ffa1249f5f4c1294c7`,
+base `20cf4d147ad3bda627ee38f7f000cb0c2351c080`, and verified merge
+`48055d58ef4429419924dbf5bfe8f25fc42c2e31`; both merge parents matched those commits.
+GitHub identified both replacement checks on that merge as required and successful.
+Full protection readback before and after differed only in the two reviewer names:
+`Project checks`, strict up-to-date checking, administrator enforcement, PR and
+conversation requirements, and all other protections remained identical.
+
+Updating the PR body then produced a [new skipped head suite](https://github.com/Lestode/EdotEnv/actions/runs/40304937478).
+Both required merge checks remained successful. The PR's state was `unstable`,
+rather than `blocked`, because the earlier non-required legacy reviews had failed
+with missing new-version contracts; the verified merge's check rollup was successful.
+This verifies the original metadata-edit sequence on the bootstrap proposal.
+It does not establish all failure, retargeting, or stale-review cases.
+
 Automatic execution changes only after the integration PR is accepted and merged;
-its feature-branch manual run validates the proposed caller with accepted project
-settings. Later head metadata edits and a fresh commit still need live validation.
+the feature-branch run validates the proposed caller with accepted project settings.
+Every subsequent revision still needs real reviews on its current merge. Automatic
+post-merge execution and the remaining failure scenarios stay in the workflow TODO.
 
 For bootstrap validation of an authorized workflow upgrade, manually dispatch
 this workflow from its feature branch for its own PR once the shared dependency
