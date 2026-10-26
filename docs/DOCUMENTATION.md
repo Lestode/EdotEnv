@@ -2,7 +2,7 @@
 
 - Keep supporting project documentation in `docs/`; keep `AGENTS.md` at the project root.
 - Keep project documents logically consistent, both internally and with each other.
-- Write planning and continuity documents to preserve the user's actual intent and help a fresh chat recover context: what matters, why, the current state, agreed constraints, important findings, and unresolved questions.
+- Write planning and continuity documents as shared context for the user and future agents. Preserve the user's actual intent, rationale, current state, consequential decisions, and unresolved questions. Assume a capable reader; omit generic methodological teaching and speculative inventories unless requested.
 - Keep these documents high-level and outcome-oriented. Do not turn them into exhaustive task lists or prescribe a detailed pathway for future agents. Leave room to choose and revise an approach as evidence changes. Include procedural detail only where it is needed to preserve a consequential decision, operate the system, or reproduce a result.
 - Give each topic one authoritative home and link to it from other documents instead of repeating it. Keep scope and decisions in `AGENTS.md`; a concise handoff of current work and outstanding outcomes in `docs/TODO.md`; and topic-specific evidence in the relevant supporting document. Link to durable records instead of accumulating completed-task history in the TODO.
 - Distinguish confirmed decisions, tentative assumptions, open questions, and deferred decisions.

@@ -11,20 +11,15 @@ warranted, ask the user.
 
 ## Control confounders and distinguish regimes
 
-Define the scientific question and intended comparison before choosing a run
-matrix. Identify factors that could explain the outcome, including differences
-introduced by scheduling, sampling, resource placement, and training progress.
-Specify which factors are controlled, varied, or measured. Measure potentially
-distinct mechanisms separately where practical; use targeted ablations when
-several factors change together. Record residual confounding and interactions
-rather than attributing every difference to the named treatment.
+Make comparisons informative: account for important confounders, measure
+potentially distinct effects separately where useful, and investigate
+interactions when they matter. A result in one workload or learning regime
+need not generalize to another.
 
-Compare learning quality, stability, elapsed time, and resource use under
-explicit budgets. Separate exploratory pilots and tuning from confirmatory
-comparisons, define outcomes and stopping rules in advance, and retain failures.
-Support conclusions with independent repetitions and uncertainty appropriate to
-the experimental unit. Limit conclusions to the workloads and training regimes
-actually tested. Study-specific controls belong in the experiment protocol.
+Agree on what would count as success before judging results. Keep exploration
+distinct from validation, use credible comparisons and uncertainty, and retain
+failures. Document the reasoning and consequential choices; add methodological
+detail when a concrete experiment needs it.
 
 ## Maintain experiment continuity
 
