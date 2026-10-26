@@ -40,6 +40,7 @@ Use a `codex/` feature branch and a pull request for every change after the init
 
 ## Confirmed decisions
 
+- The next experimental stage focuses on classical policy distillation from a more capable frozen teacher to a student, comparing synchronous and asynchronous execution on eight GPUs across two Komondor nodes. See the [experiment design](docs/experiments/policy-distillation/README.md). This preliminary study preserves the longer-term OPCD scope and its context-separation requirements.
 - The teacher will be an accessible model.
 - Komondor is the target compute cluster; authenticated access and an A100 Slurm allocation have been verified. See [hardware planning](docs/HARDWARE.md) for evidence and remaining validation.
 - For now, the user manages collaboration and access in this repository.

@@ -17,6 +17,18 @@ Slime can be extended to use different teacher and student contexts. Its bundled
 | Top-k data | [Sample](../slime/slime/utils/types.py) and score-centering code already support rollout top-k IDs/log probabilities. | Reuse suitable capture and tensor utilities after checking their probability semantics; add aligned teacher scores. Score centering itself is not the OPCD loss. |
 | Distributed execution | Ray orchestration, rollout transport, and Megatron parallel training already exist. | Connect the new scoring stage and tensors to these paths and validate distributed alignment and gradients. |
 
+## Preliminary policy distillation study
+
+The [experiment design](experiments/policy-distillation/README.md) defines the
+preliminary synchronous/asynchronous comparison; the OPCD work below remains
+the longer-term implementation plan.
+
+- [ ] Select and pin a teacher/student pair; verify tokenizer compatibility and measure the teacher's advantage on development data.
+- [ ] Freeze the study's distillation objective and verify its loss, gradients, scoring alignment, and frozen-teacher behavior on both execution paths.
+- [ ] Audit existing controls and telemetry for policy versions, actual sampling probabilities, queue bounds, weight publication, and failure handling; identify gaps through supported Slime interfaces.
+- [ ] Validate the two-node runtime and actual GPU/network placement, then use an exploratory pilot to set budgets, regime definitions, outcome measures, repetitions, and stopping rules before comparison runs.
+- [ ] Prepare matched configurations and separate learning, systems, and stability measurements; journal each launched attempt and preserve failures and discarded-work costs.
+
 ## Implementation checklist
 
 ### 1. Separate contexts and preserve response alignment

@@ -9,6 +9,7 @@ Cluster access and a single-GPU inventory probe are recorded in hardware plannin
 - [Development workflow and review integration](WORKFLOW.md)
 - [Experiment guidance](EXPERIMENTS.md)
 - [Experiment journal](experiments/LOG.md)
+- [Policy distillation experiment design](experiments/policy-distillation/README.md)
 - [Implementation tasks and validation evidence](TODO.md)
 - [Hardware planning and GPU validation sequence](HARDWARE.md)
 - [Draft research guidance based on observed agent failure cases](RESEARCH_GUIDANCE.md)

@@ -9,6 +9,23 @@ applicable evidence, and avoid redundant checks. Investigate unexpected results
 before scaling. When unsure whether further validation or a larger run is
 warranted, ask the user.
 
+## Control confounders and distinguish regimes
+
+Define the scientific question and intended comparison before choosing a run
+matrix. Identify factors that could explain the outcome, including differences
+introduced by scheduling, sampling, resource placement, and training progress.
+Specify which factors are controlled, varied, or measured. Measure potentially
+distinct mechanisms separately where practical; use targeted ablations when
+several factors change together. Record residual confounding and interactions
+rather than attributing every difference to the named treatment.
+
+Compare learning quality, stability, elapsed time, and resource use under
+explicit budgets. Separate exploratory pilots and tuning from confirmatory
+comparisons, define outcomes and stopping rules in advance, and retain failures.
+Support conclusions with independent repetitions and uncertainty appropriate to
+the experimental unit. Limit conclusions to the workloads and training regimes
+actually tested. Study-specific controls belong in the experiment protocol.
+
 ## Maintain experiment continuity
 
 Read recent experiment records before planning further runs. Create a journal
