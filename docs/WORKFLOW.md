@@ -7,9 +7,9 @@ branch and open a PR against `main`. Update that PR as work progresses. Do not
 push changes directly to `main`. Agents may prepare and push changes within the
 user's authorized task; merging requires explicit user acceptance of the PR.
 
-EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/53c57b9e8e81dbcf144544d24a3cdeb3aa755736/WORKFLOW.md),
-[documentation review procedure](https://github.com/Lestode/review-agents/blob/53c57b9e8e81dbcf144544d24a3cdeb3aa755736/documentation-review/SKILL.md),
-and [implementation review procedure](https://github.com/Lestode/review-agents/blob/53c57b9e8e81dbcf144544d24a3cdeb3aa755736/implementation-review/SKILL.md)
+EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/81df365e099ca370470822780313fda567c298b0/WORKFLOW.md),
+[documentation review procedure](https://github.com/Lestode/review-agents/blob/81df365e099ca370470822780313fda567c298b0/documentation-review/SKILL.md),
+and [implementation review procedure](https://github.com/Lestode/review-agents/blob/81df365e099ca370470822780313fda567c298b0/implementation-review/SKILL.md)
 at the same revision as both actions. Project scope remains in [AGENTS.md](../AGENTS.md).
 Update the action pin and these links together through a reviewed PR. EdotEnv adopts
 the shared reviewer-owned test-merge checks. The [migration record](#test-merge-migration)
@@ -102,7 +102,7 @@ index and [documentation instructions](../.github/documentation-review.md).
 index, a separate command and marker, optional unchanged source paths, and
 [implementation instructions](../.github/implementation-review.md).
 The shared action defines the model, collection limits, authorization, execution,
-and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/53c57b9e8e81dbcf144544d24a3cdeb3aa755736/README.md).
+and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/81df365e099ca370470822780313fda567c298b0/README.md).
 
 Both actions run on a GitHub-hosted Ubuntu runner with `auth-mode: api-key` and
 explicit public-repository opt-in. Fetch it with `REVIEW_AGENTS_READ_KEY`, a
@@ -148,7 +148,10 @@ This workflow authorizes both reviewers' PR reports and requested follow-up repl
 Each request captures the intended PR head. Both actions use the supported
 `check-target: test-merge` input. Each publishes its own finding-blocking check on
 the current test merge after verifying that its two parents are the current PR
-head and target commit. Before finalization, it rechecks the open PR's head,
+head and target commit. Each reviewer also publishes its own verdict as a commit
+status under the same name and SHA. Both publications must complete; the check
+retains the assessment ledger. This requires `statuses: write` alongside
+`checks: write`; incomplete publication blocks and requires fresh assessment. Before finalization, it rechecks the open PR's head,
 target commit, target branch, and test merge. A missing, conflicting, stale, or
 unreadable merge leaves the request incomplete. The check passes only after
 its report is completed and finalized with no unresolved blocking findings.
@@ -389,7 +392,7 @@ The owner explicitly approved adopting the current shared fix and migrating the
 checks in the [recorded decision](https://github.com/Lestode/EdotEnv/pull/12#issuecomment-6413352763),
 after being told that reviews would certify the current merge with main
 instead of only the PR commit. Shared reviewer PR #7 is accepted at
-`53c57b9e8e81dbcf144544d24a3cdeb3aa755736`. This consumer upgrade pins that revision,
+`53c57b9e8e81dbcf144544d24a3cdeb3aa755736`. The initial consumer upgrade pinned that revision,
 selects `check-target: test-merge` for both actions, updates their required names,
 and removes the retired comparison workflow source. It uses supported upstream
 configuration; it adds no consumer-side check publisher or shared verdict.
@@ -414,8 +417,11 @@ REST merge, and REST squash attempts rejected PR #12 with both reviewer checks
 reported as expected, despite successful checks on the current test merge.
 GitHub replaced the synthetic merge after each failed attempt while its parents
 and tree stayed identical. Shared [PR #9](https://github.com/Lestode/review-agents/pull/9)
-proposes paired commit-status publication; its acceptance, consumer upgrade, and
-live protected-merge validation remain pending. No protection was bypassed.
+adds paired commit-status publication. The owner explicitly
+[accepted that change and its permission migration](https://github.com/Lestode/review-agents/pull/9#issuecomment-6415307403).
+This consumer pins its reviewed revision, grants `statuses: write`, and preserves
+the same required names, GitHub Actions ownership, and all branch protections.
+Live protected-merge validation remains pending. No protection was bypassed.
 Failure, retargeting, and stale-review scenarios also remain to be validated.
 
 Automatic execution changes only after the integration PR is accepted and merged;
