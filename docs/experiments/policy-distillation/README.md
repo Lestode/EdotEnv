@@ -14,8 +14,8 @@ speed and cost are secondary. Scope and rationale are recorded in
 
 Establish implementation correctness during development, before sustained
 training. Compare teacher scores, the sampled-token loss, and student gradients
-on fixed examples against an independent reference. Begin with inexpensive local
-checks, then validate the actual model pair and backends during the first GPU
+on fixed examples against an independent reference. Begin with inexpensive CPU
+checks on allocated compute, then validate the actual model pair and backends during the first GPU
 run. Establish agreement through the distributed path before comparing training
 quality; distinguish numerical discrepancies from intentional async staleness.
 Baseline task evaluations can proceed independently.
@@ -54,11 +54,12 @@ setup; resources and topology can evolve. Multi-node execution and the complete
 distillation path still need validation under the [hardware constraints](../../HARDWARE.md).
 
 The [initial model pair](../../EXPERIMENTS.md#initial-policy-distillation-pair)
-is selected, with tokenizer compatibility and baseline quality to validate
-before training. The initial objective is selected in [project scope](../../../AGENTS.md#scope).
-The dataset, acceptable quality loss, and learning/evaluation budgets remain
-open. Slime already has sync/async and OPD paths; that does not establish their
-correctness for this study.
+is selected, with tokenizer metadata compatibility verified and baseline quality
+still to establish. The [implementation](../../DISTILLATION.md) supplies the selected
+sampled-token objective and matched sync/async configuration. Dataset and acceptable
+quality loss remain open. The first training validation is bounded at 30 minutes
+on eight GPUs after runtime checks; this does not set the budget for later studies.
+Slime's existing paths and the adapter CPU checks do not establish learning quality.
 
 Use the [experiment guidance](../../EXPERIMENTS.md), [run records](../LOG.md),
 and [current work](../../TODO.md#policy-distillation-validation) to
