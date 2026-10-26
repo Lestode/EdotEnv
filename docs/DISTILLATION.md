@@ -59,7 +59,8 @@ copy, [the A100 initializer](../scripts/init-distillation-a100.sh) builds the
 existing PyTorch. It removes unused FlashAttention-4, whose bundled CUTLASS API
 breaks Transformer Engine's eager import on this runtime. Set `RUNTIME_BUILD_RECORD`
 to a new directory; it retains setup, versions, build flags, and logs. The FA2
-build and A100 kernel probe passed; actual model execution remains unvalidated. Source
+build, A100 kernel probe and frozen-model baseline inference passed; integrated
+training remains unvalidated. Source
 [the runtime environment](../scripts/distillation-runtime-env.sh) inside the
 container to make PyTorch and Transformer Engine use the same cuDNN libraries;
 the Slurm launcher does this for both driver and workers.

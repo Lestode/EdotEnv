@@ -8,6 +8,13 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-26 · distillation-sync-smoke-20261026-a2 · running
+
+- Question: Does the complete synchronous path execute three updates and save a checkpoint?
+- Setup: Revision `7093564`, pinned models/runtime, eight synthetic smoke prompts, three batches of eight with a 512-token response cap. Both frozen-model baseline evaluations completed before submission. Existing stage timers only; detailed profiling is deferred.
+- Resources: Slurm `14651375`, eight GPUs across two nodes, 30-minute limit (at most four GPU-hours).
+- Evidence: Private `edotenv/distillation-check-20261026-a1/sync-smoke-20261026-a2/` and corresponding log. Candidate-runtime collective, Ray startup and training results pending; no full run.
+
 ### 2026-10-26 · distillation-step-cleanup-20261026 · completed
 
 - Question: Does the training launcher's cleanup terminate only its recorded Slurm worker step and return promptly?
@@ -15,12 +22,13 @@ the earlier entry so failures remain visible.
 - Result: Step killed and reaped while its parent allocation remained alive; Slurm `14651228`, one second, exit `0:0`, one CPU, 1 GiB RAM, no GPUs.
 - Evidence: Private `edotenv/distillation-check-20261026-a1/smoke-launcher.tar.gz`, `step-cleanup-check.sh`, `step-cleanup-check.log` and `step-cleanup-14651228/`.
 
-### 2026-10-26 · distillation-baseline-batched-20261026 · running
+### 2026-10-26 · distillation-baseline-batched-20261026 · completed
 
 - Question: Can bounded batches complete both frozen-model baselines within the pilot budget?
 - Setup: Same 32 examples, checkpoints, greedy decoding and 8192-token limit; batch size eight for both models. This changes scheduling and may change numerical generation behavior; cancelled sequential attempts are not pooled with this pilot. The batched evaluator passed fourteen CPU tests and the real-tokenizer/HTTP/grader fixture.
-- Resources: Slurm `14651195` (student) and `14651196` (teacher), each two GPUs, eight CPUs, 64 GiB RAM and 30 minutes; at most two GPU-hours combined.
-- Evidence: Private `edotenv/distillation-check-20261026-a1/baseline-{student,teacher}-<job-id>/` and corresponding logs; pending. Two dependency-based submissions were rejected before allocation because the earlier completed jobs were no longer accepted as dependencies.
+- Result: Student 22/32 correct (68.75%), ten truncated; teacher 27/32 (84.375%), five truncated. No request or grading errors. Evaluation elapsed time was 811.85s and 832.97s respectively. This small development pilot suggests a teacher advantage; truncation and sample size limit quality conclusions.
+- Resources: Slurm `14651195` (student) and `14651196` (teacher), each two GPUs, eight CPUs and 64 GiB RAM. Completed in 14m59s and 16m02s respectively, both exit `0:0`; approximately 1.034 GPU-hours combined, including startup and cleanup.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/baseline-{student,teacher}-<job-id>/` and corresponding logs. Two dependency-based submissions were rejected before allocation because the earlier completed jobs were no longer accepted as dependencies.
 
 ### 2026-10-26 · distillation-evaluator-batch-20261026 · completed
 

@@ -10,6 +10,10 @@ teacher to a student in Slime. Quality and technical validity come first;
 speed and cost are secondary. Scope and rationale are recorded in
 [AGENTS.md](../../../AGENTS.md#confirmed-decisions).
 
+For now, retain existing logs and coarse elapsed-time measurements. Defer detailed
+profiling and continuous monitoring until their performance impact is understood;
+one-time startup topology snapshots can remain outside the measured training work.
+
 ## Proposed evaluation approach
 
 Establish implementation correctness during development, before sustained
@@ -57,8 +61,8 @@ setup; resources and topology can evolve. Multi-node execution and the complete
 distillation path still need validation under the [hardware constraints](../../HARDWARE.md).
 
 The [initial model pair](../../EXPERIMENTS.md#initial-policy-distillation-pair)
-is selected, with tokenizer metadata compatibility verified and baseline quality
-still to establish. The [implementation](../../DISTILLATION.md) supplies the selected
+is selected, with tokenizer metadata compatibility verified and both development
+baselines completed; see the [results and limits](../LOG.md). The [implementation](../../DISTILLATION.md) supplies the selected
 sampled-token objective and matched sync/async configuration. Dataset and acceptable
 quality loss remain open. The first training validation is bounded at 30 minutes
 on eight GPUs after runtime checks and both models' baseline evaluations; this

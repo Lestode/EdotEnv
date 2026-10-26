@@ -23,7 +23,9 @@ score/policy-age checks. Tokenizer metadata, CPU regression checks, and a separa
 eight-GPU/two-node site collective passed on Komondor; these do not establish
 Slime training correctness. Runtime qualification is recorded in the [journal](experiments/LOG.md).
 
-The task, both models' baseline quality, and acceptable quality loss remain open.
+Both frozen models completed the fixed development baseline; results and
+truncation limits are in the [journal](experiments/LOG.md). The final study task
+and acceptable quality loss remain open.
 The study must establish that distillation improves the student and whether the
 shortcuts preserve that benefit. Async stability and actual distributed Slime
 training still need evidence.
