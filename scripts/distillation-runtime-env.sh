@@ -9,3 +9,6 @@ export NVTE_FLASH_ATTN_V3=0
 export NVTE_FLASH_ATTN_V4=0
 export NVTE_FUSED_ATTN=0
 export NVTE_UNFUSED_ATTN=0
+# Dependencies are already installed with uv in this shared container. Ray's
+# uv-run autodetection walks inaccessible Slurm ancestors on Komondor.
+export RAY_ENABLE_UV_RUN_RUNTIME_ENV=0

@@ -35,6 +35,7 @@ export CUDA_DEVICE_MAX_CONNECTIONS=1
 srun --ntasks=2 --ntasks-per-node=1 --kill-on-bad-exit=1 \
     apptainer exec --nv --bind "$PROJECT_ROOT,$RUN_ROOT" "$RUNTIME_IMAGE" \
     bash -c '
+        set -euo pipefail
         cd "$PROJECT_ROOT"
         source scripts/distillation-runtime-env.sh
         python -m torch.distributed.run --nnodes=2 --nproc-per-node=4 \
@@ -68,6 +69,7 @@ pids+=("$!")
 srun --overlap --nodes=1 --ntasks=1 --nodelist="$HEAD_NODE" \
     apptainer exec --nv --bind "$PROJECT_ROOT,$MODEL_ROOT,$RUN_ROOT,$(dirname "$TRAIN_DATA")" \
     "$RUNTIME_IMAGE" bash -c '
+        set -euo pipefail
         cd "$PROJECT_ROOT"
         source scripts/distillation-runtime-env.sh
         python -m distillation.cluster_ready

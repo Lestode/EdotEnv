@@ -8,12 +8,21 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
-### 2026-10-26 · distillation-sync-smoke-20261026-a2 · running
+### 2026-10-26 · distillation-ray-startup-20261026 · completed
+
+- Question: Can Ray initialize and execute a remote task without inspecting inaccessible Slurm ancestors?
+- Setup: Disable Ray's automatic `uv run` environment detection; dependencies remain installed with uv in the prepared container. Check updated launcher shell syntax and real Ray startup/task/shutdown inside a CPU allocation.
+- Result: Launcher shell syntax, Ray initialization, remote task and shutdown passed. Ray still warns that it cannot inspect dashboard descendants; this did not prevent the task. Slurm remains responsible for allocation containment.
+- Resources: Slurm `14651431`, two CPUs, 8 GiB RAM, five-minute limit; no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/ray-startup-fix.tar.gz`, `ray-startup-check.sh` and `ray-startup-check.log`.
+
+### 2026-10-26 · distillation-sync-smoke-20261026-a2 · cancelled
 
 - Question: Does the complete synchronous path execute three updates and save a checkpoint?
 - Setup: Revision `7093564`, pinned models/runtime, eight synthetic smoke prompts, three batches of eight with a 512-token response cap. Both frozen-model baseline evaluations completed before submission. Existing stage timers only; detailed profiling is deferred.
-- Resources: Slurm `14651375`, eight GPUs across two nodes, 30-minute limit (at most four GPU-hours).
-- Evidence: Private `edotenv/distillation-check-20261026-a1/sync-smoke-20261026-a2/` and corresponding log. Candidate-runtime collective, Ray startup and training results pending; no full run.
+- Result: Candidate-runtime BF16 all-reduce passed on all eight GPUs (PyTorch 2.13.0/CUDA 13/NCCL 2.29.7). Ray readiness failed when automatic `uv run` detection inspected an inaccessible Slurm ancestor. The inner driver shell incorrectly continued after that failure; stopped the job before model initialization or updates. The retry disables that detection and makes inner shells fail immediately.
+- Resources: Slurm `14651375`, eight GPUs across two nodes, cancelled after 2m13s; approximately 0.296 GPU-hours.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/sync-smoke-20261026-a2/` and corresponding log. Import errors also appeared during cancellation; their relation to teardown remains unverified. No full run.
 
 ### 2026-10-26 · distillation-step-cleanup-20261026 · completed
 
