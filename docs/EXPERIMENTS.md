@@ -33,6 +33,10 @@ distinct from validation, use credible comparisons and uncertainty, and retain
 failures. Document the reasoning and consequential choices; add methodological
 detail when a concrete experiment needs it.
 
+The policy-distillation design records the
+[candidate execution and weight-update policies](experiments/policy-distillation/README.md#candidate-execution-policies)
+and the proposed first comparison.
+
 ## Maintain experiment continuity
 
 Read recent experiment records before planning further runs. Create a journal

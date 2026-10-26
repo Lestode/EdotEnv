@@ -21,6 +21,8 @@ Sync and async share those settings. Async allows one publication of policy lag
 by default; sync allows none. Unknown, future, or excessively old policy versions
 abort the attempt rather than silently dropping examples. The bound is configurable
 with `--max-policy-lag`. It does not eliminate off-policy bias or guarantee stability.
+It also does not enforce one student version per response; see the experiment's
+[candidate policies and implementation gap](experiments/policy-distillation/README.md#candidate-execution-policies).
 The wrappers rely on the pinned fresh-run driver's one weight publication per
 rollout; resuming training is outside this launcher's current scope.
 

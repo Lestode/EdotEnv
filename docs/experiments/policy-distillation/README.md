@@ -54,6 +54,44 @@ from sampling and training variation; preserve inconclusive and failed results.
 A successful short execution check establishes readiness for a learning study,
 not that learning or quality preservation has already been demonstrated.
 
+## Candidate execution policies
+
+“Asynchronous” covers two separate choices: how far rollout generation runs
+ahead of training, and when the serving student adopts new weights. The teacher
+stays frozen throughout. These are candidate comparisons, not a commitment to
+test every combination.
+
+### Scheduling
+
+| Strategy | What happens | Proposed scope |
+| --- | --- | --- |
+| Round-synchronous | Collect a batch, train on it, publish weights, then collect the next batch. Generation and scoring can still run concurrently within a round. | Learning reference. |
+| Bounded pipeline overlap | Generate and score future responses while training the current batch; allow at most one publication of policy lag. | First async comparison. |
+| Deeper asynchronous queue | Let more work run ahead, allowing greater policy lag. | Possible later comparison. |
+| Asynchronous optimizer updates | Training workers apply updates without the usual coordination. | Outside this experiment. |
+
+### Updating the serving student during a response
+
+| Weight-update policy | What a response uses | What it lets us test |
+| --- | --- | --- |
+| Finish with original weights | One student version for the entire response; publish at a suitable boundary or retain the original serving snapshot. | Pipeline overlap and stale responses without changing weights mid-response. |
+| Pause, update, rebuild cache, continue | Earlier tokens come from the old version; later tokens use new weights after rebuilding the prefix's KV cache. | The additional effect of mixing policy versions within a response. |
+| Pause, update, retain cache, continue | New weights continue from KV state computed with older weights. | An additional cache-reuse shortcut; defer initially. |
+
+Updates to serving weights must happen at a safe inference boundary. Training a
+separate student copy while generation continues is compatible with all three
+policies; it does not itself change the weights serving an unfinished response.
+
+The proposed starting comparison is **round-synchronous versus bounded overlap,
+with one student version per response in both**. First ask whether student quality
+is preserved; investigate individual mechanisms only if results warrant it.
+
+**Implementation gap:** the current one-publication lag check does not enforce
+one version per response. The pinned async path can retain interrupted partial
+responses and resume them after a weight update. That boundary must be enforced
+and validated before treating the proposed first comparison as implemented.
+Rebuilding the cache alone does not remove the mixed-version token history.
+
 ## Current context
 
 Eight GPUs across two Komondor nodes is the provisional initial validation
