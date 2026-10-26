@@ -403,3 +403,34 @@ extend CI dependencies and test commands through the same PR when necessary.
 Keep GPU and cluster jobs separate until compute access is confirmed. Changes
 inside `slime/` need a published submodule commit and a reviewed pointer update;
 the initial submodule URL is the upstream read source, not an authorized push target.
+
+### Return to latest-head reviews
+
+On 2026-10-26, test-merge checks and then paired check/status publication both
+failed live protected merge attempts on PR #12 despite successful reviews.
+The [paired-publication run](https://github.com/Lestode/EdotEnv/actions/runs/40319372070)
+passed on head `de252c714837ba8a01ab1b0d55cea710c3876d75`, but GitHub still
+returned “2 of 3 required status checks are expected.” No protection was bypassed.
+
+The owner then explicitly [selected the simpler latest-head policy and accepted
+both merges](https://github.com/Lestode/EdotEnv/pull/12#issuecomment-6415770108).
+This supersedes EdotEnv's earlier test-merge adoption. Retain the previously working accepted reviewer revision and its default
+head publication; the unsuccessful shared PR #9 proposal is not adopted. Require `Project checks`, `Documentation reviewer`, and
+`Implementation reviewer` from GitHub Actions. Strict up-to-date checking and
+all unrelated protections remain required. No comparison or completion-only gate
+is added, and findings or incomplete assessments are not waived.
+
+Reviews bind to the latest PR commit. This explicitly overrides the shared
+legacy head-mode comparison requirement; GitHub does not independently bind
+those results to a synthetic merge or target-branch identity. The immediate
+validation is a normal protected merge for this experimental repository.
+Broader failure-injection validation remains deferred. If a metadata-only edit
+hides a head check, publish a fresh PR commit and obtain fresh reviews before
+merging; do not manufacture a replacement result.
+
+The [PR #12 protected merge](https://github.com/Lestode/EdotEnv/pull/12) succeeded
+on 2026-10-26 after project checks and both [latest-head reviews](https://github.com/Lestode/EdotEnv/actions/runs/40321514804)
+passed on `7dcadc811ad227006f5efe993667708d7b1297fe`. The merge produced
+`3c1277bba93278e434e455926e930be75727febe`; strict protection and all unrelated
+settings were preserved. This verifies the normal merge path, not the deferred
+failure-injection scenarios.

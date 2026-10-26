@@ -39,10 +39,10 @@ failures still need interpretation before a follow-up. No new run is implied.
 ## Repository workflow validation
 
 The [development workflow](WORKFLOW.md) owns review policy, activation evidence,
-and merge requirements. Remaining confidence gaps concern fresh reviews after
-changes, stale or missing review blocking, duplicate-request behavior, and
-normal protected merges under the applicable policy. Verify behavior through
-supported interfaces; do not weaken protection or substitute synthetic checks.
+and merge requirements. The restored latest-head policy passed its first normal
+protected merge in PR #12; broader failure-injection validation remains deferred.
+Use supported interfaces and keep further workflow work proportionate to
+experimental needs.
 
 Keep implementation checks proportionate to the change, and distinguish CPU
 checks, reviewer results, and measured GPU training evidence. Launched runs and
