@@ -12,7 +12,7 @@ Goal: implement [On-Policy Context Distillation for Language Models](https://arx
 
 Keep supporting project documentation in `docs/` and follow [documentation rules](docs/DOCUMENTATION.md).
 
-Track implementation gaps and validation work in [the OPCD TODO](docs/TODO.md).
+Keep a concise handoff of current work and validation gaps in [the project TODO](docs/TODO.md).
 
 Follow [experiment guidance](docs/EXPERIMENTS.md) when planning and running experiments.
 
@@ -40,7 +40,7 @@ Use a `codex/` feature branch and a pull request for every change after the init
 
 ## Confirmed decisions
 
-- The next experimental stage focuses on classical policy distillation from a more capable frozen teacher to a student, comparing synchronous and asynchronous execution on eight GPUs across two Komondor nodes. See the [experiment design](docs/experiments/policy-distillation/README.md). This preliminary study preserves the longer-term OPCD scope and its context-separation requirements.
+- The next experimental stage validates classical policy distillation from a more capable frozen teacher to a student on eight GPUs across two Komondor nodes. The primary question is whether the implementation works and its shortcuts preserve quality within an acceptable loss; synchronous/asynchronous execution is one comparison, with speed and cost secondary. See the [experiment design](docs/experiments/policy-distillation/README.md). This preliminary study preserves the longer-term OPCD scope and its context-separation requirements.
 - The teacher will be an accessible model.
 - Komondor is the target compute cluster; authenticated access and an A100 Slurm allocation have been verified. See [hardware planning](docs/HARDWARE.md) for evidence and remaining validation.
 - For now, the user manages collaboration and access in this repository.

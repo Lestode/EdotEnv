@@ -2,8 +2,9 @@
 
 - Keep supporting project documentation in `docs/`; keep `AGENTS.md` at the project root.
 - Keep project documents logically consistent, both internally and with each other.
-- Give each topic one authoritative home and link to it from other documents instead of repeating it. Keep scope, decisions, assumptions, and open/deferred questions in `AGENTS.md`; implementation tasks in `docs/TODO.md`; and topic-specific findings in the relevant supporting document.
-- Keep TODO items actionable. Translate requirements into concrete implementation or validation work without copying requirement lists, decision registers, or checklists maintained elsewhere.
+- Write planning and continuity documents to preserve the user's actual intent and help a fresh chat recover context: what matters, why, the current state, agreed constraints, important findings, and unresolved questions.
+- Keep these documents high-level and outcome-oriented. Do not turn them into exhaustive task lists or prescribe a detailed pathway for future agents. Leave room to choose and revise an approach as evidence changes. Include procedural detail only where it is needed to preserve a consequential decision, operate the system, or reproduce a result.
+- Give each topic one authoritative home and link to it from other documents instead of repeating it. Keep scope and decisions in `AGENTS.md`; a concise handoff of current work and outstanding outcomes in `docs/TODO.md`; and topic-specific evidence in the relevant supporting document. Link to durable records instead of accumulating completed-task history in the TODO.
 - Distinguish confirmed decisions, tentative assumptions, open questions, and deferred decisions.
 - Move answered questions into confirmed decisions and update affected documents; do not leave resolved questions open.
 - Use agreed decisions and the reference paper to resolve settled details instead of asking again.
