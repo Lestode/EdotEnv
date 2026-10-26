@@ -7,9 +7,9 @@ branch and open a PR against `main`. Update that PR as work progresses. Do not
 push changes directly to `main`. Agents may prepare and push changes within the
 user's authorized task; merging requires explicit user acceptance of the PR.
 
-EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/81df365e099ca370470822780313fda567c298b0/WORKFLOW.md),
-[documentation review procedure](https://github.com/Lestode/review-agents/blob/81df365e099ca370470822780313fda567c298b0/documentation-review/SKILL.md),
-and [implementation review procedure](https://github.com/Lestode/review-agents/blob/81df365e099ca370470822780313fda567c298b0/implementation-review/SKILL.md)
+EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/2b2307e7e087dab6a172cc9a3b8f6bbb2f89b483/WORKFLOW.md),
+[documentation review procedure](https://github.com/Lestode/review-agents/blob/2b2307e7e087dab6a172cc9a3b8f6bbb2f89b483/documentation-review/SKILL.md),
+and [implementation review procedure](https://github.com/Lestode/review-agents/blob/2b2307e7e087dab6a172cc9a3b8f6bbb2f89b483/implementation-review/SKILL.md)
 at the same revision as both actions. Project scope remains in [AGENTS.md](../AGENTS.md).
 Update the action pin and these links together through a reviewed PR. EdotEnv adopts
 the shared reviewer-owned test-merge checks. The [migration record](#test-merge-migration)
@@ -102,7 +102,7 @@ index and [documentation instructions](../.github/documentation-review.md).
 index, a separate command and marker, optional unchanged source paths, and
 [implementation instructions](../.github/implementation-review.md).
 The shared action defines the model, collection limits, authorization, execution,
-and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/81df365e099ca370470822780313fda567c298b0/README.md).
+and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/2b2307e7e087dab6a172cc9a3b8f6bbb2f89b483/README.md).
 
 Both actions run on a GitHub-hosted Ubuntu runner with `auth-mode: api-key` and
 explicit public-repository opt-in. Fetch it with `REVIEW_AGENTS_READ_KEY`, a

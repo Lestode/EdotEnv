@@ -74,7 +74,7 @@ jobs:
         with:
           repository: Lestode/review-agents
           # Accepted shared reviewer: review-agents PR #7.
-          ref: 81df365e099ca370470822780313fda567c298b0
+          ref: 2b2307e7e087dab6a172cc9a3b8f6bbb2f89b483
           ssh-key: ${{ secrets.REVIEW_AGENTS_READ_KEY }}
           path: .review-agent
           persist-credentials: false
