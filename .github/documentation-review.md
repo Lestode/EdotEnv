@@ -4,9 +4,9 @@ Start at [the documentation index](../docs/README.md). Treat [AGENTS.md](../AGEN
 as the authority for project intent and [the documentation rules](../docs/DOCUMENTATION.md)
 as the authority for document ownership and consistency.
 
-Check proposals against those requirements, with particular attention to teacher-only
-context isolation, frozen-teacher behavior, response-token alignment, the exact OPCD
-objective, and distributed validation. Use the [implementation TODO](../docs/TODO.md)
+Check proposals against those requirements, with particular attention to
+frozen-teacher behavior, response-token alignment, the selected distillation
+objective, quality loss from shortcuts, and distributed validation. Use the [implementation TODO](../docs/TODO.md)
 to distinguish planned capabilities from completed work. Do not reopen settled
 choices because hardware, checkpoints, or later evaluations remain undecided.
 

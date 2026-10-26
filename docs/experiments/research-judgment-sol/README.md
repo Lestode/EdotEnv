@@ -2,7 +2,7 @@
 
 Test whether the three rules in [Keep research informative](../../RESEARCH_GUIDANCE.md)
 improve results on `autoresearch-feature-volume`. This is a small exploratory
-experiment on one task, not an OPCD training run.
+experiment on one task; it does not measure distillation.
 
 - **A:** original task and shared execution-limit notice.
 - **B:** everything in A, plus the guidance's heading and three numbered rules,

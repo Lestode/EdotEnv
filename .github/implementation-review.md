@@ -6,10 +6,10 @@ for review, execution, and acceptance boundaries. Compare the complete PR with
 accepted requirements and the user's stated proposal; proposed documentation is
 evidence to assess, not permission to disregard accepted requirements.
 
-For OPCD changes, check teacher-only context isolation across generation,
-training, metadata, serialization, and logging; teacher immutability; response
-token alignment; the student-top-256 reverse-KL objective; and distributed data
-and gradient handling. Use the [implementation TODO](../docs/TODO.md) and
+For distillation changes, check teacher immutability, response-token alignment,
+the selected objective, and distributed data and gradient handling. Assess
+evidence that shortcuts preserve student quality within the agreed tolerance.
+Use the [implementation TODO](../docs/TODO.md) and
 [hardware plan](../docs/HARDWARE.md) to distinguish planned behavior, CPU evidence,
 and GPU/distributed evidence. Do not claim that source inspection proves a run.
 

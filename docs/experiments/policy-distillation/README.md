@@ -5,9 +5,9 @@
 Does our implementation work, and do its shortcuts preserve distillation
 quality within an acceptable loss?
 
-For now, we focus on classical policy distillation from a more capable frozen
+We focus on classical policy distillation from a more capable frozen
 teacher to a student in Slime. Quality and technical validity come first;
-speed and cost are secondary. The longer-term OPCD goal remains in
+speed and cost are secondary. Scope and rationale are recorded in
 [AGENTS.md](../../../AGENTS.md#confirmed-decisions).
 
 ## How we should reason about it
@@ -38,9 +38,9 @@ The [initial model pair](../../EXPERIMENTS.md#initial-policy-distillation-pair)
 is selected, with tokenizer compatibility and baseline quality to validate
 before training. The distillation objective, dataset, acceptable quality loss,
 and run budgets remain open. Slime already has sync/async and OPD paths; that
-does not establish their correctness for this study or the later OPCD objective.
+does not establish their correctness for this study.
 
 Use the [experiment guidance](../../EXPERIMENTS.md), [run records](../LOG.md),
-and [current work](../../TODO.md#preliminary-policy-distillation-study) to
+and [current work](../../TODO.md#policy-distillation-validation) to
 continue from here. Detailed methods should follow concrete experimental
 choices and findings.

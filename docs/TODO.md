@@ -9,7 +9,7 @@ alone does not establish distillation correctness or stability on Komondor.
 [AGENTS.md](../AGENTS.md) holds the project scope and decisions. This handoff
 tracks outstanding outcomes; detailed evidence belongs in the linked records.
 
-## Preliminary policy distillation study
+## Policy distillation validation
 
 The [experiment design](experiments/policy-distillation/README.md) frames the
 initial technical validation, with a provisional resource setup. Quality loss
@@ -23,19 +23,6 @@ validation before training. The distillation objective, task, and acceptable
 quality loss remain open. The study should establish
 that distillation improves the student and whether the shortcuts preserve that
 benefit. Async stability and the actual two-node runtime remain unvalidated.
-
-## OPCD implementation
-
-OPCD remains the longer-term goal. No OPCD-specific implementation or GPU
-training validation is complete. The main unresolved capabilities are separate
-teacher/student contexts, teacher scores on student-selected token support,
-and the paper's differentiable top-256 objective through distributed training.
-Slime's existing OPD path is not equivalent to that objective.
-
-Preserve the teacher-only context boundary and frozen teacher specified in
-[AGENTS.md](../AGENTS.md). The [hardware notes](HARDWARE.md) record verified
-single-GPU access, runtime uncertainty, and storage constraints; multi-node
-execution still needs evidence. Prefer Slime's supported extension points.
 
 ## Markdown guidance final-score comparison
 

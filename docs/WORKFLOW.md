@@ -29,7 +29,7 @@ Before merging:
    There is no separate `Current review comparison` or completion-only merge gate.
    Human acceptance and training correctness remain separate from reviewer results.
 3. Run relevant implementation tests and record their commands, results, and
-   coverage limits in the PR. Use [the OPCD TODO](TODO.md) for feature evidence
+   coverage limits in the PR. Use [the project TODO](TODO.md) for feature evidence
    and [hardware planning](HARDWARE.md) for GPU/distributed validation.
    CPU checks and model commentary alone cannot establish training correctness.
 4. Obtain explicit user acceptance of the PR. Each new commit requires fresh
@@ -393,7 +393,7 @@ node --test tests/*.test.cjs
 .venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
-Add deterministic CPU tests under `tests/` using unittest as OPCD is implemented;
+Add deterministic CPU tests under `tests/` using unittest as training code is implemented;
 extend CI dependencies and test commands through the same PR when necessary.
 Keep GPU and cluster jobs separate until compute access is confirmed. Changes
 inside `slime/` need a published submodule commit and a reviewed pointer update;

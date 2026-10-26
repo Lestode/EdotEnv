@@ -1,7 +1,8 @@
 # EdotEnv documentation
 
-Implement OPCD in Slime with distributed execution. The project is in the design
-stage; no OPCD-specific implementation or GPU training validation is complete.
+Validate classical policy distillation in Slime with distributed execution,
+focusing on correctness and quality loss from implementation shortcuts.
+The study is in the design stage; GPU training validation is not complete.
 Cluster access and a single-GPU inventory probe are recorded in hardware planning.
 
 - [Project scope and decisions](../AGENTS.md)

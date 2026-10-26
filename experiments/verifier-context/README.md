@@ -71,11 +71,7 @@ Detailed analysis of the agents' research process is potential future work.
 
 If the guidelines improve the final metric, future work could inspect which
 agent decisions changed and whether those changes explain the improvement.
-It could also test whether an agent can learn the useful behavior through OPCD
-without receiving the extra Markdown at deployment.
-
-These follow-ups are outside the current experiment. Any later OPCD work must
-follow the teacher-only context separation required by the project scope.
+This follow-up is outside the current experiment.
 A score improvement here would not by itself establish that the behavior can
 be distilled or that the guidelines help on other tasks.
 
@@ -348,7 +344,7 @@ with reported model usage of $0.143722165 ($0.15949155 including the prior local
 pilot and smoke request). Its frozen inputs, initial prompts, and official score
 contracts passed the completion audit. Per-trial scores and the final comparison
 remain in the private, ignored run artifacts; they are not published in this PR.
-A small pilot does not establish statistical significance or OPCD distillability.
+A small pilot does not establish statistical significance or distillability.
 
 After all scores were saved, the controller's first cleanup audit encountered a
 Daytona HTTP 409 because the last sandbox was already changing state. The host
@@ -461,5 +457,5 @@ contract test:
 ```
 
 Project implementation gaps and validation work remain in
-[the OPCD TODO](../../docs/TODO.md); repository changes follow
+[the project TODO](../../docs/TODO.md); repository changes follow
 [the development workflow](../../docs/WORKFLOW.md).
