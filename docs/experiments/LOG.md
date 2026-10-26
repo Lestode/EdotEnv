@@ -8,6 +8,14 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-26 · euler-inventory · unavailable
+
+- Question: Can Euler immediately allocate eight GPUs across two nodes?
+- Setup: Read-only SSH/scheduler/runtime inspection, then a bounded two-minute inventory request. Per-node memory and an explicit GPU account were rejected before allocation; per-CPU memory and default account selection were accepted.
+- Result: Slurm `18475970` could not obtain the requested nodes immediately and was cancelled without running. No GPU execution or training evidence.
+- Resources: zero allocation time; no GPU-hours consumed. Runtime and selected model caches still need staging.
+- Evidence: Scheduler accounting reports `CANCELLED`, elapsed `00:00:00`; cluster context and next steps are in the [Euler report](policy-distillation/EULER.md).
+
 ### 2026-10-26 · distillation-sync-smoke-20261026-a5 · failed
 
 - Question: Does the distributed synchronous path work with validated Ray startup settings?

@@ -36,7 +36,10 @@ by separate measurements. The previous checkpoint hold is lifted for this bounde
 validation. Ray startup remains the shared blocker; diagnose it on allocated CPUs
 before another GPU attempt. B's draining worker adapter and single-version
 enforcement passed CPU regressions in CI; full runtime integration remains
-unvalidated. A fresh Komondor eduID login is pending. Keep checkpoints and reports separate;
+unvalidated. Komondor eduID access is blocked; the user authorized tonight's
+smoke checks on Euler, where SSH and Slurm access work. Separate cluster entry
+scripts are being qualified; see the [Euler report](experiments/policy-distillation/EULER.md).
+Keep checkpoints and reports separate;
 do not start a sustained learning run merely because smoke checks pass.
 
 ## Markdown guidance final-score comparison

@@ -1,15 +1,5 @@
 #!/bin/bash
-# Submit with --account=<authorized account> and exported paths described in docs.
-#SBATCH --job-name=distillation-check
-#SBATCH --partition=gpu
-#SBATCH --nodes=2
-#SBATCH --ntasks-per-node=1
-#SBATCH --gpus-per-node=4
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=128G
-#SBATCH --time=00:30:00
-#SBATCH --exclusive
-
+# Shared execution body; submit a cluster-specific Slurm entry point.
 set -euo pipefail
 umask 077
 : "${PROJECT_ROOT:?Shared checkout containing the initialized Slime submodule}"
@@ -19,7 +9,8 @@ umask 077
 : "${RUNTIME_IMAGE:?Validated A100 Slime Apptainer image}"
 : "${SLURM_JOB_ID:?Submit through Slurm}"
 MODE=${MODE:-synchronous}
-module load apptainer/1.4.4
+if [ -n "${APPTAINER_MODULE:-}" ]; then module load "$APPTAINER_MODULE"; fi
+command -v apptainer >/dev/null
 mkdir -m 700 "$RUN_ROOT"
 export PROJECT_ROOT MODEL_ROOT TRAIN_DATA RUN_ROOT RUNTIME_IMAGE MODE
 # Explicitly share one private token between head, workers and driver. The

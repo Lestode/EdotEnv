@@ -98,13 +98,21 @@ output directory. Raw responses and training logs remain in that directory.
 
 For the two-node allocation, export `PROJECT_ROOT`, `MODEL_ROOT` (containing
 `student/` and `teacher/`), `TRAIN_DATA`, `RUN_ROOT` (a new directory), and
-`RUNTIME_IMAGE`. Submit [distillation.slurm](../scripts/distillation.slurm) with
-the authorized account. Set `MODE=synchronous` (A), `MODE=bounded_async` (B), or
+`RUNTIME_IMAGE`. Submit [the Komondor entry point](../scripts/distillation-komondor.slurm)
+with the authorized account, or [the Euler entry point](../scripts/distillation-euler.slurm)
+using Euler's automatic account/partition selection. Set `MODE=synchronous` (A), `MODE=bounded_async` (B), or
 `MODE=fully_async` (C), with a separate `RUN_ROOT` for each attempt. The current
 script requests two four-GPU nodes for at most 30 minutes. It owns a dedicated
 Ray cluster, first checks an eight-GPU collective in the candidate runtime,
 records runtime/topology evidence, and terminates its own Slurm steps. Cleanup
 kills the recorded Ray step so a server shutdown error cannot retain the allocation.
+
+Euler uses per-CPU memory requests and its installed Apptainer, rather than the
+Komondor module. Its [CPU preparation job](../scripts/distillation-euler-prepare.slurm)
+builds the pinned runtime with uv and fetches the locked models. The
+[two-node CPU Ray check](../scripts/distillation-euler-ray.slurm) preserves startup
+logs and must pass before GPU smoke jobs. These cluster-specific scripts share
+[the execution body](../scripts/distillation-run.sh); they do not change A/B/C semantics.
 
 [Smoke prompts](../configs/distillation/smoke.jsonl) are for execution checks only.
 They are not a learning benchmark. For baseline and checkpoint evaluation,

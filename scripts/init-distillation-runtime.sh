@@ -8,7 +8,10 @@ project=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 runtime=$(realpath -m "$RUNTIME_ROOT")
 uv=$(command -v "${UV_BIN:-uv}")
 uv=$(readlink -f "$uv")
-module load apptainer/1.4.4
+if [ -n "${APPTAINER_MODULE-apptainer/1.4.4}" ]; then
+    module load "${APPTAINER_MODULE-apptainer/1.4.4}"
+fi
+command -v apptainer >/dev/null
 mkdir -m 700 "$runtime"
 mkdir "$runtime/cache" "$runtime/tmp"
 export APPTAINER_CACHEDIR="$runtime/cache"
