@@ -8,6 +8,20 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-26 · distillation-async-smoke-20261026-a1 · running
+
+- Question: Can the frozen-teacher distillation path complete a bounded fully asynchronous run without violating score or policy-age checks?
+- Setup: Revision `2deac06`, selected pinned DeepSeek models, eight arithmetic execution prompts, three rollouts; same learning settings as the synchronous smoke. Queued after successful synchronous job `14650897`.
+- Resources: Slurm `14650899`, eight GPUs across two nodes, 30-minute limit (at most four GPU-hours).
+- Evidence: Private `edotenv/distillation-check-20261026-a1/async-smoke-20261026-a1/` and `async-smoke-14650899.log`; pending. This cannot establish learning quality.
+
+### 2026-10-26 · distillation-sync-smoke-20261026-a1 · running
+
+- Question: Can the initial distributed Slime path generate, score, train, and save a student checkpoint?
+- Setup: Revision `2deac06`, selected pinned DeepSeek models, eight arithmetic execution prompts, three rollouts. Queued after successful native-kernel probe `14650838`.
+- Resources: Slurm `14650897`, eight GPUs across two nodes, 30-minute limit (at most four GPU-hours).
+- Evidence: Private `edotenv/distillation-check-20261026-a1/sync-smoke-20261026-a1/` and `sync-smoke-14650897.log`; pending. Execution evidence only, not a learning experiment.
+
 ### 2026-10-26 · distillation-flash2-native-20261026 · running
 
 - Question: Does the rebuilt runtime execute the student's packed GQA and RMSNorm kernels on A100?
