@@ -8,33 +8,65 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
-### 2026-10-26 · distillation-async-smoke-20261026-a1 · running
+### 2026-10-26 · distillation-flash2-native2-20261026 · running
+
+- Question: Can the native A100 probe execute after the unused FA4 import conflict is removed?
+- Setup: Same probe and runtime as `14650838`, with FA4 uninstalled by `14650955`; no other package changes.
+- Resources: Slurm `14651045`, one GPU, four CPUs, 16 GiB RAM, eight-minute limit.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/flash2-native2.log`; pending. An earlier submission was rejected by the shared per-user job-count limit before allocation.
+
+### 2026-10-26 · distillation-contract2-20261026 · completed
+
+- Question: Does the new contract regression pass with the complete pinned Slime Python package available?
+- Setup: Retry after replacing the incomplete staged dependency source with the package from the verified checkout. No test-code change.
+- Result: Slurm `14651044`, all thirteen CPU tests, Ruff and shell checks passed; two seconds, two requested CPUs, 8 GiB RAM, no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/contract-check2.log`. The bounded contract check does not execute Slime's full GPU argument parser.
+
+### 2026-10-26 · distillation-contract-20261026 · failed
+
+- Question: Do the pinned Slime reward accessor and custom-configuration statements satisfy the adapter's entry contracts?
+- Setup: New CPU regression against the actual submodule source, with numpy/httpx added to the uv test environment; remaining adapter tests, Ruff and shell checks included.
+- Result: Twelve tests passed; the new test could not read `arguments.py` because the earlier staged dependency archive was incomplete. Ruff and shell checks passed.
+- Resources: Slurm `14650958`, two requested CPUs, 8 GiB RAM; six seconds, exit `1:0`, no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/contract-update.tar.gz` and `contract-check.log`.
+
+### 2026-10-26 · distillation-flash4-removal-20261026 · completed
+
+- Question: Does removing unused FlashAttention-4 resolve the native probe's eager-import conflict while preserving FlashAttention-2?
+- Setup: uv uninstall in the owned writable runtime; before/after package lists and FA2 import check retained. No upstream source edits or PyTorch replacement.
+- Result: Only `flash-attn-4==4.0.0b19` was removed; FA2 imports passed.
+- Resources: Slurm `14650955`, two requested CPUs, 8 GiB RAM; three seconds, exit `0:0`, no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/flash4-removal.log` and `flash4-removal/`. GPU qualification remains separate.
+
+### 2026-10-26 · distillation-async-smoke-20261026-a1 · cancelled
 
 - Question: Can the frozen-teacher distillation path complete a bounded fully asynchronous run without violating score or policy-age checks?
-- Setup: Revision `2deac06`, selected pinned DeepSeek models, eight arithmetic execution prompts, three rollouts; same learning settings as the synchronous smoke. Queued after successful synchronous job `14650897`.
-- Resources: Slurm `14650899`, eight GPUs across two nodes, 30-minute limit (at most four GPU-hours).
-- Evidence: Private `edotenv/distillation-check-20261026-a1/async-smoke-20261026-a1/` and `async-smoke-14650899.log`; pending. This cannot establish learning quality.
+- Setup: Revision `2deac06`, selected pinned DeepSeek models, eight arithmetic execution prompts, three rollouts; queued after synchronous job `14650897`.
+- Result: Held and cancelled before execution to preserve the agreed baseline-before-training prerequisite; no runtime logs or training artifacts were produced.
+- Resources: Slurm `14650899`, planned eight GPUs/two nodes and 30 minutes; actual elapsed time and GPU-hours zero.
 
-### 2026-10-26 · distillation-sync-smoke-20261026-a1 · running
+### 2026-10-26 · distillation-sync-smoke-20261026-a1 · cancelled
 
 - Question: Can the initial distributed Slime path generate, score, train, and save a student checkpoint?
-- Setup: Revision `2deac06`, selected pinned DeepSeek models, eight arithmetic execution prompts, three rollouts. Queued after successful native-kernel probe `14650838`.
-- Resources: Slurm `14650897`, eight GPUs across two nodes, 30-minute limit (at most four GPU-hours).
-- Evidence: Private `edotenv/distillation-check-20261026-a1/sync-smoke-20261026-a1/` and `sync-smoke-14650897.log`; pending. Execution evidence only, not a learning experiment.
+- Setup: Revision `2deac06`, selected pinned DeepSeek models, eight arithmetic execution prompts, three rollouts; queued after native-kernel probe `14650838`.
+- Result: Held and cancelled before execution because this would update weights before both models' task baselines were established. Implementation review `071c98e7224f` F1 identified the ordering error; the original prerequisite is retained.
+- Resources: Slurm `14650897`, planned eight GPUs/two nodes and 30 minutes; actual elapsed time and GPU-hours zero. No training artifacts were produced.
 
-### 2026-10-26 · distillation-flash2-native-20261026 · running
+### 2026-10-26 · distillation-flash2-native-20261026 · failed
 
 - Question: Does the rebuilt runtime execute the student's packed GQA and RMSNorm kernels on A100?
-- Setup: Feature-branch probe with explicit flash backend and consistent cuDNN path; packed attention checked against FP32 causal-softmax reference, finite backward gradients, and a known Megatron Adam update. Queued only after successful build `14650836`.
-- Resources: Slurm `14650838`, one GPU, four CPUs, 16 GiB RAM, eight-minute limit.
-- Evidence: Private `edotenv/distillation-check-20261026-a1/flash2-native.log`; pending. No model training in this probe.
+- Setup: Feature-branch probe with explicit flash backend and consistent cuDNN path, following successful build `14650836`.
+- Result: Failed while importing Transformer Engine: bundled FlashAttention-4 expects `cutlass.cute.core.ThrMma`, absent from the installed CUTLASS API. The intended packed-attention, RMSNorm and Adam checks did not execute.
+- Resources: Slurm `14650838`, one GPU, four CPUs, 16 GiB RAM; 2m32s, exit `1:0`, approximately 0.042 GPU-hours.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/flash2-native.log`. No model training.
 
-### 2026-10-26 · distillation-flash2-build2-20261026 · running
+### 2026-10-26 · distillation-flash2-build2-20261026 · completed
 
 - Question: Can the A100 extension build complete with an explicit resource budget?
 - Setup: Retry of `14650807` with six compiler workers and two NVCC threads each, overriding the image's inherited build settings. Existing CUDA/PyTorch retained.
-- Resources: Slurm `14650836`, thirteen CPUs, 48 GiB RAM, 45-minute limit; no GPUs.
-- Evidence: Private `edotenv/distillation-check-20261026-a1/flash2-build2.log` and `flash2-build2/`; pending.
+- Result: FlashAttention-2 2.8.3 built for sm80, installed through uv and imported successfully. Compilation/import alone does not qualify GPU execution.
+- Resources: Slurm `14650836`, thirteen CPUs, 48 GiB RAM; 30m40s, exit `0:0`, no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/flash2-build2.log` and `flash2-build2/`, including versions, exact flags and completion marker.
 
 ### 2026-10-26 · distillation-uv-check2-20261026 · completed
 

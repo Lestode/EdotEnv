@@ -8,7 +8,8 @@
 This is our initial pair. Exact tokenizer metadata compatibility passed on
 Komondor for the [pinned revisions](../configs/distillation/models.json).
 Runtime token alignment and baseline quality for both models on the chosen
-evaluation tasks still need validation before learning experiments.
+evaluation tasks still need validation before training, including execution
+checks that update weights. Native-kernel and inference checks can proceed first.
 
 ## Validate before scaling
 

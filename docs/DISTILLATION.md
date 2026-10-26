@@ -56,9 +56,10 @@ The candidate GPU runtime starts from Slime's OCI digest
 (`slimerl/slime`, CUDA 13). It lacks FlashAttention-2. Inside an owned writable
 copy, [the A100 initializer](../scripts/init-distillation-a100.sh) builds the
 [pinned addition](../requirements-distillation-a100.txt) with uv against the
-existing PyTorch, without dependency replacement. Set `RUNTIME_BUILD_RECORD`
-to a new directory; it retains setup, versions, build flags, and logs. This
-build is being validated, not yet a qualified runtime. Source
+existing PyTorch. It removes unused FlashAttention-4, whose bundled CUTLASS API
+breaks Transformer Engine's eager import on this runtime. Set `RUNTIME_BUILD_RECORD`
+to a new directory; it retains setup, versions, build flags, and logs. The FA2
+build passed; native GPU execution is still being qualified. Source
 [the runtime environment](../scripts/distillation-runtime-env.sh) inside the
 container to make PyTorch and Transformer Engine use the same cuDNN libraries;
 the Slurm launcher does this for both driver and workers.
@@ -115,7 +116,8 @@ actual pinned loss helper's gradient against an enumerated reverse-KL reference.
 The loss-helper test isolates the function from Megatron; it is not a distributed
 training test. Checkpoint metadata preflight, Ruff, and shell syntax checks passed.
 Follow-up job `14650690` passed eleven tests, including the actual Slime serving
-configuration parser. The review regression brings this to twelve passing tests.
+configuration parser. Follow-up regressions bring this to thirteen passing tests,
+including the real `Sample` reward accessor and custom-configuration statements.
 A separate site-runtime NCCL probe passed across eight A100s on two nodes using
 one Slurm launcher per node. See the [journal](experiments/LOG.md) for attempts
 and coverage limits. Actual Slime model execution, end-to-end async behavior,

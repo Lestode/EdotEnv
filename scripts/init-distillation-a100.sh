@@ -27,6 +27,10 @@ export NVCC_THREADS=2
 "$uv" pip freeze --python "$python" > "$RUNTIME_BUILD_RECORD/before.txt"
 cp "$root/requirements-distillation-a100.txt" "$RUNTIME_BUILD_RECORD/requirements.txt"
 cp "${BASH_SOURCE[0]}" "$RUNTIME_BUILD_RECORD/setup.sh"
+# FA4 is unused on A100 and its bundled CUTLASS API breaks TE's eager import.
+# Remove it before installing FA2, which shares the flash_attn namespace.
+"$uv" pip uninstall --python "$python" flash-attn-4 \
+    2>&1 | tee "$RUNTIME_BUILD_RECORD/remove-flash4.log"
 env | LC_ALL=C sort | sed -n '/^\(CUDA_HOME\|FLASH_ATTENTION_FORCE_BUILD\|FLASH_ATTN_CUDA_ARCHS\|TORCH_CUDA_ARCH_LIST\|MAX_JOBS\|NVCC_THREADS\)=/p' \
     > "$RUNTIME_BUILD_RECORD/build-environment.txt"
 "$uv" pip install --python "$python" --no-build-isolation --no-deps \

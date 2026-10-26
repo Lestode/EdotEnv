@@ -1,5 +1,6 @@
 """CPU checks for project hooks; GPU runtime and learning are separate evidence."""
 
+import argparse
 import ast
 import asyncio
 import copy
@@ -15,6 +16,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import torch
+import yaml
 from aiohttp import web
 
 from distillation.hooks import (
@@ -105,6 +107,55 @@ class PolicyAgeTests(unittest.TestCase):
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_real_slime_reward_accessor_and_custom_config_contract(self):
+        # Exercise the pinned accessor and configuration statements without
+        # importing the GPU-only argument parser. This is a bounded contract check.
+        source = ROOT / "slime/slime/utils/arguments.py"
+        tree = ast.parse(source.read_text())
+        reward_argument = next(
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "add_argument"
+            and node.args
+            and isinstance(node.args[0], ast.Constant)
+            and node.args[0].value == "--reward-key"
+        )
+        parser = argparse.ArgumentParser()
+        definition = ast.Module(
+            body=[ast.Expr(value=copy.deepcopy(reward_argument))], type_ignores=[]
+        )
+        exec(
+            compile(ast.fix_missing_locations(definition), str(source), "exec"),
+            {"parser": parser},
+        )
+        args = parser.parse_args([])
+        self.assertIsNone(args.reward_key)
+        loader = next(
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.If)
+            and isinstance(node.test, ast.Attribute)
+            and node.test.attr == "custom_config_path"
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            config = Path(temporary) / "hooks.json"
+            config.write_text(json.dumps({"distillation_max_policy_lag": 1}))
+            args.custom_config_path = str(config)
+            block = ast.Module(body=[copy.deepcopy(loader)], type_ignores=[])
+            exec(
+                compile(ast.fix_missing_locations(block), str(source), "exec"),
+                {"args": args, "yaml": yaml, "logger": Mock()},
+            )
+        self.assertEqual(args.distillation_max_policy_lag, 1)
+        with patch.object(sys, "path", [str(ROOT / "slime"), *sys.path]):
+            from slime.utils.types import Sample
+
+        sample = Sample(response_length=2, reward={"teacher_log_probs": [-0.4, -0.7]})
+        self.assertEqual(post_process_rewards(args, [sample]), ([0.0], [0.0]))
+        torch.testing.assert_close(sample.teacher_log_probs, torch.tensor([-0.4, -0.7]))
+
     def test_real_slime_serving_parser_keeps_teacher_frozen(self):
         path = ROOT / "slime/slime/backends/sglang_utils/sglang_config.py"
         spec = importlib.util.spec_from_file_location(

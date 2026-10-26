@@ -58,7 +58,8 @@ is selected, with tokenizer metadata compatibility verified and baseline quality
 still to establish. The [implementation](../../DISTILLATION.md) supplies the selected
 sampled-token objective and matched sync/async configuration. Dataset and acceptable
 quality loss remain open. The first training validation is bounded at 30 minutes
-on eight GPUs after runtime checks; this does not set the budget for later studies.
+on eight GPUs after runtime checks and both models' baseline evaluations; this
+does not set the budget for later studies.
 Slime's existing paths and the adapter CPU checks do not establish learning quality.
 
 Use the [experiment guidance](../../EXPERIMENTS.md), [run records](../LOG.md),
