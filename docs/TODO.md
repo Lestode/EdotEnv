@@ -19,10 +19,11 @@ attributed to its cause, including differences between learning regimes.
 
 The [initial model pair](EXPERIMENTS.md#initial-policy-distillation-pair) is
 selected; tokenizer compatibility and both models' baseline quality still need
-validation before training. The distillation objective, task, and acceptable
-quality loss remain open. The study should establish
-that distillation improves the student and whether the shortcuts preserve that
-benefit. Async stability and the actual two-node runtime remain unvalidated.
+validation before training. The selected sampled-token objective still needs
+correctness evidence; the task and acceptable quality loss remain open. The
+study should establish that distillation improves the student and whether the
+shortcuts preserve that benefit. Async stability and the actual two-node runtime
+remain unvalidated.
 
 ## Markdown guidance final-score comparison
 

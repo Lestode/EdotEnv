@@ -4,7 +4,7 @@ Goal: validate classical policy distillation in Slime with distributed execution
 
 - Use Slime (`slime/`) as the training framework.
 - Distill from a more capable, frozen teacher into a trainable student.
-- Use teacher token-level scores on student-generated responses; the precise objective remains to be selected and validated.
+- Use Slime's sampled-token on-policy distillation for the initial study, with teacher token-level scores on student-generated responses. Its implementation still needs validation.
 - Support distributed student generation, teacher evaluation, and student training.
 - Prefer Slime's existing customization hooks and minimize core framework changes.
 
@@ -54,7 +54,7 @@ Use a `codex/` feature branch and a pull request for every change after the init
 These do not block local design and implementation. Resolve each before the run or feature that depends on it.
 
 - Data: which training and evaluation datasets, who grants access, and where may they be processed and stored?
-- Distillation: which objective and teacher-scoring backend should the validation study use? See [current work](docs/TODO.md).
+- Teacher scoring: which backend should the validation study use? See [current work](docs/TODO.md).
 - Compute sizing: which GPU/node counts and per-run budget should each experiment use within the verified Komondor project access? Multi-node execution remains unvalidated; see [hardware planning](docs/HARDWARE.md).
 - Runtime: which GPU container runtime/images are permitted, and can we install modified code and fetch dependencies/model weights?
 - Distribution: one managed cluster or independent sites? Are concurrent multi-node jobs and Ray/NCCL/teacher-service connections permitted?
