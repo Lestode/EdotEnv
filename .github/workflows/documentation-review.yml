@@ -21,6 +21,7 @@ permissions:
   contents: read
   pull-requests: write
   checks: write
+  statuses: write
 
 jobs:
   review:
@@ -121,7 +122,8 @@ jobs:
                   fs.readFileSync(`.review-agent/${file}`, 'utf8'), 'inputs:', 'outputs:')]),
               ['KNOWN_ISSUES.md', fs.readFileSync('.review-agent/KNOWN_ISSUES.md', 'utf8')],
             ];
-            // Include only the pinned helper and publication interfaces used by this caller.
+            // Supply caller interfaces and finalization identity; full publication behavior
+            // and failure handling belong to the accepted shared contract above.
             const excerpt = (file, startMarker, endMarker) => {
               const source = fs.readFileSync(`.review-agent/${file}`, 'utf8');
               return [`${file}: ${startMarker}`, section(source, startMarker, endMarker)];
@@ -130,8 +132,7 @@ jobs:
               excerpt('documentation-review/action.cjs', 'async function readProjectFile(', 'async function runAction('),
               excerpt('documentation-review/review.cjs', 'const defaults = Object.freeze(', 'function formatResponse('),
               excerpt('implementation-review/review.cjs', 'function projectSettings(', 'async function collectContext('),
-              excerpt('documentation-review/check.cjs', '  ledger(includeResult', '  recover('),
-              excerpt('documentation-review/check.cjs', '  finalized(check, report)', '  async reuse(comment)'),
+              excerpt('documentation-review/check.cjs', '  finalized(check, report)', '  async update('),
             ];
             const scope = '\n\n' +
               'The private shared runtime is a separately reviewed, pinned dependency; ' +

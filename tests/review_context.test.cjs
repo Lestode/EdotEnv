@@ -34,7 +34,7 @@ function fixture({ bootstrap = false, acceptedImplementation = !bootstrap } = {}
     'documentation-review/action.cjs': 'async function readProjectFile() { /* helper fixture */ }\nasync function runAction()',
     'documentation-review/review.cjs': 'const defaults = Object.freeze({});\nfunction projectSettings() {}\nfunction formatResponse()',
     'implementation-review/review.cjs': 'function projectSettings() { /* settings fixture */ }\nasync function collectContext()',
-    'documentation-review/check.cjs': '  ledger(includeResult) { /* ledger fixture */ }\n  recover(checks) {}\n  finalized(check, report) { /* publication fixture */ }\n  async reuse(comment)',
+    'documentation-review/check.cjs': '  ledger(includeResult) { /* ledger fixture */ }\n  recover(checks) {}\n  finalized(check, report) { /* publication fixture */ }\n  async update() {}\n  async reuse(comment)',
   };
   const written = {}, outputs = {}, reads = [];
   const localRequire = name => {

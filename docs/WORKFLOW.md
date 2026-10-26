@@ -409,7 +409,14 @@ Both required merge checks remained successful. The PR's state was `unstable`,
 rather than `blocked`, because the earlier non-required legacy reviews had failed
 with missing new-version contracts; the verified merge's check rollup was successful.
 This verifies the original metadata-edit sequence on the bootstrap proposal.
-It does not establish all failure, retargeting, or stale-review cases.
+It did not establish successful merge enforcement. Subsequent protected GraphQL,
+REST merge, and REST squash attempts rejected PR #12 with both reviewer checks
+reported as expected, despite successful checks on the current test merge.
+GitHub replaced the synthetic merge after each failed attempt while its parents
+and tree stayed identical. Shared [PR #9](https://github.com/Lestode/review-agents/pull/9)
+proposes paired commit-status publication; its acceptance, consumer upgrade, and
+live protected-merge validation remain pending. No protection was bypassed.
+Failure, retargeting, and stale-review scenarios also remain to be validated.
 
 Automatic execution changes only after the integration PR is accepted and merged;
 the feature-branch run validates the proposed caller with accepted project settings.
