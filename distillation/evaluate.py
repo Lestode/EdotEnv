@@ -21,6 +21,33 @@ def request(url, payload=None, *, timeout=180):
         return json.load(response)
 
 
+def generate_batch(tokenizer, rows, endpoint, generation, timeout):
+    inputs = []
+    for row in rows:
+        messages = row["prompt"]
+        if isinstance(messages, str):
+            messages = [{"role": "user", "content": messages}]
+        inputs.append(
+            tokenizer.apply_chat_template(
+                messages, tokenize=True, add_generation_prompt=True, return_dict=False
+            )
+        )
+    response = request(
+        endpoint + "/generate",
+        {
+            "input_ids": inputs[0] if len(inputs) == 1 else inputs,
+            "sampling_params": generation,
+        },
+        timeout=timeout,
+    )
+    responses = [response] if len(inputs) == 1 else response
+    if not isinstance(responses, list) or len(responses) != len(rows):
+        raise ValueError("Generation response count differs from batch size")
+    if any(not isinstance(response, dict) for response in responses):
+        raise ValueError("Expected a generation response object for every example")
+    return responses
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--endpoint", required=True)
@@ -29,6 +56,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--max-tokens", type=int, default=2048)
     parser.add_argument("--request-timeout", type=float, default=180)
+    parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument(
         "--scorer", default="slime.rollout.rm_hub.math_utils.grade_answer_verl"
     )
@@ -39,6 +67,8 @@ def main():
         raise ValueError("max-tokens must be positive")
     if not math.isfinite(args.request_timeout) or args.request_timeout <= 0:
         raise ValueError("request-timeout must be finite and positive")
+    if args.batch_size < 1:
+        raise ValueError("batch-size must be positive")
     from transformers import AutoTokenizer
 
     endpoint = args.endpoint.rstrip("/")
@@ -64,6 +94,7 @@ def main():
         "tokenizer_sha256": fingerprint(args.model / "tokenizer.json"),
         "generation": {"temperature": 0, "max_new_tokens": args.max_tokens},
         "request_timeout_seconds": args.request_timeout,
+        "batch_size": args.batch_size,
         "scorer": args.scorer,
         "planned": len(rows),
         "attempted": 0,
@@ -77,42 +108,52 @@ def main():
     start = time.monotonic()
     try:
         with (args.output / "responses.jsonl").open("x") as log:
-            for index, row in enumerate(rows):
-                record = {"index": index}
-                summary["attempted"] += 1
-                stage = "generation"
+            for offset in range(0, len(rows), args.batch_size):
+                batch = rows[offset : offset + args.batch_size]
+                summary["attempted"] += len(batch)
+                generation_error = None
                 try:
-                    messages = row["prompt"]
-                    if isinstance(messages, str):
-                        messages = [{"role": "user", "content": messages}]
-                    ids = tokenizer.apply_chat_template(
-                        messages,
-                        tokenize=True,
-                        add_generation_prompt=True,
-                        return_dict=False,
+                    responses = generate_batch(
+                        tokenizer,
+                        batch,
+                        endpoint,
+                        summary["generation"],
+                        args.request_timeout,
                     )
-                    response = request(
-                        endpoint + "/generate",
-                        {"input_ids": ids, "sampling_params": summary["generation"]},
-                        timeout=args.request_timeout,
-                    )
-                    record["response"] = response
-                    truncated = (
-                        response["meta_info"].get("finish_reason", {}).get("type")
-                        == "length"
-                    )
-                    record["truncated"] = truncated
-                    summary["truncated"] += int(truncated)
-                    stage = "grading"
-                    correct = bool(scorer(response["text"], str(row["answer"])))
-                    record["correct"] = correct
-                    summary["correct"] += int(correct)
                 except Exception as error:
-                    record["error"] = f"{type(error).__name__}: {error}"
-                    record["error_stage"] = stage
-                    summary["failed"] += 1
-                log.write(json.dumps(record) + "\n")
-                log.flush()
+                    generation_error = f"{type(error).__name__}: {error}"
+                    responses = [None] * len(batch)
+                for position, (row, response) in enumerate(
+                    zip(batch, responses, strict=True)
+                ):
+                    record = {"index": offset + position}
+                    if generation_error:
+                        record.update(error=generation_error, error_stage="generation")
+                        summary["failed"] += 1
+                    else:
+                        record["response"] = response
+                        stage = "generation"
+                        try:
+                            truncated = (
+                                response["meta_info"]
+                                .get("finish_reason", {})
+                                .get("type")
+                                == "length"
+                            )
+                            record["truncated"] = truncated
+                            summary["truncated"] += int(truncated)
+                            stage = "grading"
+                            correct = bool(scorer(response["text"], str(row["answer"])))
+                            record["correct"] = correct
+                            summary["correct"] += int(correct)
+                        except Exception as error:
+                            record["error"] = f"{type(error).__name__}: {error}"
+                            record["error_stage"] = stage
+                            summary["failed"] += 1
+                    log.write(json.dumps(record) + "\n")
+                    log.flush()
+                summary["elapsed_seconds"] = time.monotonic() - start
+                summary_path.write_text(json.dumps(summary, indent=2) + "\n")
         summary["status"] = (
             "completed" if summary["failed"] == 0 else "completed_with_errors"
         )

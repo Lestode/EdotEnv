@@ -8,12 +8,50 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
-### 2026-10-26 · distillation-baseline-retry-20261026 · running
+### 2026-10-26 · distillation-baseline-batched-20261026 · running
+
+- Question: Can bounded batches complete both frozen-model baselines within the pilot budget?
+- Setup: Same 32 examples, checkpoints, greedy decoding and 8192-token limit; batch size eight for both models. This changes scheduling and may change numerical generation behavior; cancelled sequential attempts are not pooled with this pilot. The batched evaluator passed fourteen CPU tests and the real-tokenizer/HTTP/grader fixture.
+- Resources: Slurm `14651195` (student) and `14651196` (teacher), each two GPUs, eight CPUs, 64 GiB RAM and 30 minutes; at most two GPU-hours combined.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/baseline-{student,teacher}-<job-id>/` and corresponding logs; pending. Two dependency-based submissions were rejected before allocation because the earlier completed jobs were no longer accepted as dependencies.
+
+### 2026-10-26 · distillation-evaluator-batch-20261026 · completed
+
+- Question: Does batching preserve example alignment, final partial batches and failure evidence?
+- Setup: Updated evaluator, mismatch rejection and grading-failure regression; actual checkpoint tokenizer and Slime grader with a two-response fixture HTTP server.
+- Result: Slurm `14651186`, fourteen CPU tests, Ruff, formatting, shell checks and real-runtime fixture passed; 20 seconds, two requested CPUs, 8 GiB RAM, no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/evaluator-batch.tar.gz`, `evaluator-batch.log` and `eval-batch-formatted.tar.gz`. Fixture correctness is not model accuracy.
+
+### 2026-10-26 · distillation-arguments-gpu2-20261026 · running
+
+- Question: Does full argument validation pass with the production launcher's environment?
+- Setup: Same parser-only probe with `CUDA_DEVICE_MAX_CONNECTIONS=1`, already set by the real launcher; no training.
+- Resources: Slurm `14651194`, one GPU, two CPUs, 8 GiB RAM, eight-minute limit.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/argument-probe-gpu2.log`; pending.
+
+### 2026-10-26 · distillation-arguments-gpu-20261026 · failed
+
+- Question: Can the full parser run with the CUDA driver available?
+- Setup: Same parser-only probe inside an A100 allocation, adding Apptainer GPU passthrough.
+- Result: Reached Megatron validation, which rejected the probe's missing `CUDA_DEVICE_MAX_CONNECTIONS=1`. The production launcher already sets it; this was a probe setup error.
+- Resources: Slurm `14651173`, one GPU, two CPUs, 8 GiB RAM; 4m18s, exit `1:0`, approximately 0.072 GPU-hours.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/argument-probe-gpu.log`.
+
+### 2026-10-26 · distillation-arguments-20261026 · failed
+
+- Question: Does the complete runtime argument parser accept both launch modes and preserve the intended objective and hook settings?
+- Setup: Actual pinned Slime, Megatron and SGLang parsers; generated serving/hooks configuration and project training arguments; no model loading or optimizer updates.
+- Result: Transformer Engine import requires `libcuda.so.1`, unavailable in the CPU allocation; full parsing did not complete.
+- Resources: Slurm `14651163`, two requested CPUs, 8 GiB RAM; 32 seconds, exit `1:0`, no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/argument-probe.py`, `argument-probe.sh` and `argument-probe.log`.
+
+### 2026-10-26 · distillation-baseline-retry-20261026 · cancelled
 
 - Question: Can both frozen models complete the fixed development evaluation after the tokenizer and cleanup fixes?
 - Setup: Same pinned models and 32-example protocol as the failed student attempt. Explicit token-ID output passed the real-runtime CPU contract check; cleanup passed its failure fixture. Student and teacher run independently with identical settings and no weight updates.
-- Resources: Slurm `14651158` (student) and `14651159` (teacher), each two GPUs, eight CPUs, 64 GiB RAM and 30 minutes; at most two GPU-hours combined.
-- Evidence: Private `edotenv/distillation-check-20261026-a1/baseline-{student,teacher}-<job-id>/` and corresponding job logs; pending.
+- Result: Student generation worked at about 42 tokens/second, but the first long response showed sequential evaluation would not reliably fit the budget. Both attempts were cancelled to use matched batching; no complete quality result. Teacher was still loading.
+- Resources: Slurm `14651158` (student) and `14651159` (teacher), each two GPUs, eight CPUs, 64 GiB RAM; each cancelled at 4m28s, approximately 0.298 GPU-hours combined.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/baseline-{student,teacher}-<job-id>/` and corresponding job logs.
 
 ### 2026-10-26 · distillation-cleanup-20261026 · completed
 

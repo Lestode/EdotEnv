@@ -105,7 +105,9 @@ the served checkpoint path, and held-out JSONL with `prompt` and `answer` fields
 It uses greedy generation and Slime's math grader by default, preserving failures
 and truncations. `--request-timeout` accommodates longer reasoning responses;
 the timeout is recorded alongside the decoding settings. Select the task, decoding budget, and suitable scorer before
-interpreting quality; use the same evaluation configuration for both models and
+interpreting quality. `--batch-size` bounds each request and is recorded in results;
+response-count mismatches fail instead of silently misaligning examples. Use
+the same evaluation configuration for both models and
 trained checkpoints. Training checkpoints need Slime's supported HF export before
 serving them for evaluation.
 
@@ -117,7 +119,7 @@ actual pinned loss helper's gradient against an enumerated reverse-KL reference.
 The loss-helper test isolates the function from Megatron; it is not a distributed
 training test. Checkpoint metadata preflight, Ruff, and shell syntax checks passed.
 Follow-up job `14650690` passed eleven tests, including the actual Slime serving
-configuration parser. Follow-up regressions bring this to thirteen passing tests,
+configuration parser. Follow-up regressions bring this to fourteen passing tests,
 including the real `Sample` reward accessor and custom-configuration statements.
 A separate site-runtime NCCL probe passed across eight A100s on two nodes using
 one Slurm launcher per node. The candidate Slime runtime now passes the A100

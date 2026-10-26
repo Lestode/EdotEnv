@@ -9,6 +9,7 @@
   "temperature": 0,
   "max_new_tokens": 8192,
   "request_timeout_seconds": 600,
+  "batch_size": 8,
   "scorer": "slime.rollout.rm_hub.math_utils.grade_answer_verl",
   "roles": ["student", "teacher"],
   "per_model_budget": {"gpus": 2, "wall_minutes": 30},

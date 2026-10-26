@@ -304,6 +304,23 @@ class ObjectiveTests(unittest.TestCase):
 
 
 class EvaluationTests(unittest.TestCase):
+    def test_batch_response_count_mismatch_is_rejected(self):
+        from distillation.evaluate import generate_batch
+
+        tokenizer = Mock()
+        tokenizer.apply_chat_template.return_value = [1, 2]
+        with (
+            patch("distillation.evaluate.request", return_value=[{"text": "one"}]),
+            self.assertRaisesRegex(ValueError, "response count"),
+        ):
+            generate_batch(
+                tokenizer,
+                [{"prompt": "one"}, {"prompt": "two"}],
+                "http://127.0.0.1:1",
+                {},
+                1,
+            )
+
     def test_grading_failure_preserves_generated_answer_and_truncation(self):
         from distillation.evaluate import main
 
@@ -311,12 +328,15 @@ class EvaluationTests(unittest.TestCase):
             root = Path(temporary)
             (root / "tokenizer.json").write_text("{}")
             data = root / "eval.jsonl"
-            data.write_text(json.dumps({"prompt": "2 + 2?", "answer": "4"}) + "\n")
+            data.write_text(
+                (json.dumps({"prompt": "2 + 2?", "answer": "4"}) + "\n") * 3
+            )
             response = {
                 "text": "partial answer",
                 "meta_info": {"finish_reason": {"type": "length"}},
             }
             tokenizer = Mock()
+
             # Transformers 5 defaults to a BatchEncoding; exercise the explicit
             # token-ID request rather than silently assuming the old default.
             def chat_template(messages, **kwargs):
@@ -340,6 +360,8 @@ class EvaluationTests(unittest.TestCase):
                 "fixture.grade",
                 "--request-timeout",
                 "600",
+                "--batch-size",
+                "2",
             ]
             with (
                 patch("sys.argv", argv),
@@ -347,7 +369,11 @@ class EvaluationTests(unittest.TestCase):
                 patch.dict("sys.modules", {"transformers": transformers}),
                 patch(
                     "distillation.evaluate.request",
-                    side_effect=[{"model_path": str(root)}, response],
+                    side_effect=[
+                        {"model_path": str(root)},
+                        [response, response],
+                        response,
+                    ],
                 ) as request_mock,
                 patch(
                     "distillation.evaluate.importlib.import_module", return_value=grader
@@ -356,16 +382,26 @@ class EvaluationTests(unittest.TestCase):
                 self.assertRaises(SystemExit),
             ):
                 main()
-            record = json.loads((root / "out/responses.jsonl").read_text())
+            records = [
+                json.loads(line)
+                for line in (root / "out/responses.jsonl").read_text().splitlines()
+            ]
+            self.assertEqual([record["index"] for record in records], [0, 1, 2])
+            record = records[0]
             summary = json.loads((root / "out/summary.json").read_text())
             self.assertEqual(record["response"], response)
             self.assertEqual(record["error_stage"], "grading")
             self.assertTrue(record["truncated"])
-            self.assertEqual(summary["truncated"], 1)
-            self.assertEqual(summary["failed"], 1)
+            self.assertEqual(summary["truncated"], 3)
+            self.assertEqual(summary["failed"], 3)
+            self.assertEqual(summary["attempted"], 3)
+            self.assertEqual(summary["batch_size"], 2)
             self.assertEqual(summary["request_timeout_seconds"], 600)
             self.assertEqual(request_mock.call_args.kwargs["timeout"], 600)
             self.assertEqual(request_mock.call_args.args[1]["input_ids"], [1, 2])
+            self.assertEqual(
+                request_mock.call_args_list[1].args[1]["input_ids"], [[1, 2], [1, 2]]
+            )
 
 
 if __name__ == "__main__":
