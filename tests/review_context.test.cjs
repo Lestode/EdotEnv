@@ -26,15 +26,15 @@ function fixture({ bootstrap = false, acceptedImplementation = !bootstrap } = {}
     command: '/review-implementation', markerPrefix: 'implementation-fixture', contextPaths: [],
   });
   const privateFiles = {
-    'README.md': '### Test-merge review checks\nTest-merge contract fixture.\nFor an optional completion-only check\n## Required reviews before merge\nContract fixture.\n### Legacy head-based checks\n## Implementation review\nImplementation behavior fixture.\nThe collector reads the full accepted target-tip Markdown snapshot\n## Project settings\n',
-    'documentation-review/action.yml': 'inputs:\nDocumentation action fixture.\noutputs:',
-    'implementation-review/action.yml': 'inputs:\nImplementation action fixture.\noutputs:',
+    'README.md': '## Required reviews before merge\nContract fixture.\nCopy [the comparison workflow]\n## Implementation review\nImplementation behavior fixture.\nThe collector reads the full accepted target-tip Markdown snapshot\n## Project settings\n',
+    'documentation-review/action.yml': 'Documentation action fixture.',
+    'implementation-review/action.yml': 'Implementation action fixture.',
     'implementation-review/SKILL.md': 'Accepted implementation procedure fixture.',
     'KNOWN_ISSUES.md': 'Known limitations fixture.',
     'documentation-review/action.cjs': 'async function readProjectFile() { /* helper fixture */ }\nasync function runAction()',
     'documentation-review/review.cjs': 'const defaults = Object.freeze({});\nfunction projectSettings() {}\nfunction formatResponse()',
     'implementation-review/review.cjs': 'function projectSettings() { /* settings fixture */ }\nasync function collectContext()',
-    'documentation-review/check.cjs': '  ledger(includeResult) { /* ledger fixture */ }\n  recover(checks) {}\n  finalized(check, report) { /* publication fixture */ }\n  async update() {}\n  async reuse(comment)',
+    'documentation-review/check.cjs': '  ledger(includeResult) { /* ledger fixture */ }\n  recover(checks) {}\n  finalized(check, report) { /* publication fixture */ }\n  async reuse(comment)',
   };
   const written = {}, outputs = {}, reads = [];
   const localRequire = name => {
@@ -121,20 +121,4 @@ test('missing and oversized private evidence fail without silent omission or tru
   const large = fixture({ bootstrap: true });
   large.privateFiles['KNOWN_ISSUES.md'] = 'x'.repeat(32000);
   await assert.rejects(large.run(), /instruction bound/);
-});
-
-test('both actions select the supported test-merge gates required by branch protection', () => {
-  const required = JSON.parse(readFileSync(`${__dirname}/../.github/review-required-checks.json`, 'utf8'));
-  assert.equal(required.strict, true);
-  assert.deepEqual(required.checks, [
-    { context: 'Project checks', app_id: 15368 },
-    { context: 'Documentation reviewer (test merge)', app_id: 15368 },
-    { context: 'Implementation reviewer (test merge)', app_id: 15368 },
-  ]);
-  for (const agent of ['documentation', 'implementation']) {
-    const invocation = workflow.split(`        uses: ./.review-agent/${agent}-review\n`)[1]
-      .split(/\n {6}- /)[0];
-    assert.match(invocation, /\n          check-target: test-merge(?:\n|$)/);
-    assert.match(invocation, /expected-head-sha: \$\{\{ steps\.reviewer\.outputs\.head \}\}/);
-  }
 });

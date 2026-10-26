@@ -2,7 +2,7 @@
   "strict": true,
   "checks": [
     {"context": "Project checks", "app_id": 15368},
-    {"context": "Documentation reviewer (test merge)", "app_id": 15368},
-    {"context": "Implementation reviewer (test merge)", "app_id": 15368}
+    {"context": "Documentation reviewer", "app_id": 15368},
+    {"context": "Implementation reviewer", "app_id": 15368}
   ]
 }

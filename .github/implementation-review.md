@@ -15,7 +15,7 @@ and GPU/distributed evidence. Do not claim that source inspection proves a run.
 
 For workflow changes, check authorization before paid reviews or check writes,
 accepted configuration and immutable reviewer pins, reviews on the exact latest
-PR head and verified current test merge, blocking findings, failed or missing review execution, and private source
+PR head, blocking findings, failed or missing review execution, and private source
 and credential handling. Workflow files alone do not prove branch enforcement.
 
 Use the public-change scope in [reviewer operation](../docs/WORKFLOW.md#reviewer-operation).

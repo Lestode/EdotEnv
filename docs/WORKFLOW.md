@@ -7,23 +7,22 @@ branch and open a PR against `main`. Update that PR as work progresses. Do not
 push changes directly to `main`. Agents may prepare and push changes within the
 user's authorized task; merging requires explicit user acceptance of the PR.
 
-EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/2b2307e7e087dab6a172cc9a3b8f6bbb2f89b483/WORKFLOW.md),
-[documentation review procedure](https://github.com/Lestode/review-agents/blob/2b2307e7e087dab6a172cc9a3b8f6bbb2f89b483/documentation-review/SKILL.md),
-and [implementation review procedure](https://github.com/Lestode/review-agents/blob/2b2307e7e087dab6a172cc9a3b8f6bbb2f89b483/implementation-review/SKILL.md)
+EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/WORKFLOW.md),
+[documentation review procedure](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/documentation-review/SKILL.md),
+and [implementation review procedure](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/implementation-review/SKILL.md)
 at the same revision as both actions. Project scope remains in [AGENTS.md](../AGENTS.md).
-Update the action pin and these links together through a reviewed PR. EdotEnv adopts
-the shared reviewer-owned test-merge checks. The [migration record](#test-merge-migration)
-distinguishes the approved policy, prepared configuration, and live activation.
+Update the action pin and these links together through a reviewed PR. EdotEnv uses
+the user-selected latest-head merge policy below in place of the earlier shared
+example's five-check/test-merge integration.
 
 Before merging:
 
 1. `Project checks` must pass on the latest PR revision. It checks project file
    hygiene, Python lint/format, local documentation links, review configuration,
    and project CPU tests when present. Slime's upstream test suite is separate.
-2. `Documentation reviewer (test merge)` and `Implementation reviewer (test merge)`
-   must both pass on GitHub's verified current merge of the PR with its target.
-   Each reviewer must finish and have no unresolved blocking findings; a changed
-   PR head, target commit, or target branch requires fresh checks and reviews. Missing,
+2. `Documentation reviewer` and `Implementation reviewer` must both pass on
+   the exact latest PR commit. Each reviewer must finish and have no unresolved
+   blocking findings; a new commit requires fresh checks and reviews. Missing,
    running, failed, or unpublished reviews do not pass. Fix findings or have an
    authorized human dismiss specific findings with a recorded reason under the
    [finding-resolution and conflict policy](#finding-resolution-and-conflicts).
@@ -65,9 +64,8 @@ A proposed dismissal or prose record cannot substitute for a required check.
 
 A completed review establishes that a report was published. It does not establish
 that its findings were resolved or dismissed. The target branch requirements are
-`Project checks`, `Documentation reviewer (test merge)`, and
-`Implementation reviewer (test merge)`. The reviewer checks certify the current
-PR head, target commit, target branch, and verified test merge. Activation and historical requirements are recorded in
+`Project checks`, `Documentation reviewer`, and `Implementation reviewer`, on the
+latest PR commit. Activation and historical requirements are recorded in
 [activation and enforcement status](#activation-and-enforcement-status).
 Remaining validation scenarios are tracked in
 [the workflow TODO](TODO.md#repository-workflow-validation).
@@ -94,15 +92,13 @@ both local composite actions. Public-consumer support was accepted in
 [shared reviewer PR #4](https://github.com/Lestode/review-agents/pull/4);
 implementation review and finding-blocking checks were accepted in
 [shared reviewer PR #3](https://github.com/Lestode/review-agents/pull/3).
-Reviewer-owned test-merge checks were accepted in
-[shared reviewer PR #7](https://github.com/Lestode/review-agents/pull/7).
 [Documentation settings](../.github/documentation-review.json) select this documentation
 index and [documentation instructions](../.github/documentation-review.md).
 [Implementation settings](../.github/implementation-review.json) select the same
 index, a separate command and marker, optional unchanged source paths, and
 [implementation instructions](../.github/implementation-review.md).
 The shared action defines the model, collection limits, authorization, execution,
-and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/2b2307e7e087dab6a172cc9a3b8f6bbb2f89b483/README.md).
+and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/README.md).
 
 Both actions run on a GitHub-hosted Ubuntu runner with `auth-mode: api-key` and
 explicit public-repository opt-in. Fetch it with `REVIEW_AGENTS_READ_KEY`, a
@@ -145,23 +141,12 @@ cannot overwrite a valid result. Follow-up questions in this gated workflow
 require a full review of the captured revision as well as an answer.
 This workflow authorizes both reviewers' PR reports and requested follow-up replies.
 
-Each request captures the intended PR head. Both actions use the supported
-`check-target: test-merge` input. Each publishes its own finding-blocking check on
-the current test merge after verifying that its two parents are the current PR
-head and target commit. Each reviewer also publishes its own verdict as a commit
-status under the same name and SHA. Both publications must complete; the check
-retains the assessment ledger. This requires `statuses: write` alongside
-`checks: write`; incomplete publication blocks and requires fresh assessment. Before finalization, it rechecks the open PR's head,
-target commit, target branch, and test merge. A missing, conflicting, stale, or
-unreadable merge leaves the request incomplete. The check passes only after
+Each request captures the intended PR head. Each shared action publishes its
+named finding-blocking check on that exact commit. The check passes only after
 its report is completed and finalized with no unresolved blocking findings.
 Missing read credentials, skipped or failed review execution, missing reports,
 and unpublished results cannot pass. A new commit has no reviewer checks until
-reviewed; it cannot inherit the previous commit's success. The neutral
-`Documentation reviewer assessments` and `Implementation reviewer assessments`
-checks on the PR head are recovery references, never merge requirements. The
-reviewer-owned merge check keeps the finding ledger; the stable reference allows
-recovery when only the temporary merge is replaced. Paid-review requests
+reviewed; it cannot inherit the previous commit's success. Paid-review requests
 remain authorized and serialized, with existing deduplication and finding-ledger
 behavior unchanged. Incomplete assessments within the agreed scope remain
 blocking; out-of-scope private audits are coverage notes rather than prerequisites.
@@ -181,7 +166,7 @@ and receives relevant unchanged caller/configuration source through its supporte
 `contextPaths` setting. Missing evidence for a consequential requirement remains
 blocking in either review.
 
-Both reviews include the accepted shared action input contracts, integration contract,
+Both reviews include the accepted shared action manifests, integration contract,
 known limitations, and upstream validation references in bounded private
 model context. Normal runs prepend accepted project customization; bootstrap runs
 do not activate proposed customization. Temporary context/configuration stays in
@@ -197,13 +182,11 @@ accepted caller configuration/resolver. Both receive the narrow helper and
 check-publication interfaces used by the caller. Both disclosures to the OpenAI API were explicitly authorized
 by the user. The private checkout is never published as review context.
 
-The merge gate combines the two reviewer-owned test-merge results with AND. There
-is no separate comparison workflow or completion-only gate. Strict up-to-date
-branch protection remains enabled: when `main` advances, update the PR branch
-and obtain new reviews on its resulting comparison. Later skipped title/body-edit
-workflow suites on the head cannot replace checks placed on the verified merge.
-This integration keeps API execution on the GitHub-hosted runner; the shared
-repository's optional Daytona backend is not selected by this upgrade.
+The merge gate uses the shared actions' existing checks on the PR head. The
+separate polling comparison workflow is disabled; there is no test-merge review
+check or additional agent review. Strict up-to-date branch protection remains
+enabled: when `main` advances, update the PR branch and obtain new reviews on
+its resulting commit. Only the latest reviewed PR commit may merge.
 
 Review scope is the public proposal and supplied interfaces. Operator-reported
 private outcomes and unavailable private operations are explicitly unverified
@@ -240,10 +223,8 @@ re-enable the workflow in Actions if needed.
 The initial API-key support was accepted and merged in
 [review-agents PR #2](https://github.com/Lestode/review-agents/pull/2). Its original
 private-consumer pin was `f4db0e334f6fc2216c583fe796638b096a5abbfe`.
-Public-consumer support arrived in shared reviewer PR #4. The earlier pin
-`57e1e998e109d879f41c1872eb547e8502555e60` was the accepted merge commit of shared
-reviewer PR #3, which includes that support. The current prepared pin includes
-the accepted test-merge repair; its activation is recorded below.
+Public-consumer support arrived in shared reviewer PR #4. The new pin above
+is the accepted merge commit of shared reviewer PR #3, which includes that support.
 
 [EdotEnv PR #1](https://github.com/Lestode/EdotEnv/pull/1) activated the initial
 private-repository workflow on the default branch. The repository's
@@ -350,8 +331,6 @@ in [the workflow TODO](TODO.md#repository-workflow-validation).
 
 ### Latest-head policy transition
 
-This historical rollout is superseded by the approved [test-merge migration](#test-merge-migration).
-
 On 2026-10-24, the user explicitly replaced the five-check/test-merge policy:
 both reviewers must finish without blocking findings on the latest PR commit;
 every new commit requires fresh reviews. The user explicitly accepted that a
@@ -378,56 +357,6 @@ configuration stops collecting that retired workflow. The shared reviewer
 implementation and pin remain unchanged. Updated scope customization takes effect
 only after this configuration PR is accepted on the default branch; an existing
 incomplete report does not silently become successful.
-
-### Test-merge migration
-
-On 2026-10-26, EdotEnv PRs [#10](https://github.com/Lestode/EdotEnv/pull/10) and
-[#11](https://github.com/Lestode/EdotEnv/pull/11) had successful reviewer checks on
-their heads, but later skipped metadata-edit suites left both required reviews
-displayed as Expected. A manual rerun reused the earlier checks and did not clear
-the gate. A fresh commit on PR #10, followed by updating PR #11 against main,
-produced fresh passing checks; both PRs then merged with protection unchanged.
-
-The owner explicitly approved adopting the current shared fix and migrating the
-checks in the [recorded decision](https://github.com/Lestode/EdotEnv/pull/12#issuecomment-6413352763),
-after being told that reviews would certify the current merge with main
-instead of only the PR commit. Shared reviewer PR #7 is accepted at
-`53c57b9e8e81dbcf144544d24a3cdeb3aa755736`. The initial consumer upgrade pinned that revision,
-selects `check-target: test-merge` for both actions, updates their required names,
-and removes the retired comparison workflow source. It uses supported upstream
-configuration; it adds no consumer-side check publisher or shared verdict.
-
-The replacement requirements were activated on 2026-10-26 after the
-[feature-branch review run](https://github.com/Lestode/EdotEnv/actions/runs/40303978069)
-passed on integration PR #12. Its head was `3d704f5c56705558604512ffa1249f5f4c1294c7`,
-base `20cf4d147ad3bda627ee38f7f000cb0c2351c080`, and verified merge
-`48055d58ef4429419924dbf5bfe8f25fc42c2e31`; both merge parents matched those commits.
-GitHub identified both replacement checks on that merge as required and successful.
-Full protection readback before and after differed only in the two reviewer names:
-`Project checks`, strict up-to-date checking, administrator enforcement, PR and
-conversation requirements, and all other protections remained identical.
-
-Updating the PR body then produced a [new skipped head suite](https://github.com/Lestode/EdotEnv/actions/runs/40304937478).
-Both required merge checks remained successful. The PR's state was `unstable`,
-rather than `blocked`, because the earlier non-required legacy reviews had failed
-with missing new-version contracts; the verified merge's check rollup was successful.
-This verifies the original metadata-edit sequence on the bootstrap proposal.
-It did not establish successful merge enforcement. Subsequent protected GraphQL,
-REST merge, and REST squash attempts rejected PR #12 with both reviewer checks
-reported as expected, despite successful checks on the current test merge.
-GitHub replaced the synthetic merge after each failed attempt while its parents
-and tree stayed identical. Shared [PR #9](https://github.com/Lestode/review-agents/pull/9)
-adds paired commit-status publication. The owner explicitly
-[accepted that change and its permission migration](https://github.com/Lestode/review-agents/pull/9#issuecomment-6415307403).
-This consumer pins its reviewed revision, grants `statuses: write`, and preserves
-the same required names, GitHub Actions ownership, and all branch protections.
-Live protected-merge validation remains pending. No protection was bypassed.
-Failure, retargeting, and stale-review scenarios also remain to be validated.
-
-Automatic execution changes only after the integration PR is accepted and merged;
-the feature-branch run validates the proposed caller with accepted project settings.
-Every subsequent revision still needs real reviews on its current merge. Automatic
-post-merge execution and the remaining failure scenarios stay in the workflow TODO.
 
 For bootstrap validation of an authorized workflow upgrade, manually dispatch
 this workflow from its feature branch for its own PR once the shared dependency
@@ -469,3 +398,27 @@ extend CI dependencies and test commands through the same PR when necessary.
 Keep GPU and cluster jobs separate until compute access is confirmed. Changes
 inside `slime/` need a published submodule commit and a reviewed pointer update;
 the initial submodule URL is the upstream read source, not an authorized push target.
+
+### Return to latest-head reviews
+
+On 2026-10-26, test-merge checks and then paired check/status publication both
+failed live protected merge attempts on PR #12 despite successful reviews.
+The [paired-publication run](https://github.com/Lestode/EdotEnv/actions/runs/40319372070)
+passed on head `de252c714837ba8a01ab1b0d55cea710c3876d75`, but GitHub still
+returned “2 of 3 required status checks are expected.” No protection was bypassed.
+
+The owner then explicitly [selected the simpler latest-head policy and accepted
+both merges](https://github.com/Lestode/EdotEnv/pull/12#issuecomment-6415770108).
+This supersedes EdotEnv's earlier test-merge adoption. Retain the previously working accepted reviewer revision and its default
+head publication; the unsuccessful shared PR #9 proposal is not adopted. Require `Project checks`, `Documentation reviewer`, and
+`Implementation reviewer` from GitHub Actions. Strict up-to-date checking and
+all unrelated protections remain required. No comparison or completion-only gate
+is added, and findings or incomplete assessments are not waived.
+
+Reviews bind to the latest PR commit. This explicitly overrides the shared
+legacy head-mode comparison requirement; GitHub does not independently bind
+those results to a synthetic merge or target-branch identity. The immediate
+validation is a normal protected merge for this experimental repository.
+Broader failure-injection validation remains deferred. If a metadata-only edit
+hides a head check, publish a fresh PR commit and obtain fresh reviews before
+merging; do not manufacture a replacement result.
