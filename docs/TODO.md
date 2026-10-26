@@ -12,7 +12,7 @@ tracks outstanding outcomes; detailed evidence belongs in the linked records.
 ## Preliminary policy distillation study
 
 The [experiment design](experiments/policy-distillation/README.md) frames the
-technical validation on eight GPUs across two Komondor nodes. Quality loss
+initial technical validation, with a provisional resource setup. Quality loss
 relative to a trustworthy reference is the primary concern; speed and cost are
 secondary. Distinguish shortcuts and confounders so that a failure can be
 attributed to its cause, including differences between learning regimes.

@@ -1,9 +1,12 @@
 # Policy distillation experiment design
 
 Status: protocol proposal, 2026-10-26. The immediate study concerns classical
-policy distillation from a more capable frozen teacher to a student, using
-Slime on eight GPUs across two Komondor nodes. The longer-term OPCD scope stays
-in [the project decisions](../../../AGENTS.md#confirmed-decisions).
+policy distillation from a more capable frozen teacher to a student using
+Slime. The initial validation setup is eight GPUs across two Komondor nodes.
+This is provisional: resource sizing and topology may change as validation
+and workload evidence develops. Record the actual setup for each comparison.
+The longer-term OPCD scope stays in
+[the project decisions](../../../AGENTS.md#confirmed-decisions).
 
 ## Main question
 
