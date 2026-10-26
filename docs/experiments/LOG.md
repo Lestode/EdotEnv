@@ -8,12 +8,28 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-26 · distillation-node-startup-20261026 · completed
+
+- Question: Does the node launcher reach Ray startup when optional network tools are absent?
+- Setup: Actual container and node script, with native-probe and Ray executables replaced by fixtures; the real GPU probe and Ray task have separate passing evidence. Network capture falls back to kernel routes and cannot abort training.
+- Result: Node script reached the Ray-start fixture with missing network tools; shell syntax passed.
+- Resources: Slurm `14651434`, one CPU, 2 GiB RAM; one second, exit `0:0`, no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/node-startup-fix.tar.gz`, `node-startup-check.sh`, `node-startup-check.log` and `node-check-14651434/`.
+
+### 2026-10-26 · distillation-sync-smoke-20261026-a3 · cancelled
+
+- Question: Does synchronous training initialize and complete after the Ray startup fix?
+- Setup: Revision `b619222`, same pinned models, runtime, prompts and three-update configuration as the cancelled attempt. Disable Ray's unnecessary environment autodetection and abort immediately if readiness fails.
+- Result: Eight-GPU collective and native probes passed. Both node launchers then failed because the optional network snapshot invoked the absent `ip` utility; Ray never started and no updates ran. Stopped the attempt and made snapshots best effort.
+- Resources: Slurm `14651432`, eight GPUs across two nodes, cancelled after 2m20s; approximately 0.311 GPU-hours.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/sync-smoke-20261026-a3/` and corresponding log.
+
 ### 2026-10-26 · distillation-ray-startup-20261026 · completed
 
 - Question: Can Ray initialize and execute a remote task without inspecting inaccessible Slurm ancestors?
 - Setup: Disable Ray's automatic `uv run` environment detection; dependencies remain installed with uv in the prepared container. Check updated launcher shell syntax and real Ray startup/task/shutdown inside a CPU allocation.
 - Result: Launcher shell syntax, Ray initialization, remote task and shutdown passed. Ray still warns that it cannot inspect dashboard descendants; this did not prevent the task. Slurm remains responsible for allocation containment.
-- Resources: Slurm `14651431`, two CPUs, 8 GiB RAM, five-minute limit; no GPUs.
+- Resources: Slurm `14651431`, two CPUs, 8 GiB RAM; 38 seconds, exit `0:0`, no GPUs.
 - Evidence: Private `edotenv/distillation-check-20261026-a1/ray-startup-fix.tar.gz`, `ray-startup-check.sh` and `ray-startup-check.log`.
 
 ### 2026-10-26 · distillation-sync-smoke-20261026-a2 · cancelled

@@ -10,9 +10,16 @@ export SLIME_HOST_IP="$ip"
 export TMPDIR="/tmp/edot-${SLURM_JOB_ID}"
 mkdir -p "$TMPDIR"
 python -m distillation.runtime_probe > "$RUN_ROOT/runtime-${SLURM_NODEID}.json"
-nvidia-smi topo -m > "$RUN_ROOT/topology-${SLURM_NODEID}.txt"
-ip -brief address > "$RUN_ROOT/network-${SLURM_NODEID}.txt"
-ip route get "$RAY_HEAD_IP" >> "$RUN_ROOT/network-${SLURM_NODEID}.txt"
+nvidia-smi topo -m > "$RUN_ROOT/topology-${SLURM_NODEID}.txt" 2>&1 || true
+{
+    if command -v ip >/dev/null; then
+        ip -brief address
+        ip route get "$RAY_HEAD_IP"
+    else
+        echo 'ip utility unavailable; recording kernel routes instead.'
+        cat /proc/net/route
+    fi
+} > "$RUN_ROOT/network-${SLURM_NODEID}.txt" 2>&1 || true
 if [ "$SLURM_NODEID" = 0 ]; then
     exec ray start --head --node-ip-address="$RAY_HEAD_IP" --port="$RAY_PORT" \
         --num-gpus=4 --num-cpus=16 --temp-dir="$TMPDIR/ray" --disable-usage-stats --block
