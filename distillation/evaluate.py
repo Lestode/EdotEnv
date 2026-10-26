@@ -75,6 +75,7 @@ def main():
             for index, row in enumerate(rows):
                 record = {"index": index}
                 summary["attempted"] += 1
+                stage = "generation"
                 try:
                     messages = row["prompt"]
                     if isinstance(messages, str):
@@ -86,18 +87,20 @@ def main():
                         endpoint + "/generate",
                         {"input_ids": ids, "sampling_params": summary["generation"]},
                     )
-                    correct = bool(scorer(response["text"], str(row["answer"])))
+                    record["response"] = response
                     truncated = (
                         response["meta_info"].get("finish_reason", {}).get("type")
                         == "length"
                     )
-                    record.update(
-                        response=response, correct=correct, truncated=truncated
-                    )
-                    summary["correct"] += int(correct)
+                    record["truncated"] = truncated
                     summary["truncated"] += int(truncated)
+                    stage = "grading"
+                    correct = bool(scorer(response["text"], str(row["answer"])))
+                    record["correct"] = correct
+                    summary["correct"] += int(correct)
                 except Exception as error:
                     record["error"] = f"{type(error).__name__}: {error}"
+                    record["error_stage"] = stage
                     summary["failed"] += 1
                 log.write(json.dumps(record) + "\n")
                 log.flush()

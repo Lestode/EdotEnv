@@ -78,6 +78,8 @@ actual pinned loss helper's gradient against an enumerated reverse-KL reference.
 The loss-helper test isolates the function from Megatron; it is not a distributed
 training test. Checkpoint metadata preflight, Ruff, and shell syntax checks passed.
 Follow-up job `14650690` passed eleven tests, including the actual Slime serving
-configuration parser. See the [journal](experiments/LOG.md) for runtime qualification and later runs.
-Actual model execution, end-to-end async behavior, two-node communication, and
-learning-quality comparisons remain unvalidated.
+configuration parser. The review regression brings this to twelve passing tests.
+A separate site-runtime NCCL probe passed across eight A100s on two nodes using
+one Slurm launcher per node. See the [journal](experiments/LOG.md) for attempts
+and coverage limits. Actual Slime model execution, end-to-end async behavior,
+and learning-quality comparisons remain unvalidated.

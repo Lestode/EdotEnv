@@ -84,6 +84,8 @@ def training_args(args, output):
         "1",
         "--actor-num-gpus-per-node",
         "4",
+        "--num-gpus-per-node",
+        "4",
         "--rollout-num-gpus",
         "4",
         "--tensor-model-parallel-size",

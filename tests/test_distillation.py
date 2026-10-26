@@ -3,13 +3,16 @@
 import ast
 import asyncio
 import copy
+import contextlib
 import importlib.util
+import io
 import json
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 import torch
 from aiohttp import web
@@ -154,6 +157,7 @@ class ConfigurationTests(unittest.TestCase):
         )
         self.assertIn("--untie-embeddings-and-output-weights", sync)
         self.assertNotIn("--use-rollout-logprobs", sync)
+        self.assertEqual(sync[sync.index("--num-gpus-per-node") + 1], "4")
 
     def test_bad_lag_fails_before_io(self):
         args = SimpleNamespace(
@@ -246,6 +250,61 @@ class ObjectiveTests(unittest.TestCase):
         self.assertLess(
             (updated.exp() * (updated - teacher)).sum().item(), exact.item()
         )
+
+
+class EvaluationTests(unittest.TestCase):
+    def test_grading_failure_preserves_generated_answer_and_truncation(self):
+        from distillation.evaluate import main
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "tokenizer.json").write_text("{}")
+            data = root / "eval.jsonl"
+            data.write_text(json.dumps({"prompt": "2 + 2?", "answer": "4"}) + "\n")
+            response = {
+                "text": "partial answer",
+                "meta_info": {"finish_reason": {"type": "length"}},
+            }
+            tokenizer = Mock()
+            tokenizer.apply_chat_template.return_value = [1, 2]
+            transformers = SimpleNamespace(AutoTokenizer=Mock())
+            transformers.AutoTokenizer.from_pretrained.return_value = tokenizer
+            grader = SimpleNamespace(grade=Mock(side_effect=ValueError("bad grade")))
+            argv = [
+                "evaluate",
+                "--endpoint",
+                "http://127.0.0.1:1",
+                "--model",
+                str(root),
+                "--data",
+                str(data),
+                "--output",
+                str(root / "out"),
+                "--scorer",
+                "fixture.grade",
+            ]
+            with (
+                patch("sys.argv", argv),
+                patch.dict("os.environ", {"SLURM_JOB_ID": "cpu-test"}),
+                patch.dict("sys.modules", {"transformers": transformers}),
+                patch(
+                    "distillation.evaluate.request",
+                    side_effect=[{"model_path": str(root)}, response],
+                ),
+                patch(
+                    "distillation.evaluate.importlib.import_module", return_value=grader
+                ),
+                contextlib.redirect_stdout(io.StringIO()),
+                self.assertRaises(SystemExit),
+            ):
+                main()
+            record = json.loads((root / "out/responses.jsonl").read_text())
+            summary = json.loads((root / "out/summary.json").read_text())
+            self.assertEqual(record["response"], response)
+            self.assertEqual(record["error_stage"], "grading")
+            self.assertTrue(record["truncated"])
+            self.assertEqual(summary["truncated"], 1)
+            self.assertEqual(summary["failed"], 1)
 
 
 if __name__ == "__main__":

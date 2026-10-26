@@ -19,14 +19,14 @@ attributed to its cause, including differences between learning regimes.
 
 The [implementation](DISTILLATION.md) now supplies a sampled-token distillation
 baseline, matched sync/async launch settings, frozen teacher serving, and strict
-score/policy-age checks. Exact tokenizer metadata compatibility and ten CPU tests
-passed on Komondor; these do not establish GPU training correctness. Runtime
-qualification is recorded in the [journal](experiments/LOG.md).
+score/policy-age checks. Tokenizer metadata, CPU regression checks, and a separate
+eight-GPU/two-node site collective passed on Komondor; these do not establish
+Slime training correctness. Runtime qualification is recorded in the [journal](experiments/LOG.md).
 
 The task, both models' baseline quality, and acceptable quality loss remain open.
 The study must establish that distillation improves the student and whether the
-shortcuts preserve that benefit. Async stability and actual two-node execution
-still need evidence.
+shortcuts preserve that benefit. Async stability and actual distributed Slime
+training still need evidence.
 
 ## Markdown guidance final-score comparison
 
