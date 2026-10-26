@@ -35,10 +35,12 @@ setup; resources and topology can evolve. Multi-node execution and the complete
 distillation path still need validation under the [hardware constraints](../../HARDWARE.md).
 
 The [initial model pair](../../EXPERIMENTS.md#initial-policy-distillation-pair)
-is selected, with tokenizer compatibility and baseline quality to validate
-before training. The distillation objective, dataset, acceptable quality loss,
-and run budgets remain open. Slime already has sync/async and OPD paths; that
-does not establish their correctness for this study.
+is selected, with tokenizer metadata compatibility verified and baseline quality
+still to establish. The [implementation](../../DISTILLATION.md) supplies an initial
+sampled-token objective and matched sync/async configuration. Dataset and acceptable
+quality loss remain open. The first training validation is bounded at 30 minutes
+on eight GPUs after runtime checks; this does not set the budget for later studies.
+Slime's existing paths and the adapter CPU checks do not establish learning quality.
 
 Use the [experiment guidance](../../EXPERIMENTS.md), [run records](../LOG.md),
 and [current work](../../TODO.md#policy-distillation-validation) to

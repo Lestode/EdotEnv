@@ -41,7 +41,7 @@ Use a `codex/` feature branch and a pull request for every change after the init
 - OPCD is retired from the project scope. The user chose classical policy distillation because prompt engineering and context manipulation make the intended study difficult to evaluate scientifically. The earlier context-distillation requirements and paper-specific objective no longer apply.
 - The primary question is whether the implementation works and its shortcuts preserve quality within an acceptable loss; synchronous/asynchronous execution is one comparison, with speed and cost secondary. The [experiment design](docs/experiments/policy-distillation/README.md) records the provisional validation setup; resource sizing may evolve.
 - The teacher will be an accessible model.
-- The initial classical distillation model pair is selected in [experiment guidance](docs/EXPERIMENTS.md#initial-policy-distillation-pair); tokenizer compatibility and baseline quality still need validation before training.
+- The initial classical distillation model pair is selected in [experiment guidance](docs/EXPERIMENTS.md#initial-policy-distillation-pair). Tokenizer metadata compatibility passed on Komondor; runtime alignment and baseline quality remain to be established.
 - Komondor is the target compute cluster; authenticated access and an A100 Slurm allocation have been verified. See [hardware planning](docs/HARDWARE.md) for evidence and remaining validation.
 - For now, the user manages collaboration and access in this repository.
 - Always bring conflicting information to the user for review before resolving it, including conflicts introduced by a new request. Follow the [finding-resolution and conflict policy](docs/WORKFLOW.md#finding-resolution-and-conflicts) for review findings, consequences, and recorded decisions.
@@ -54,7 +54,7 @@ Use a `codex/` feature branch and a pull request for every change after the init
 These do not block local design and implementation. Resolve each before the run or feature that depends on it.
 
 - Data: which training and evaluation datasets, who grants access, and where may they be processed and stored?
-- Distillation: which objective and teacher-scoring backend should the validation study use? See [current work](docs/TODO.md).
+- Distillation: does the initial sampled-token baseline and its SGLang teacher-scoring path learn reliably, and which shortcuts preserve that benefit? See [implementation and evidence](docs/DISTILLATION.md).
 - Compute sizing: which GPU/node counts and per-run budget should each experiment use within the verified Komondor project access? Multi-node execution remains unvalidated; see [hardware planning](docs/HARDWARE.md).
 - Runtime: which GPU container runtime/images are permitted, and can we install modified code and fetch dependencies/model weights?
 - Distribution: one managed cluster or independent sites? Are concurrent multi-node jobs and Ray/NCCL/teacher-service connections permitted?

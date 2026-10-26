@@ -11,6 +11,12 @@ for all access through greengoblin. Perform runtime setup and workload validatio
 on authorized Komondor resources. The gateway's hardware and software inventory
 does not establish the cluster's available compute resources or runtime.
 
+Manual tests, numerical checks, inference, and training run in authorized
+Komondor compute allocations. Local editing and artifact preparation are allowed;
+use uv for new project-managed Python environments. CI remains on GitHub runners.
+The [distillation journal](experiments/LOG.md) records current CPU and runtime
+qualification; historical single-GPU evidence below is not a training result.
+
 ## Observed cluster resources and limits
 
 - Slurm advertises four A100-SXM4-40GB GPUs per standard `gpu` node (one node

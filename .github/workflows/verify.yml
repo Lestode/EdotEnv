@@ -25,8 +25,13 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
+      - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
+        with:
+          version: '0.13.5'
       - name: Install validation tools
-        run: python -m pip install pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt
+        run: |
+          uv pip install --system pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt
+          uv pip install --system -r requirements-distillation-test.txt --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match
       - name: Check tracked project files
         run: pre-commit run --all-files
       - name: Check project documentation and review configuration

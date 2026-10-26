@@ -1,0 +1,8 @@
+{"prompt":[{"role":"user","content":"Compute 17 + 28. Put the final answer in \\boxed{}."}]}
+{"prompt":[{"role":"user","content":"Compute 9 times 13. Put the final answer in \\boxed{}."}]}
+{"prompt":[{"role":"user","content":"Solve 3x + 7 = 22. Put the value of x in \\boxed{}."}]}
+{"prompt":[{"role":"user","content":"A rectangle has width 6 and length 11. What is its area? Put the final answer in \\boxed{}."}]}
+{"prompt":[{"role":"user","content":"What is one quarter of 84? Put the final answer in \\boxed{}."}]}
+{"prompt":[{"role":"user","content":"A train travels 150 km in 3 hours. What is its average speed in km/h? Put the final answer in \\boxed{}."}]}
+{"prompt":[{"role":"user","content":"Find the next number in the sequence 2, 5, 8, 11. Put the final answer in \\boxed{}."}]}
+{"prompt":[{"role":"user","content":"What is the sum of the integers from 1 to 10? Put the final answer in \\boxed{}."}]}

@@ -378,15 +378,19 @@ resolve bootstrap with the user. After acceptance and merge, validate automatic
 reviews on updated PRs, exact-head association, duplicate handling, and failure
 and stale-head blocking. See [the activation tasks](TODO.md#repository-workflow-validation).
 
-## Local verification
+## Project verification
 
 Initialize Slime with `git submodule update --init slime`. Use Python 3.12 and
 the [experiment’s virtual-environment setup](../experiments/verifier-context/README.md#running-the-comparison)
-for the Harbor/Daytona dependencies required by the project tests. The reviewer
+for the Harbor/Daytona dependencies required by the project tests. Run manual
+checks in a Komondor compute allocation under [hardware policy](HARDWARE.md#access-boundary).
+Use uv for project-managed dependency setup. The reviewer
 freshness tests also require Node.js. Then run:
 
 ```sh
-.venv/bin/python -m pip install pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt
+uv pip install --python .venv/bin/python -r requirements-distillation-test.txt --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match
 .venv/bin/pre-commit run --all-files
 .venv/bin/python scripts/check_project.py
 node --test tests/*.test.cjs

@@ -5,8 +5,10 @@
 - Frozen teacher: `deepseek-ai/DeepSeek-R1-Distill-Qwen-7B`.
 - Trainable student: `deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B`.
 
-This is our initial pair. Before training, verify tokenizer compatibility and
-establish baseline quality for both models on the chosen evaluation tasks.
+This is our initial pair. Exact tokenizer metadata compatibility passed on
+Komondor for the [pinned revisions](../configs/distillation/models.json).
+Runtime token alignment and baseline quality for both models on the chosen
+evaluation tasks still need validation before learning experiments.
 
 ## Validate before scaling
 

@@ -17,12 +17,16 @@ relative to a trustworthy reference is the primary concern; speed and cost are
 secondary. Distinguish shortcuts and confounders so that a failure can be
 attributed to its cause, including differences between learning regimes.
 
-The [initial model pair](EXPERIMENTS.md#initial-policy-distillation-pair) is
-selected; tokenizer compatibility and both models' baseline quality still need
-validation before training. The distillation objective, task, and acceptable
-quality loss remain open. The study should establish
-that distillation improves the student and whether the shortcuts preserve that
-benefit. Async stability and the actual two-node runtime remain unvalidated.
+The [implementation](DISTILLATION.md) now supplies a sampled-token distillation
+baseline, matched sync/async launch settings, frozen teacher serving, and strict
+score/policy-age checks. Exact tokenizer metadata compatibility and ten CPU tests
+passed on Komondor; these do not establish GPU training correctness. Runtime
+qualification is recorded in the [journal](experiments/LOG.md).
+
+The task, both models' baseline quality, and acceptable quality loss remain open.
+The study must establish that distillation improves the student and whether the
+shortcuts preserve that benefit. Async stability and actual two-node execution
+still need evidence.
 
 ## Markdown guidance final-score comparison
 
