@@ -9,5 +9,7 @@ Cluster access and a single-GPU inventory probe are recorded in hardware plannin
 - [Development workflow and review integration](WORKFLOW.md)
 - [Implementation tasks and validation evidence](TODO.md)
 - [Hardware planning and GPU validation sequence](HARDWARE.md)
+- [Draft research guidance based on observed agent failure cases](RESEARCH_GUIDANCE.md)
+- [Sol comparison of research judgment guidance](experiments/research-judgment-sol/README.md)
 
 The upstream training framework is pinned through [the Slime submodule](../.gitmodules).
