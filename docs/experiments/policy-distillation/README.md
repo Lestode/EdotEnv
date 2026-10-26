@@ -108,39 +108,6 @@ Updates to serving weights must happen at a safe inference boundary. Training a
 separate student copy while generation continues does not itself change the
 weights serving an unfinished response.
 
-### Per-rollout conditions for the capacity model
-
-Distinguish a **response** (one generated trajectory) from a **training round**
-(one rollout batch consumed by Slime). Let `r` be the published student version
-at the start of a round, and `V_i` the versions that generated response `i`'s
-tokens. The round trains the student and then publishes version `r + 1`.
-Versions count publications, not individual optimizer steps.
-
-Allocate `g` GPUs to generation, `s` to frozen-teacher scoring and `t` to
-training, with `g + s + t = N`. For a specified workload, express stage capacities
-`G(g)`, `S(s)` and `T(t)` in equivalent training batches per second. In every
-condition, a response must finish generation and teacher scoring before its
-batch can train. Training updates remain coordinated.
-
-| Condition | Which responses can train in round `r`? | Work allowed during training | Condition for publishing `r + 1` |
-| --- | --- | --- | --- |
-| **A** | Every response uses only version `r`: `V_i = {r}`. | No generation/scoring of future training batches. | Finish training, publish, then start the next collection round. |
-| **B** | Each response uses one version, either `r` or `r - 1`. A batch may contain responses from both. | Generate and score upcoming responses with the serving copy, which still has version `r`. | Stop admitting new work; finish all active generation **and scoring** tasks; publish; resume admission. This matches the current worker's drain behavior. |
-| **C** | A response may use `r`, `r - 1`, or both: `V_i` is a nonempty subset of `{r - 1, r}`. | Generate and score upcoming responses with version `r`, including continuations of older prefixes. | Stop admission; pause/abort unfinished generation, flush cache, publish, then resume partial responses with rebuilt prefix state. No B-style wait for all active tasks to finish. |
-
-For B/C, enforce `r - min(V_i) <= 1` when a batch is consumed; future or unknown
-versions are invalid. The first round can only use the initial version. Work
-remaining in queues is subject to this check in its eventual consumption round;
-being valid when generated does not guarantee it will still be valid then.
-
-The ideal overlapping capacity is bounded by `min(G(g), S(s), T(t))`. To model
-actual round timing, also include weight-publication time, B's residual drain
-wait, and C's interrupted-generation and prefix-rebuild work. A instead has a
-collection/scoring phase followed by training and publication; generation and
-scoring may overlap within collection. Batch size, response lengths and queue
-capacity must be specified alongside the GPU split. These are scheduling
-conditions for the model, not measured throughput or learning guarantees.
-
 ### Separate execution checks and measurements
 
 Each condition has its own manifest, output directory, checkpoint and report:
