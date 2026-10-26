@@ -21,11 +21,12 @@ def main():
         importlib.import_module(module)
     import torch
     from flash_attn import flash_attn_func
-    from transformer_engine.pytorch import LayerNormLinear
+    from transformer_engine.pytorch import DotProductAttention, LayerNormLinear
 
     report = {
         "python": platform.python_version(),
         "cuda": torch.version.cuda,
+        "flash_attention_implementation": flash_attn_func.__module__,
         "packages": {},
         "gpus": [],
         "slurm_job_id": os.environ["SLURM_JOB_ID"],
@@ -49,22 +50,64 @@ def main():
             x = torch.ones((64, 64), device=f"cuda:{index}", dtype=torch.bfloat16)
             if not torch.equal(x @ x, torch.full_like(x, 64)):
                 raise RuntimeError("BF16 matrix multiplication failed")
+            # Student TP2: six query heads and one KV head per rank, head dim 128.
             qkv = [
                 torch.randn(
-                    (1, 16, 2, 64),
+                    (32, heads, 128),
                     device=f"cuda:{index}",
                     dtype=torch.bfloat16,
                     requires_grad=True,
                 )
-                for _ in range(3)
+                for heads in (6, 1, 1)
             ]
-            attention = flash_attn_func(*qkv, causal=True)
+            cumulative = torch.tensor([0, 9, 32], device=x.device, dtype=torch.int32)
+            layer_attention = DotProductAttention(
+                6,
+                128,
+                num_gqa_groups=1,
+                qkv_format="thd",
+                attn_mask_type="padding_causal",
+            )
+            attention = layer_attention(
+                *qkv,
+                cu_seqlens_q=cumulative,
+                cu_seqlens_kv=cumulative,
+                max_seqlen_q=23,
+                max_seqlen_kv=23,
+            )
+            expected = []
+            with torch.no_grad():
+                for begin, end in ((0, 9), (9, 32)):
+                    q, k, v = [value[begin:end].float() for value in qkv]
+                    q = q.transpose(0, 1)
+                    k = k.repeat_interleave(6, dim=1).transpose(0, 1)
+                    v = v.repeat_interleave(6, dim=1).transpose(0, 1)
+                    scores = (q @ k.transpose(-1, -2)) / (128**0.5)
+                    mask = torch.ones(
+                        end - begin, end - begin, device=x.device, dtype=torch.bool
+                    ).triu(1)
+                    expected.append(
+                        (
+                            scores.masked_fill(mask, float("-inf")).softmax(-1) @ v
+                        ).transpose(0, 1)
+                    )
+                reference = torch.cat(expected)
+                torch.testing.assert_close(
+                    attention.reshape_as(reference).float(),
+                    reference,
+                    atol=0.025,
+                    rtol=0.03,
+                )
             attention.float().square().mean().backward()
             layer = LayerNormLinear(
-                64, 64, params_dtype=torch.bfloat16, device=f"cuda:{index}"
+                128,
+                128,
+                normalization="RMSNorm",
+                params_dtype=torch.bfloat16,
+                device=f"cuda:{index}",
             )
             inputs = torch.randn(
-                (8, 64),
+                (8, 128),
                 device=f"cuda:{index}",
                 dtype=torch.bfloat16,
                 requires_grad=True,
@@ -86,8 +129,8 @@ def main():
                     "name": torch.cuda.get_device_name(index),
                     "capability": torch.cuda.get_device_capability(index),
                     "bf16_matmul": "passed",
-                    "flash_attention_forward_backward": "passed",
-                    "transformer_engine_forward_backward": "passed",
+                    "packed_gqa_reference_and_backward": "passed",
+                    "rmsnorm_linear_forward_backward": "passed",
                 }
             )
     print(json.dumps(report, indent=2))

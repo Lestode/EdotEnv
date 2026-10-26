@@ -8,6 +8,72 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-26 · distillation-uv-check2-20261026 · completed
+
+- Question: Does the reusable uv CPU initializer preserve passing adapter checks?
+- Setup: Python 3.12, explicit CPU PyTorch index, pinned requirements; corrected the lint annotation from the previous attempt.
+- Result: Slurm `14650816`, all twelve tests, Ruff, and shell syntax passed. The kernel probe was formatted but not executed on CPU. Runtime compilation remains separate.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/uv-cpu-check2.log`, `.venv/requirements-resolved.txt`, and `uv-formatted.tar.gz`.
+
+### 2026-10-26 · distillation-uv-check-20261026 · failed
+
+- Question: Does the new uv setup and expanded native probe pass CPU checks?
+- Setup: Same environment initializer and pinned dependencies; Slurm `14650812`, two requested CPUs, 8 GiB RAM, no GPUs.
+- Result: Environment setup succeeded; Ruff rejected an incorrectly written unused-import annotation after one second. Tests did not execute. The follow-up records the corrected probe's implementation module instead.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/uv-cpu-check.log`.
+
+### 2026-10-26 · distillation-flash2-build-20261026 · running
+
+- Question: Can FlashAttention-2 be built for A100 against the selected Slime runtime?
+- Setup: Owned writable runtime sandbox from the recorded OCI digest; uv, FlashAttention 2.8.3 source, sm80 only, existing PyTorch/CUDA retained. Reusable project initializer records provenance.
+- Resources: Slurm `14650807`, eight requested CPUs, 64 GiB RAM, 45-minute limit; no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/flash2-build.log` and `flash2-build/`; result pending. Build success alone will not establish native-kernel correctness.
+
+### 2026-10-26 · distillation-fused-coherent-20261026 · failed
+
+- Question: Does a single cuDNN version make packed GQA fused attention available on A100?
+- Setup: Same candidate probe, now setting both `CUDNN_HOME` and `LD_LIBRARY_PATH` to PyTorch's libraries. Debug output confirmed cuDNN 9.20.
+- Result: Slurm `14650796`, one GPU, 24 seconds, exit `1:0`; no supported fused backend for this configuration. No model training. Retain the planned FlashAttention-2 training path.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/fused-coherent.log`.
+
+### 2026-10-26 · distillation-fused-debug-20261026 · failed
+
+- Question: Which libraries and attention backend did the earlier retry actually select?
+- Setup: Repeat with Transformer Engine debug logging, no package changes.
+- Result: Slurm `14650789`, one GPU, 35 seconds, exit `1:0`; TE still selected system cuDNN 9.14 despite the library-path prefix, and found no backend.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/fused-debug.log`. Motivated setting TE's documented `CUDNN_HOME` as well.
+
+### 2026-10-26 · distillation-fused-cudnn-20261026 · failed
+
+- Question: Does a consistent cuDNN library path resolve the candidate backend's import failure?
+- Setup: Repeat the same fused-attention/reference and RMSNormLinear probe, placing the image's PyTorch cuDNN 9.20 library directory first in `LD_LIBRARY_PATH`. No package or container-source changes.
+- Resources: Slurm `14650787`, one GPU, four requested CPUs, 16 GiB RAM, eight-minute limit.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/fused-cudnn.log`; failed after 1m47s, exit `1:0`, with no available fused backend. A debug follow-up checked the actual cuDNN selection.
+
+### 2026-10-26 · distillation-fused-20261026 · failed
+
+- Question: Does the image's cuDNN fused-attention route support A100 without adding FlashAttention-2?
+- Setup: Forced fused attention, BF16 packed GQA forward compared with an explicit causal-softmax reference, backward finiteness, and RMSNormLinear forward/backward. This tests a candidate backend before changing training settings.
+- Resources: Slurm `14650783`, one GPU, four requested CPUs, 16 GiB RAM, eight-minute limit.
+- Result: Fourteen seconds, exit `1:0`; cuDNN 9.14 system libraries conflicted with PyTorch's cuDNN 9.20 while importing Transformer Engine. This did not test the fused kernels.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/fused-probe.py` and `fused-probe.log`.
+
+### 2026-10-26 · distillation-gpu-sandbox-20261026 · failed
+
+- Question: Can the fully extracted runtime execute on A100 without completing SIF compression?
+- Setup: Apptainer's directory runtime using the original complete extracted filesystem from `14650675`, moved after that job ended; same native-kernel probe. The partial preservation copy is unused.
+- Resources: Slurm `14650736`, one GPU, four requested CPUs, 16 GiB RAM, five-minute limit.
+- Result: Failed after 3m07s, exit `1:0`: the image contains FlashAttention-3/4 but no FlashAttention-2 API. The independent CPU import step passed (PyTorch 2.13.0/CUDA 13.0, Ray, SGLang, Megatron, Transformer Engine). No model training ran.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/gpu-runtime-sandbox.log` and `sandbox-import.log`.
+
+### 2026-10-26 · distillation-gpu-runtime-20261026 · failed
+
+- Question: Does the prepared Slime image execute its native kernels on A100?
+- Setup: Runtime imports, BF16 matrix multiplication, FlashAttention and Transformer Engine forward/backward probes; dependent on image preparation. No models or training data.
+- Resources: Slurm `14650730`, one GPU, four requested CPUs, 16 GiB RAM, five-minute limit (at most 0.083 GPU-hours).
+- Result: Two seconds, exit `1:0`; the prerequisite SIF image was absent after preparation timed out. No native kernels ran.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/gpu-runtime.log`.
+
 ### 2026-10-26 · distillation-final-cpu-20261026 · completed
 
 - Question: Does the final configuration retain passing checks with four GPUs per node and native-kernel probes?
@@ -15,12 +81,12 @@ the earlier entry so failures remain visible.
 - Result: All twelve tests, Ruff, formatting, and shell syntax passed. GPU kernels are not exercised by these CPU tests.
 - Evidence: Private `edotenv/distillation-check-20261026-a1/final-cpu-inline.log`.
 
-### 2026-10-26 · distillation-weights-20261026 · running
+### 2026-10-26 · distillation-weights-20261026 · completed
 
 - Question: Can the pinned teacher/student snapshots be staged and verified on shared project storage?
 - Setup: The model lock and allocation-only downloader, `huggingface-hub==0.34.4` through uv; no inference.
 - Resources: Slurm `14650718`, four requested CPUs, 16 GiB RAM, 15-minute limit; no GPUs.
-- Evidence: Private `edotenv/distillation-check-20261026-a1/model-staging.log` and `models/verification.json` when complete. Result pending.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/model-staging.log` and `models/verification.json`. Both snapshots downloaded and metadata/weight hashes verified; completed in 3m41s, exit `0:0`.
 
 ### 2026-10-26 · distillation-review-fix2-20261026 · completed
 
@@ -52,12 +118,13 @@ the earlier entry so failures remain visible.
 - Resources: Slurm `14650690`, 19 seconds, three allocated CPUs, 8 GiB RAM on `test`; exit `0:0`.
 - Evidence: `edotenv/distillation-check-20261026-a1/update.tar.gz` and `recheck.log`. Distributed training and learning quality remain unvalidated.
 
-### 2026-10-26 · distillation-runtime-20261026 · running
+### 2026-10-26 · distillation-runtime-20261026 · failed
 
 - Question: Can the documented Slime container provide the pinned training stack on Komondor?
 - Setup: Apptainer pull of `slimerl/slime` digest `sha256:6379b872c6cc2535fb8c0e073a79bb1f41e365ca4859dd308e99ba14eb87936d`, then CPU import checks.
 - Resources: Slurm `14650675`, planned eight CPUs, 64 GiB RAM, 30 minutes on `test`; no GPUs or model weights.
-- Evidence: Private `edotenv/distillation-check-20261026-a1/runtime-preparation.log`; result pending. A100 kernels and distributed training remain separate checks.
+- Result: Timed out after 30m03s during SIF compression, after extraction and Apptainer configuration completed. The scheduler denied extending the running job. The complete extracted filesystem survived and was moved to `runtime-sandbox` for a directory-runtime retry; an interrupted hardlink preservation attempt is not used.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/runtime-preparation.log`. No import or GPU validation completed in this attempt.
 
 ### 2026-10-26 · distillation-check-20261026-a1 · completed
 

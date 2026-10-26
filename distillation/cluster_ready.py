@@ -7,7 +7,8 @@ import time
 def main():
     import ray
 
-    deadline = time.monotonic() + 180
+    # Cold Apptainer startup plus native-kernel probes can exceed three minutes.
+    deadline = time.monotonic() + 600
     while time.monotonic() < deadline:
         try:
             ray.init(address=os.environ["RAY_ADDRESS"], logging_level="ERROR")

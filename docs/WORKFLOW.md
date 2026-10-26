@@ -390,7 +390,8 @@ freshness tests also require Node.js. Then run:
 ```sh
 uv venv --python 3.12 .venv
 uv pip install --python .venv/bin/python pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt
-uv pip install --python .venv/bin/python -r requirements-distillation-test.txt --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match
+uv pip install --python .venv/bin/python --index-url https://download.pytorch.org/whl/cpu 'torch==2.8.0+cpu'
+uv pip install --python .venv/bin/python -r requirements-distillation-test.txt
 .venv/bin/pre-commit run --all-files
 .venv/bin/python scripts/check_project.py
 node --test tests/*.test.cjs

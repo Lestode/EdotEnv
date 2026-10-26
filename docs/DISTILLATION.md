@@ -39,6 +39,30 @@ and artifact preparation are permitted; greengoblin remains transit-only. Use uv
 for project-managed Python setup. Keep the GPU runtime separate from
 [CPU-test requirements](../requirements-distillation-test.txt).
 
+For CPU adapter tests, run `bash scripts/init-distillation-tests.sh` in the
+allocation, then run the adapter suite from the checkout:
+
+```sh
+.venv-distillation/bin/python -m unittest discover -s tests -p test_distillation.py -v
+```
+
+The initializer uses Python 3.12,
+fetches CPU PyTorch from its own index, and records resolved versions. The
+`distillation` package has an explicit `__init__.py`; run its modules from the
+checkout, with the pinned Slime source on `PYTHONPATH` when using its hooks.
+
+The candidate GPU runtime starts from Slime's OCI digest
+`sha256:6379b872c6cc2535fb8c0e073a79bb1f41e365ca4859dd308e99ba14eb87936d`
+(`slimerl/slime`, CUDA 13). It lacks FlashAttention-2. Inside an owned writable
+copy, [the A100 initializer](../scripts/init-distillation-a100.sh) builds the
+[pinned addition](../requirements-distillation-a100.txt) with uv against the
+existing PyTorch, without dependency replacement. Set `RUNTIME_BUILD_RECORD`
+to a new directory; it retains setup, versions, build flags, and logs. This
+build is being validated, not yet a qualified runtime. Source
+[the runtime environment](../scripts/distillation-runtime-env.sh) inside the
+container to make PyTorch and Transformer Engine use the same cuDNN libraries;
+the Slurm launcher does this for both driver and workers.
+
 The launcher requires a compatible A100 Slime runtime, the initialized submodule,
 and identical shared paths on both nodes. The upstream container is being qualified;
 its presence or successful imports alone do not establish A100 kernel compatibility.

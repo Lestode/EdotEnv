@@ -52,6 +52,7 @@ srun --overlap --nodes=1 --ntasks=1 --nodelist="$HEAD_NODE" \
     apptainer exec --nv --bind "$PROJECT_ROOT,$MODEL_ROOT,$RUN_ROOT,$(dirname "$TRAIN_DATA")" \
     "$RUNTIME_IMAGE" bash -c '
         cd "$PROJECT_ROOT"
+        source scripts/distillation-runtime-env.sh
         python -m distillation.cluster_ready
         python -m distillation.launch --student "$MODEL_ROOT/student" --teacher "$MODEL_ROOT/teacher" \
             --data "$TRAIN_DATA" --output "$RUN_ROOT/train" --mode "$MODE" --execute
