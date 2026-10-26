@@ -7,6 +7,10 @@ set -euo pipefail
 export UV_CACHE_DIR="$RUNTIME_ROOT/cache/uv"
 export TMPDIR="$RUNTIME_ROOT/tmp"
 "$UV_BIN" venv --python /opt/sglang/bin/python --system-site-packages "$RUNTIME_ENV"
+# The base interpreter is itself in a venv; uv may resolve its underlying Python.
+# Add the pinned stack after this venv's packages so local FA2 takes precedence.
+printf '%s\n' /opt/sglang/lib/python3.12/site-packages > \
+    "$RUNTIME_ENV/lib/python3.12/site-packages/sglang-base.pth"
 export PATH="$RUNTIME_ENV/bin:$PATH"
 python - <<'CHECK'
 import sys
