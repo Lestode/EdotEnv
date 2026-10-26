@@ -39,6 +39,7 @@ def main():
         report["packages"][package] = importlib.metadata.version(package)
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable")
+    report["torch_cuda_arches"] = torch.cuda.get_arch_list()
     for index in range(torch.cuda.device_count()):
         with torch.cuda.device(index):
             if not torch.cuda.is_bf16_supported():
