@@ -1,5 +1,8 @@
 # Verifier context experiment
 
+Follow [experiment guidance](../../docs/EXPERIMENTS.md) and record new runs in
+the [experiment journal](../../docs/experiments/LOG.md).
+
 Status: the fresh cloud comparison completed all 20 rollouts, with ten accepted
 submissions per condition and no trial execution errors. Frozen inputs and all
 20 initial prompt conditions were audited. Private results were downloaded;
