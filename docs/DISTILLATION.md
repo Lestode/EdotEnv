@@ -96,7 +96,9 @@ For the two-node allocation, export `PROJECT_ROOT`, `MODEL_ROOT` (containing
 `RUNTIME_IMAGE`. Submit [distillation.slurm](../scripts/distillation.slurm) with
 the authorized account. Set `MODE=synchronous` or `MODE=fully_async`. The current
 script requests two four-GPU nodes for at most 30 minutes. It owns a dedicated
-Ray cluster, records runtime/topology evidence, and terminates its own Slurm steps.
+Ray cluster, first checks an eight-GPU collective in the candidate runtime,
+records runtime/topology evidence, and terminates its own Slurm steps. Cleanup
+kills the recorded Ray step so a server shutdown error cannot retain the allocation.
 
 [Smoke prompts](../configs/distillation/smoke.jsonl) are for execution checks only.
 They are not a learning benchmark. For baseline and checkpoint evaluation,

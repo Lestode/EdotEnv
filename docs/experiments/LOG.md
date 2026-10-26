@@ -8,6 +8,13 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-26 · distillation-step-cleanup-20261026 · completed
+
+- Question: Does the training launcher's cleanup terminate only its recorded Slurm worker step and return promptly?
+- Setup: Real CPU Slurm step running a sleep fixture; invoke the launcher's cleanup function against that step. Shell syntax checked for the updated launcher and node script.
+- Result: Step killed and reaped while its parent allocation remained alive; Slurm `14651228`, one second, exit `0:0`, one CPU, 1 GiB RAM, no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/smoke-launcher.tar.gz`, `step-cleanup-check.sh`, `step-cleanup-check.log` and `step-cleanup-14651228/`.
+
 ### 2026-10-26 · distillation-baseline-batched-20261026 · running
 
 - Question: Can bounded batches complete both frozen-model baselines within the pilot budget?
@@ -22,12 +29,13 @@ the earlier entry so failures remain visible.
 - Result: Slurm `14651186`, fourteen CPU tests, Ruff, formatting, shell checks and real-runtime fixture passed; 20 seconds, two requested CPUs, 8 GiB RAM, no GPUs.
 - Evidence: Private `edotenv/distillation-check-20261026-a1/evaluator-batch.tar.gz`, `evaluator-batch.log` and `eval-batch-formatted.tar.gz`. Fixture correctness is not model accuracy.
 
-### 2026-10-26 · distillation-arguments-gpu2-20261026 · running
+### 2026-10-26 · distillation-arguments-gpu2-20261026 · completed
 
 - Question: Does full argument validation pass with the production launcher's environment?
 - Setup: Same parser-only probe with `CUDA_DEVICE_MAX_CONNECTIONS=1`, already set by the real launcher; no training.
-- Resources: Slurm `14651194`, one GPU, two CPUs, 8 GiB RAM, eight-minute limit.
-- Evidence: Private `edotenv/distillation-check-20261026-a1/argument-probe-gpu2.log`; pending.
+- Result: Full Slime/Megatron/SGLang argument validation passed for both synchronous and fully asynchronous modes, including BF16, sampled-token objective and policy-lag configuration. No training ran.
+- Resources: Slurm `14651194`, one GPU, two CPUs, 8 GiB RAM; 1m50s, exit `0:0`, approximately 0.031 GPU-hours.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/argument-probe-gpu2.log`.
 
 ### 2026-10-26 · distillation-arguments-gpu-20261026 · failed
 

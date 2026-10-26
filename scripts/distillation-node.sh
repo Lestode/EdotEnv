@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 source "$PROJECT_ROOT/scripts/distillation-runtime-env.sh"
+if [ "$SLURM_NODEID" = 0 ]; then
+    printf '%s.%s\n' "$SLURM_JOB_ID" "$SLURM_STEP_ID" > "$RUN_ROOT/ray-step-id"
+fi
 ip=$(getent ahostsv4 "$(hostname)" | awk 'NR==1 {print $1}')
 if [ "$SLURM_NODEID" = 0 ]; then ip="$RAY_HEAD_IP"; fi
 export SLIME_HOST_IP="$ip"

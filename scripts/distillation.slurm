@@ -31,9 +31,26 @@ RAY_ADDRESS="$RAY_HEAD_IP:$RAY_PORT"
 export PYTHONPATH="$PROJECT_ROOT:$PROJECT_ROOT/slime:${PYTHONPATH:-}"
 export CUDA_DEVICE_MAX_CONNECTIONS=1
 
+# Exercise the actual candidate runtime's inter-node collective before training.
+srun --ntasks=2 --ntasks-per-node=1 --kill-on-bad-exit=1 \
+    apptainer exec --nv --bind "$PROJECT_ROOT,$RUN_ROOT" "$RUNTIME_IMAGE" \
+    bash -c '
+        cd "$PROJECT_ROOT"
+        source scripts/distillation-runtime-env.sh
+        python -m torch.distributed.run --nnodes=2 --nproc-per-node=4 \
+            --node-rank="$SLURM_NODEID" --master-addr="$RAY_HEAD_IP" --master-port=16400 \
+            -m distillation.collective_probe
+    ' > "$RUN_ROOT/collective.log" 2>&1
+
 # Each Slurm step owns its processes; never stop another job's Ray instance.
 pids=()
 cleanup() {
+    if [ -f "$RUN_ROOT/ray-step-id" ]; then
+        read -r ray_step < "$RUN_ROOT/ray-step-id"
+        case "$ray_step" in
+            "$SLURM_JOB_ID".[0-9]*) scancel --signal=KILL "$ray_step" 2>/dev/null || true ;;
+        esac
+    fi
     for pid in "${pids[@]}"; do kill "$pid" 2>/dev/null || true; done
     wait || true
 }
