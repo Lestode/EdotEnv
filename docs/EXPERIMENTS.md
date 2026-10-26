@@ -45,3 +45,17 @@ private storage.
 Use the [experiment journal](experiments/LOG.md) for concise run entries, newest
 first. Link to saved configurations and detailed results rather than copying
 them into the journal. Mark unavailable measurements as unknown.
+
+## Share results and check in
+
+Every experiment must have a concise, shareable report in its experiment
+directory. Start with the question and current status; update it at meaningful
+milestones with the setup, results, limitations, resources spent and next decision.
+Write for a reader without the chat history. Link to detailed evidence instead
+of reproducing logs or a long implementation plan. Provide a portable document
+when requested; keep it consistent with the report in the repository.
+
+Give the user a substantive checkpoint when repeated failures prolong debugging
+or the time, cost or scope grows beyond the last agreed step. Pause further run
+submissions for that checkpoint rather than continuing for hours through status
+messages alone. Separate engineering validation from evidence of learning quality.

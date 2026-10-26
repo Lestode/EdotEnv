@@ -30,6 +30,11 @@ The study must establish that distillation improves the student and whether the
 shortcuts preserve that benefit. Async stability and actual distributed Slime
 training still need evidence.
 
+At the user's checkpoint, both development baselines are complete, but the
+two-node Ray startup still fails before model loading. No experiment jobs remain
+active or queued. Hold further submissions until the checkpoint is reviewed;
+see the [shareable progress report](experiments/policy-distillation/REPORT.md).
+
 ## Markdown guidance final-score comparison
 
 The [comparison record](../experiments/verifier-context/README.md) preserves

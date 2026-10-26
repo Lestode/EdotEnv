@@ -8,6 +8,14 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-26 · distillation-sync-smoke-20261026-a5 · failed
+
+- Question: Does the distributed synchronous path work with validated Ray startup settings?
+- Setup: Revision `d2bd5dc`, same three-update smoke workload, pinned models and runtime. Ray uses head port 6379 and explicit per-attempt token authentication. Earlier frozen baselines are unchanged.
+- Result: Head startup reached an authenticated Ray cluster, but its client service timed out waiting for node registration. The head shut down and the readiness driver failed before model loading or updates. The precise startup delay remains unresolved; no further jobs are submitted pending the user's checkpoint.
+- Resources: Slurm `14651539`, eight GPUs across two nodes, failed after 1m48s, exit `1:0`; approximately 0.240 GPU-hours.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/sync-smoke-20261026-a5/` and corresponding log. Attempted collection of node-local Ray logs after exit was rejected because the allocation had expired.
+
 ### 2026-10-26 · distillation-ray-cli2-20261026 · completed
 
 - Question: Does explicit token authentication allow the CLI head and API driver to communicate?
