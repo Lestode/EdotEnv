@@ -22,7 +22,15 @@ MODE=${MODE:-synchronous}
 module load apptainer/1.4.4
 mkdir -m 700 "$RUN_ROOT"
 export PROJECT_ROOT MODEL_ROOT TRAIN_DATA RUN_ROOT RUNTIME_IMAGE MODE
-export RAY_PORT=16379
+# Explicitly share one private token between head, workers and driver. The
+# runtime otherwise enables authentication differently for CLI and API clients.
+export RAY_AUTH_MODE=token
+unset RAY_AUTH_TOKEN
+export RAY_AUTH_TOKEN_PATH="$RUN_ROOT/ray-auth-token"
+od -An -N32 -tx1 /dev/urandom | tr -d ' \n' > "$RAY_AUTH_TOKEN_PATH"
+chmod 600 "$RAY_AUTH_TOKEN_PATH"
+# Keep the head outside Ray's default worker range (10002--19999).
+export RAY_PORT=6379
 export RAY_ADDRESS
 HEAD_NODE=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -1)
 RAY_HEAD_IP=$(getent ahostsv4 "$HEAD_NODE" | awk 'NR==1 {print $1}')

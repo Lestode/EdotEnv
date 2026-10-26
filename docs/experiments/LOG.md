@@ -8,6 +8,30 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-26 · distillation-ray-cli2-20261026 · completed
+
+- Question: Does explicit token authentication allow the CLI head and API driver to communicate?
+- Setup: Same CPU CLI check, setting `RAY_AUTH_MODE=token` for both processes. Dependencies and model runtime unchanged.
+- Result: CLI head startup, driver connection, remote task and cleanup passed. The training launcher now uses explicit token mode and a private per-attempt token file shared by its head, workers and driver.
+- Resources: Slurm `14651528`, two CPUs, 8 GiB RAM; 13 seconds, exit `0:0`, no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/ray-cli-check2.sh` and `ray-cli-check2.log`.
+
+### 2026-10-26 · distillation-ray-cli-20261026 · cancelled
+
+- Question: Does the actual Ray CLI start and accept remote work using a nonconflicting head port?
+- Setup: Same container and environment; head port 6379 is outside Ray's worker range. CPU-only head, connecting driver, remote task and owned-process cleanup.
+- Result: Port accepted, but CLI head enabled token authentication automatically while the explicitly addressed API driver did not. Connection rejected; stopped for an explicit shared-authentication retry.
+- Resources: Slurm `14651470`, two CPUs, 8 GiB RAM, cancelled after 51 seconds; no GPUs.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/ray-cli-check.sh` and `ray-cli-check.log`.
+
+### 2026-10-26 · distillation-sync-smoke-20261026-a4 · cancelled
+
+- Question: Does the full synchronous path execute after both launcher startup fixes?
+- Setup: Revision `ee18621`, unchanged pinned models, runtime and three-update smoke configuration. Optional topology snapshots are best effort; existing stage timers remain the only performance instrumentation.
+- Result: Native checks passed, but Ray rejected head port 16379 because it overlaps its default worker range 10002–19999. No model initialization or training updates ran. Retry uses head port 6379 after a CLI check.
+- Resources: Slurm `14651465`, eight GPUs across two nodes, cancelled after 1m55s; approximately 0.256 GPU-hours.
+- Evidence: Private `edotenv/distillation-check-20261026-a1/sync-smoke-20261026-a4/` and corresponding log.
+
 ### 2026-10-26 · distillation-node-startup-20261026 · completed
 
 - Question: Does the node launcher reach Ray startup when optional network tools are absent?
