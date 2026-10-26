@@ -21,8 +21,10 @@ Sync and async share those settings. Async allows one publication of policy lag
 by default; sync allows none. Unknown, future, or excessively old policy versions
 abort the attempt rather than silently dropping examples. The bound is configurable
 with `--max-policy-lag`. It does not eliminate off-policy bias or guarantee stability.
-It also does not enforce one student version per response; see the experiment's
-[candidate policies and implementation gap](experiments/policy-distillation/README.md#candidate-execution-policies).
+Condition B additionally drains active work through the custom data-source
+consumer interface before publication and rejects mixed-version responses.
+Condition C permits and counts mixed-version responses. This new B integration
+still needs validation; see the [experiment conditions](experiments/policy-distillation/README.md#concrete-comparisons).
 The wrappers rely on the pinned fresh-run driver's one weight publication per
 rollout; resuming training is outside this launcher's current scope.
 
@@ -97,7 +99,8 @@ output directory. Raw responses and training logs remain in that directory.
 For the two-node allocation, export `PROJECT_ROOT`, `MODEL_ROOT` (containing
 `student/` and `teacher/`), `TRAIN_DATA`, `RUN_ROOT` (a new directory), and
 `RUNTIME_IMAGE`. Submit [distillation.slurm](../scripts/distillation.slurm) with
-the authorized account. Set `MODE=synchronous` or `MODE=fully_async`. The current
+the authorized account. Set `MODE=synchronous` (A), `MODE=bounded_async` (B), or
+`MODE=fully_async` (C), with a separate `RUN_ROOT` for each attempt. The current
 script requests two four-GPU nodes for at most 30 minutes. It owns a dedicated
 Ray cluster, first checks an eight-GPU collective in the candidate runtime,
 records runtime/topology evidence, and terminates its own Slurm steps. Cleanup

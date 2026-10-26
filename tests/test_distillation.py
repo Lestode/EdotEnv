@@ -10,6 +10,7 @@ import io
 import json
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -24,8 +25,10 @@ from distillation.hooks import (
     post_process_rewards,
     response_log_probs,
     score_teacher,
+    validate_sample_policy,
 )
 from distillation.launch import ROOT, serving_config, training_args, validate_options
+from distillation.policies import DrainBeforePublication
 from distillation.preflight import fingerprint, verify_models
 
 
@@ -96,6 +99,78 @@ class ScoringTests(unittest.IsolatedAsyncioTestCase):
 
 
 class PolicyAgeTests(unittest.TestCase):
+    def test_complete_responses_reject_mixed_versions_but_c_records_them(self):
+        with self.assertRaisesRegex(ValueError, "spans policy versions"):
+            validate_sample_policy(["2", "3"], 3, 1, complete_response=True)
+        self.assertEqual(
+            validate_sample_policy(["2", "3"], 3, 1, complete_response=False),
+            (1, True),
+        )
+        self.assertEqual(
+            validate_sample_policy(["2", "2"], 3, 1, complete_response=True),
+            (1, False),
+        )
+        with self.assertRaisesRegex(ValueError, "exceeds limit"):
+            validate_sample_policy(["1", "3"], 3, 1, complete_response=False)
+
+    def test_b_waits_for_real_slime_pause_to_drain_and_preserves_pause_state(self):
+        # Run the pinned worker's pause method without its GPU-only imports.
+        path = ROOT / "slime/slime/rollout/fully_async_rollout.py"
+        worker_class = next(
+            n
+            for n in ast.parse(path.read_text()).body
+            if isinstance(n, ast.ClassDef) and n.name == "AsyncRolloutWorker"
+        )
+        pause = next(
+            n
+            for n in worker_class.body
+            if isinstance(n, ast.FunctionDef) and n.name == "pause"
+        )
+        namespace = {}
+        exec(
+            compile(ast.Module(body=[pause], type_ignores=[]), str(path), "exec"),
+            namespace,
+        )
+        worker = SimpleNamespace(
+            condition=threading.Condition(),
+            paused=False,
+            running=True,
+            error=None,
+            admission_paused=True,
+            active=1,
+        )
+        entered = threading.Event()
+
+        def real_pause(*, drain):
+            entered.set()
+            return namespace["pause"](worker, drain=drain)
+
+        worker.pause = real_pause
+        policy = DrainBeforePublication(worker)
+        returned = threading.Event()
+        results = []
+
+        def publication_pause():
+            results.append(policy.pause(drain=False))
+            returned.set()
+
+        thread = threading.Thread(target=publication_pause, daemon=True)
+        thread.start()
+        try:
+            self.assertTrue(entered.wait(1))
+            self.assertFalse(returned.wait(0.05))
+        finally:
+            with worker.condition:
+                worker.active = 0
+                worker.condition.notify_all()
+            thread.join(timeout=1)
+        self.assertFalse(thread.is_alive())
+        self.assertEqual(results, [False])
+        self.assertTrue(policy.pause(drain=False))
+        worker.error = RuntimeError("generation failed")
+        with self.assertRaisesRegex(RuntimeError, "generation failed"):
+            policy.pause(drain=False)
+
     def test_mixed_versions_use_oldest_prefix(self):
         self.assertEqual(policy_age(["2", "3"], 3), 1)
         self.assertEqual(policy_age(["3"], 3), 0)
@@ -194,6 +269,19 @@ class ConfigurationTests(unittest.TestCase):
         sync = training_args(args, Path("/run"))
         args.mode = "fully_async"
         asynchronous = training_args(args, Path("/run"))
+        args.mode = "bounded_async"
+        bounded = training_args(args, Path("/run"))
+        self.assertEqual(
+            bounded[-2:],
+            [
+                "--data-source-path",
+                "distillation.data_source.CompleteResponseDataSource",
+            ],
+        )
+        self.assertEqual(
+            [(a, b) for a, b in zip(asynchronous, bounded[:-2], strict=True) if a != b],
+            [("distillation.hooks.fully_async", "distillation.hooks.bounded_async")],
+        )
         changes = [(a, b) for a, b in zip(sync, asynchronous, strict=True) if a != b]
         self.assertEqual(
             changes,
@@ -209,6 +297,8 @@ class ConfigurationTests(unittest.TestCase):
         self.assertIn("--untie-embeddings-and-output-weights", sync)
         self.assertNotIn("--use-rollout-logprobs", sync)
         self.assertEqual(sync[sync.index("--num-gpus-per-node") + 1], "4")
+        self.assertEqual(sync[sync.index("--flush-cache-interval") + 1], "1")
+        self.assertEqual(sync[sync.index("--sglang-server-concurrency") + 1], "2")
 
     def test_bad_lag_fails_before_io(self):
         args = SimpleNamespace(

@@ -30,10 +30,13 @@ The study must establish that distillation improves the student and whether the
 shortcuts preserve that benefit. Async stability and actual distributed Slime
 training still need evidence.
 
-At the user's checkpoint, both development baselines are complete, but the
-two-node Ray startup still fails before model loading. No experiment jobs remain
-active or queued. Hold further submissions until the checkpoint is reviewed;
-see the [shareable progress report](experiments/policy-distillation/REPORT.md).
+The user has authorized separate execution checks for
+[A, B and C](experiments/policy-distillation/README.md#concrete-comparisons), followed
+by separate measurements. The previous checkpoint hold is lifted for this bounded
+validation. Ray startup remains the shared blocker; diagnose it on allocated CPUs
+before another GPU attempt. B now has a proposed draining data-source adapter and
+single-version enforcement, pending tests. Keep checkpoints and reports separate;
+do not start a sustained learning run merely because smoke checks pass.
 
 ## Markdown guidance final-score comparison
 

@@ -67,15 +67,16 @@ from our adapter and additional work needed for a particular experimental policy
 
 ### Concrete comparisons
 
-**Proposed first comparison: A versus B.** C–E are possible follow-ups, not an
-exhaustive matrix or an agreed run schedule. None has produced training results;
-only the frozen-model baselines have completed. See the [checkpoint report](REPORT.md).
+**Selected for execution validation: A, B and C, as separate experiments.**
+Start with bounded smoke checks, then measure learning quality separately once
+execution works. D–E remain deferred. None has produced training results;
+the frozen-model baselines have completed. See the [checkpoint report](REPORT.md).
 
 | Condition | Execution and permitted lag | Weights within one response | Question / comparison | Support and current status |
 | --- | --- | --- | --- | --- |
 | **A · Synchronous reference** | Collect → train → publish; no policy lag. Generation and scoring may run concurrently within collection. | One version throughout. | Does the reference implementation improve student quality? | Built-in Slime path. Smoke attempts stopped at startup, before training. |
-| **B · Bounded overlap, complete responses** | Generate and score while training; at most one publication of lag. | Finish with original weights before switching versions. | **B vs A:** does overlap with stale responses preserve quality? | Slime supplies overlap and a drain primitive; our adapter supplies the lag check. Enforcing the response boundary still needs integration and validation. Proposed first async condition; not run. |
-| **C · Mid-response update, rebuilt cache** | Same bounded-overlap and lag settings as B. | Pause, update, rebuild the prefix's KV cache, then continue; tokens can span versions. | **C vs B:** what changes when unfinished responses can switch policy? | Slime's built-in abort/flush/requeue path for flat responses; matches our current async configuration. Not run; candidate follow-up. |
+| **B · Bounded overlap, complete responses** | Generate and score while training; at most one publication of lag. | Finish with original weights before switching versions. | **B vs A:** does overlap with stale responses preserve quality? | Slime supplies overlap and a drain primitive; the project data-source adapter now requests draining before publication and rejects mixed-version responses. Selected; integration unvalidated. |
+| **C · Mid-response update, rebuilt cache** | Same bounded-overlap and lag settings as B. | Pause, update, rebuild the prefix's KV cache, then continue; tokens can span versions. | **C vs B:** what changes when unfinished responses can switch policy? | Slime's built-in abort/flush/requeue path for flat responses. Selected; not run. |
 | **D · Mid-response update, retained cache** | Same bounded-overlap and lag settings as C. | Pause, update, continue using KV state computed with older weights. | **D vs C:** is retaining old cache an acceptable additional shortcut? | Slime option, requiring compatible SGLang and separate serving/training GPUs. Not selected by our launcher; deferred. |
 | **E · More work ahead** | Increase the queue capacity and permitted lag relative to B; values remain to be chosen. | Keep one version per response, as in B. | **E vs B:** is a more aggressive overlap regime still acceptable? | Slime has configurable prefetch; our launcher fixes its factor to 1. Needs configuration changes and B's response-boundary work; deferred. |
 
@@ -107,15 +108,25 @@ Updates to serving weights must happen at a safe inference boundary. Training a
 separate student copy while generation continues does not itself change the
 weights serving an unfinished response.
 
-The proposed starting comparison is **round-synchronous versus bounded overlap,
-with one student version per response in both**. First ask whether student quality
-is preserved; investigate individual mechanisms only if results warrant it.
+### Separate execution checks and measurements
 
-**Implementation gap:** the current one-publication lag check does not enforce
-one version per response. The pinned async path can retain interrupted partial
-responses and resume them after a weight update. That boundary must be enforced
-and validated before treating the proposed first comparison as implemented.
-Rebuilding the cache alone does not remove the mixed-version token history.
+Each condition has its own manifest, output directory, checkpoint and report:
+[A](A/REPORT.md), [B](B/REPORT.md), and [C](C/REPORT.md). Start each from the same
+original student checkpoint with matched prompts, seed, objective and training
+budget. Do not train B from A's output or pool attempts across conditions.
+
+The initial smoke check targets three updates and a saved checkpoint, with finite
+scores, loss and gradients, and valid policy versions. A/B must reject mixed-version
+responses; C records their count. A C run with none has not exercised mid-response
+updates. Existing coarse timings and version counts suffice initially; no detailed
+profiling is added. Smoke success is execution evidence, not learning quality.
+
+All three use serving concurrency 2 per engine and prefetch factor 1 for this
+validation, reduced from the earlier startup attempts to limit queued work under
+the one-publication lag bound. Queue capacity is not itself a freshness guarantee:
+the adapter still fails on excessive lag. B's drain operation and strict
+single-version check need runtime validation; rebuilding the cache in C does not
+remove its mixed-version token history.
 
 ## Current context
 

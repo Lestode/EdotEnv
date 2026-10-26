@@ -11,6 +11,7 @@ from pathlib import Path
 from distillation.preflight import ROOT, fingerprint, verify_models
 
 SLIME_REVISION = "18868a79b0b083a093798a94ed0f8cb4f71b9c14"
+CONDITIONS = {"synchronous": "A", "bounded_async": "B", "fully_async": "C"}
 
 
 def serving_config(student, teacher):
@@ -43,7 +44,7 @@ def serving_config(student, teacher):
 
 
 def training_args(args, output):
-    return [
+    command = [
         "--rollout-session-id",
         str(output),
         "--hf-checkpoint",
@@ -106,8 +107,10 @@ def training_args(args, output):
         "--sglang-config",
         str(output / "serving.json"),
         "--sglang-server-concurrency",
-        "4",
+        "2",
         "--fully-async-group-prefetch-factor",
+        "1",
+        "--flush-cache-interval",
         "1",
         "--rollout-data-transport",
         "object-store",
@@ -192,6 +195,14 @@ def training_args(args, output):
         "--save-debug-rollout-data",
         str(output / "rollouts/{rollout_id}.pt"),
     ]
+    if args.mode == "bounded_async":
+        command.extend(
+            [
+                "--data-source-path",
+                "distillation.data_source.CompleteResponseDataSource",
+            ]
+        )
+    return command
 
 
 def validate_options(args):
@@ -222,9 +233,7 @@ def main():
     parser.add_argument(
         "--output", type=Path, required=True, help="New private shared directory"
     )
-    parser.add_argument(
-        "--mode", choices=["synchronous", "fully_async"], default="synchronous"
-    )
+    parser.add_argument("--mode", choices=list(CONDITIONS), default="synchronous")
     parser.add_argument("--max-policy-lag", type=int)
     parser.add_argument("--rollouts", type=int, default=3)
     parser.add_argument("--response-tokens", type=int, default=512)
@@ -279,6 +288,10 @@ def main():
             ["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True
         ).strip(),
         "mode": args.mode,
+        "condition": CONDITIONS[args.mode],
+        "response_policy": (
+            "abort_flush_resume" if args.mode == "fully_async" else "complete_response"
+        ),
         "max_policy_lag": args.max_policy_lag,
         "data_sha256": fingerprint(args.data),
         "command": command,

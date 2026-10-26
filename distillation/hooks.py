@@ -79,7 +79,19 @@ def post_process_rewards(args, samples, **kwargs):
     return [0.0] * len(samples), [0.0] * len(samples)
 
 
-def _generate(args, rollout_id, data_buffer, *, asynchronous):
+def validate_sample_policy(versions, current_version, max_lag, *, complete_response):
+    age = policy_age(versions, current_version)
+    mixed = len({int(v) for v in versions}) > 1
+    if complete_response and mixed:
+        raise ValueError(
+            "Response spans policy versions in a complete-response condition"
+        )
+    if age > max_lag:
+        raise ValueError(f"Policy age {age} exceeds limit {max_lag}")
+    return age, mixed
+
+
+def _generate(args, rollout_id, data_buffer, *, asynchronous, complete_response=True):
     if asynchronous:
         from slime.rollout.fully_async_rollout import (
             generate_rollout_fully_async as generate,
@@ -93,12 +105,15 @@ def _generate(args, rollout_id, data_buffer, *, asynchronous):
     # This launcher starts fresh, without recovery or skipped publications.
     current_version = rollout_id + 1
     ages = []
+    mixed_responses = 0
     for sample in iter_samples(result.samples):
-        age = policy_age(sample.weight_versions, current_version)
-        if age > args.distillation_max_policy_lag:
-            raise ValueError(
-                f"Policy age {age} exceeds limit {args.distillation_max_policy_lag}"
-            )
+        age, mixed = validate_sample_policy(
+            sample.weight_versions,
+            current_version,
+            args.distillation_max_policy_lag,
+            complete_response=complete_response,
+        )
+        mixed_responses += mixed
         if (
             not sample.rollout_log_probs
             or len(sample.rollout_log_probs) != sample.response_length
@@ -115,6 +130,9 @@ def _generate(args, rollout_id, data_buffer, *, asynchronous):
             "distillation/policy_age_max": max(ages),
             "distillation/policy_age_mean": sum(ages) / len(ages),
             "distillation/training_policy_version": current_version,
+            "distillation/mixed_version_responses": mixed_responses,
+            "distillation/response_count": len(ages),
+            "distillation/stale_responses": sum(age > 0 for age in ages),
         }
     )
     return result
@@ -129,4 +147,16 @@ def synchronous(args, rollout_id, data_buffer, evaluation=False):
 def fully_async(args, rollout_id, data_buffer, evaluation=False):
     if evaluation:
         raise ValueError("Use the separate frozen-checkpoint evaluator")
+    return _generate(
+        args, rollout_id, data_buffer, asynchronous=True, complete_response=False
+    )
+
+
+def bounded_async(args, rollout_id, data_buffer, evaluation=False):
+    if evaluation:
+        raise ValueError("Use the separate frozen-checkpoint evaluator")
+    from distillation.data_source import CompleteResponseDataSource
+
+    if not isinstance(data_buffer, CompleteResponseDataSource):
+        raise ValueError("Condition B requires the draining data source")
     return _generate(args, rollout_id, data_buffer, asynchronous=True)

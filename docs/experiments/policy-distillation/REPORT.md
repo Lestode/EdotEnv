@@ -4,8 +4,14 @@
 
 **Both frozen-model baselines completed. End-to-end training remains blocked at
 distributed startup.** No optimizer updates have run, neither sync nor async
-training has passed, and no full run has started. Further submissions are on hold
-for the user's checkpoint; no jobs for this experiment remain running or queued.
+training has passed, and no full run has started. At this checkpoint submissions
+were paused and no jobs for this experiment remained running or queued.
+
+The user subsequently authorized separate A/B/C execution checks. Their current
+records are [A](A/REPORT.md), [B](B/REPORT.md), and [C](C/REPORT.md); the measured
+results below remain unchanged. The renewed work is preparing B's response-boundary
+enforcement and regression checks, with cluster authentication pending before
+diagnosing Ray startup on allocated CPUs.
 
 ## Question and setup
 
