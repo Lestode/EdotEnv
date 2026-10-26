@@ -19,10 +19,14 @@ cd "$PROJECT_ROOT"
 for script in scripts/distillation*.sh scripts/init-distillation*.sh scripts/distillation*.slurm; do
     bash -n "$script"
 done
-bash scripts/init-distillation-runtime.sh
+bash scripts/init-distillation-euler.sh
+export RUNTIME_ENV="$RUNTIME_ROOT/venv"
+export APPTAINER_BIND="$RUNTIME_ENV${APPTAINER_BIND:+,$APPTAINER_BIND}"
+export APPTAINERENV_PREPEND_PATH="$RUNTIME_ENV/bin"
+module load eth_proxy
 mkdir -m 700 "$MODEL_ROOT"
 export HF_HOME="$MODEL_ROOT/cache"
-apptainer exec --bind "$PROJECT_ROOT,$MODEL_ROOT" "$RUNTIME_ROOT/rootfs" \
+apptainer exec --bind "$PROJECT_ROOT,$MODEL_ROOT" "$RUNTIME_ROOT/base.sif" \
     python - <<'PY'
 import json
 import os
@@ -40,7 +44,7 @@ for role, spec in lock.items():
         allow_patterns=["*.json", "*.safetensors", "*.model", "*.txt"],
     )
 PY
-apptainer exec --bind "$PROJECT_ROOT,$MODEL_ROOT" "$RUNTIME_ROOT/rootfs" \
+apptainer exec --bind "$PROJECT_ROOT,$MODEL_ROOT" "$RUNTIME_ROOT/base.sif" \
     python -m distillation.preflight --student "$MODEL_ROOT/student" \
     --teacher "$MODEL_ROOT/teacher" > "$MODEL_ROOT/preflight.json"
 touch "$RUNTIME_ROOT/preparation-completed"

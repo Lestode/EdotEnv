@@ -8,6 +8,10 @@
 #SBATCH --time=00:05:00
 
 set -euo pipefail
+: "${RUNTIME_ENV:?Prepared external Euler virtual environment}"
+test -f "$(dirname "$RUNTIME_ENV")/preparation-completed"
+export APPTAINER_BIND="$RUNTIME_ENV${APPTAINER_BIND:+,$APPTAINER_BIND}"
+export APPTAINERENV_PREPEND_PATH="$RUNTIME_ENV/bin"
 umask 077
 : "${PROJECT_ROOT:?Shared initialized checkout}"
 : "${RUNTIME_IMAGE:?Prepared runtime}"

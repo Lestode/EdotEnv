@@ -25,3 +25,15 @@ files older than 15 days; retain important evidence locally.
 
 Condition reports: [A](A/REPORT.md), [B](B/REPORT.md), [C](C/REPORT.md).
 Submission IDs and outcomes belong in the [journal](../LOG.md).
+
+The first preparation job failed connecting directly to Docker Hub. All dependent
+Ray/A/B/C jobs were cancelled before allocation, consuming no GPU time. The
+user's sparse adapters workflow confirms `eth_proxy`, uv environments, per-CPU
+memory and automatic partition selection. Its CUDA 12.8 stack is not substituted
+for Slime's pinned CUDA 13 runtime. The revised preparation loads the proxy and
+uses an immutable public image with an external uv environment; this remains
+unvalidated. This follows [Euler's container guidance](https://docs.hpc.ethz.ch/software/apptainer/)
+without building a custom image on Euler. The inspected account lacked the
+container-access group; the supported `get-access` workflow confirmed successful
+addition and warned that propagation can take up to 90 minutes. Actual container
+execution and the revised runtime remain unvalidated.

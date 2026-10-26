@@ -9,6 +9,10 @@
 #SBATCH --time=00:30:00
 
 set -euo pipefail
+: "${RUNTIME_ENV:?Prepared external Euler virtual environment}"
+test -f "$(dirname "$RUNTIME_ENV")/preparation-completed"
+export APPTAINER_BIND="$RUNTIME_ENV${APPTAINER_BIND:+,$APPTAINER_BIND}"
+export APPTAINERENV_PREPEND_PATH="$RUNTIME_ENV/bin"
 : "${PROJECT_ROOT:?Shared initialized checkout}"
 # Euler provides Apptainer directly; do not load Komondor's module.
 export APPTAINER_MODULE=

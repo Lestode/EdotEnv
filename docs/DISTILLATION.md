@@ -109,7 +109,12 @@ kills the recorded Ray step so a server shutdown error cannot retain the allocat
 
 Euler uses per-CPU memory requests and its installed Apptainer, rather than the
 Komondor module. Its [CPU preparation job](../scripts/distillation-euler-prepare.slurm)
-builds the pinned runtime with uv and fetches the locked models. The
+pulls the pinned public image without modifying it, installs A100 additions in
+an external uv environment, and fetches the locked models. It loads `eth_proxy`
+for downloads. Container execution requires Euler Apptainer access. Set
+`RUNTIME_IMAGE=$RUNTIME_ROOT/base.sif` and `RUNTIME_ENV=$RUNTIME_ROOT/venv`
+for subsequent Euler jobs; the latter is bound into the container and placed
+first on its executable path. The environment must pass preparation before use. The
 [two-node CPU Ray check](../scripts/distillation-euler-ray.slurm) preserves startup
 logs and must pass before GPU smoke jobs. These cluster-specific scripts share
 [the execution body](../scripts/distillation-run.sh); they do not change A/B/C semantics.

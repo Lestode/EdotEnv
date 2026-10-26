@@ -8,6 +8,14 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-26 · euler-preparation-a1 · failed
+
+- Question: Can Euler stage the runtime before A/B/C smoke checks?
+- Setup: Revision `da5e7dc`, CPU preparation followed by dependency-gated Ray and A/B/C jobs.
+- Result: Preparation `18476549` failed reaching Docker Hub after seven seconds. Ray `18476572` and A/B/C `18476616`, `18476617`, `18476620` were cancelled on failed dependencies before allocation. No training ran.
+- Resources: Eight allocated CPUs for seven seconds; zero GPU allocation time.
+- Evidence: Private Euler scratch `edotenv/abc-20261026/prepare-18476549.log` and Slurm accounting. Proxy, runtime preparation and container-access gaps are tracked in the [Euler report](policy-distillation/EULER.md).
+
 ### 2026-10-26 · euler-inventory · unavailable
 
 - Question: Can Euler immediately allocate eight GPUs across two nodes?
