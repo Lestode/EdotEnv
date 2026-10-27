@@ -8,6 +8,14 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · euler-preparation-a4 · submitted
+
+- Question: Does a writable compiler cache resolve the observed FlashAttention build failure?
+- Setup: Source `930c270`, new `runtime-a4`/`models-a4`; reuse the completed a3 SIF after provenance/inspection checks, with compiler cache and temporary files on node-local storage.
+- Result: Targeted CPU job `18546450` submitted. No runtime, model, Ray or GPU success claimed.
+- Resources: Eight CPUs, 64 GiB RAM, 50 GB local scratch, one-hour cap; zero GPUs requested.
+- Evidence: Private Euler scratch `edotenv/abc-20261026/prepare-a4-18546450.log` and `submissions.txt`.
+
 ### 2026-10-27 · euler-preparation-a3 · failed
 
 - Question: Does node-local extraction allow runtime preparation to complete?
