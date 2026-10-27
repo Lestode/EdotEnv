@@ -34,7 +34,8 @@ The user has authorized separate execution checks for
 [A, B and C](experiments/policy-distillation/README.md#concrete-comparisons), followed
 by separate measurements. The previous checkpoint hold is lifted for this bounded
 validation. The two-node CPU Ray check passed on Komondor; synchronous GPU smoke
-job `14672502` is running, with B/C gated on its outcome. GPU runtime integration
+job `14672502` is running; the user then authorized concurrent B/C smoke jobs
+`14672807` and `14672808`, with separate results and the same per-job cap. GPU runtime integration
 and actual training updates remain unvalidated. B's draining worker adapter and single-version
 enforcement passed CPU regressions in CI; full runtime integration remains
 unvalidated. The user switched validation back to Komondor on 27 October;

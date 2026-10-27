@@ -8,11 +8,19 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · komondor-B-a1 / komondor-C-a1 · submitted
+
+- Question: Do bounded complete-response overlap (B) and abort/flush/resume overlap (C) execute their three-update smoke workloads?
+- Setup: Same source `bf6125d`, runtime, models and batch settings as A. The user explicitly authorized concurrent A/B/C execution, superseding the sequential launch plan. Results remain separate.
+- Result: B `14672807` and C `14672808` submitted independently; no learning or implementation success claimed.
+- Resources: Eight GPUs and a 30-minute cap per job; with A, up to 24 GPUs concurrently and 12 GPU-hours total if all reach their caps.
+- Evidence: Private project `edotenv/abc-komondor-20261027/B-a1`, `C-a1` and `submissions.txt`.
+
 ### 2026-10-27 · komondor-A-a1 · running
 
 - Question: Does synchronous distillation complete its three-update smoke workload after the two-node CPU Ray gate passed?
 - Setup: Source `bf6125d`, pinned Slime and existing validated Komondor runtime/models; fresh output under `edotenv/abc-komondor-20261027/A-a1`. Ray startup logs are retained before cleanup.
-- Result: Job `14672502` is running and beginning its collective probe. Training is not yet validated; B/C remain gated on success.
+- Result: Job `14672502` is running and beginning its collective probe. Training is not yet validated. B/C were subsequently authorized to run concurrently.
 - Resources: Eight A100 GPUs across two nodes, 30-minute cap (at most four GPU-hours).
 - Evidence: Private project `edotenv/abc-komondor-20261027/`, including `submissions.txt`, per-stage logs and eventual manifest.
 
