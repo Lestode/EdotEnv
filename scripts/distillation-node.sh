@@ -20,14 +20,24 @@ nvidia-smi topo -m > "$RUN_ROOT/topology-${SLURM_NODEID}.txt" 2>&1 || true
         cat /proc/net/route
     fi
 } > "$RUN_ROOT/network-${SLURM_NODEID}.txt" 2>&1 || true
+sampler_pid=""
+if [ "${GPU_SAMPLE_SECONDS:-0}" != 0 ]; then
+    nvidia-smi --query-gpu=timestamp,uuid,index,utilization.gpu,utilization.memory,memory.used,memory.total,power.draw,clocks.sm,clocks.mem \
+        --format=csv --loop="${GPU_SAMPLE_SECONDS}" > "$RUN_ROOT/gpu-${SLURM_NODEID}.csv" 2> "$RUN_ROOT/gpu-${SLURM_NODEID}.err" &
+    sampler_pid=$!
+fi
+cleanup_sampler() {
+    if [ -n "$sampler_pid" ]; then kill "$sampler_pid" 2>/dev/null || true; fi
+}
+trap cleanup_sampler EXIT
 if [ "$SLURM_NODEID" = 0 ]; then
-    exec ray start --head --node-ip-address="$RAY_HEAD_IP" --port="$RAY_PORT" \
+    ray start --head --node-ip-address="$RAY_HEAD_IP" --port="$RAY_PORT" \
         --num-gpus=4 --num-cpus=16 --temp-dir="$TMPDIR/ray" --disable-usage-stats --block
 else
     for attempt in $(seq 1 60); do
         if (echo > "/dev/tcp/$RAY_HEAD_IP/$RAY_PORT") 2>/dev/null; then break; fi
         sleep 2
     done
-    exec ray start --address="$RAY_ADDRESS" --node-ip-address="$ip" \
+    ray start --address="$RAY_ADDRESS" --node-ip-address="$ip" \
         --num-gpus=4 --num-cpus=16 --disable-usage-stats --block
 fi

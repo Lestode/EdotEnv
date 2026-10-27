@@ -1,5 +1,6 @@
 """Strict teacher scoring and bounded policy age through Slime's public hooks."""
 
+import asyncio
 import math
 import time
 
@@ -36,6 +37,21 @@ def policy_age(versions, current_version):
 
 
 async def score_teacher(args, sample, **kwargs):
+    # One semaphore per event loop; concurrent rollout requests share this bound.
+    loop = asyncio.get_running_loop()
+    limit = getattr(args, "distillation_teacher_concurrency", 2)
+    if getattr(args, "_distillation_teacher_loop", None) is not loop:
+        args._distillation_teacher_loop = loop
+        args._distillation_teacher_gate = asyncio.Semaphore(limit)
+    queued = time.monotonic()
+    async with args._distillation_teacher_gate:
+        queue_seconds = time.monotonic() - queued
+        result = await _score_teacher(args, sample, **kwargs)
+    result["teacher_queue_seconds"] = queue_seconds
+    return result
+
+
+async def _score_teacher(args, sample, **kwargs):
     import aiohttp
 
     routers = getattr(args, "sglang_model_routers", {})
@@ -104,11 +120,19 @@ def _generate(args, rollout_id, data_buffer, *, asynchronous, complete_response=
         from slime.rollout.sglang_rollout import generate_rollout as generate
     from slime.rollout.base_types import call_rollout_fn, iter_samples
 
+    worker = getattr(data_buffer, "consumers", {}).get("fully_async")
+    queue_before = worker.queue_size() if worker is not None else 0
+    started = time.monotonic()
     result = call_rollout_fn(generate, args, rollout_id, data_buffer, evaluation=False)
+    collection_seconds = time.monotonic() - started
+    worker = getattr(data_buffer, "consumers", {}).get("fully_async")
+    queue_after = worker.queue_size() if worker is not None else 0
     # The pinned train.py publishes once at startup and after every rollout.
     # This launcher starts fresh, without recovery or skipped publications.
     current_version = rollout_id + 1
     ages = []
+    teacher_seconds = []
+    teacher_queue_seconds = []
     mixed_responses = 0
     for sample in iter_samples(result.samples):
         age, mixed = validate_sample_policy(
@@ -126,11 +150,19 @@ def _generate(args, rollout_id, data_buffer, *, asynchronous, complete_response=
         if any(not math.isfinite(x) for x in sample.rollout_log_probs):
             raise ValueError("Nonfinite sampling log probability")
         ages.append(age)
+        teacher_seconds.append(sample.reward["teacher_seconds"])
+        teacher_queue_seconds.append(sample.reward.get("teacher_queue_seconds", 0.0))
     if not ages:
         raise ValueError("No generated samples")
     result.metrics = dict(result.metrics or {})
     result.metrics.update(
         {
+            "distillation/queue_ready_before": queue_before,
+            "distillation/queue_ready_after": queue_after,
+            "distillation/collection_seconds": collection_seconds,
+            "distillation/teacher_request_seconds_sum": sum(teacher_seconds),
+            "distillation/teacher_request_seconds_max": max(teacher_seconds),
+            "distillation/teacher_queue_seconds_sum": sum(teacher_queue_seconds),
             "distillation/policy_age_max": max(ages),
             "distillation/policy_age_mean": sum(ages) / len(ages),
             "distillation/training_policy_version": current_version,

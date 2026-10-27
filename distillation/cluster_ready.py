@@ -20,12 +20,12 @@ def main():
     try:
         while time.monotonic() < deadline:
             nodes = [node for node in ray.nodes() if node["Alive"]]
-            if len(nodes) == 2 and all(
+            if len(nodes) == int(os.environ.get("DISTILLATION_NODES", "2")) and all(
                 node["Resources"].get("GPU") == 4 for node in nodes
             ):
                 return
             time.sleep(2)
-        raise TimeoutError("Expected exactly two Ray nodes with four GPUs each")
+        raise TimeoutError("Expected requested Ray node count with four GPUs each")
     finally:
         ray.shutdown()
 

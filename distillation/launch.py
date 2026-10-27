@@ -14,7 +14,8 @@ SLIME_REVISION = "18868a79b0b083a093798a94ed0f8cb4f71b9c14"
 CONDITIONS = {"synchronous": "A", "bounded_async": "B", "fully_async": "C"}
 
 
-def serving_config(student, teacher):
+def serving_config(student, teacher, profile="smoke"):
+    pilot = profile == "7b32b"
     return {
         "sglang": [
             {
@@ -24,8 +25,8 @@ def serving_config(student, teacher):
                 "server_groups": [
                     {
                         "worker_type": "regular",
-                        "num_gpus": 2,
-                        "num_gpus_per_engine": 2,
+                        "num_gpus": 4 if pilot else 2,
+                        "num_gpus_per_engine": 4 if pilot and name == "teacher" else 2,
                         "overrides": {
                             "attention_backend": "triton",
                             "dtype": "bfloat16",
@@ -197,6 +198,24 @@ def training_args(args, output):
         "--save-debug-rollout-data",
         str(output / "rollouts/{rollout_id}.pt"),
     ]
+    if getattr(args, "profile", "smoke") == "7b32b":
+        overrides = {
+            "--hidden-size": "3584",
+            "--ffn-hidden-size": "18944",
+            "--num-attention-heads": "28",
+            "--num-query-groups": "4",
+            "--vocab-size": "152064",
+            "--rollout-num-gpus": "8",
+            "--tensor-model-parallel-size": "4",
+            "--sglang-server-concurrency": "8",
+            "--rollout-batch-size": "64",
+            "--global-batch-size": "64",
+        }
+        if getattr(args, "save_interval", None):
+            overrides["--save-interval"] = str(args.save_interval)
+        command += ["--save-hf", str(output / "hf-checkpoints" / "{}")]
+        for option, value in overrides.items():
+            command[command.index(option) + 1] = value
     return command
 
 
@@ -233,6 +252,8 @@ def main():
     parser.add_argument("--rollouts", type=int, default=3)
     parser.add_argument("--response-tokens", type=int, default=512)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--save-interval", type=int, default=10)
+    parser.add_argument("--profile", choices=["smoke", "7b32b"], default="smoke")
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     for key in ("student", "teacher", "data", "output"):
@@ -240,7 +261,12 @@ def main():
     if args.max_policy_lag is None:
         args.max_policy_lag = 0 if args.mode == "synchronous" else 1
     validate_options(args)
-    models = verify_models(args.student, args.teacher)
+    model_lock = (
+        ROOT
+        / "configs/distillation"
+        / ("models-7b32b.json" if args.profile == "7b32b" else "models.json")
+    )
+    models = verify_models(args.student, args.teacher, model_lock)
     revision = subprocess.check_output(
         ["git", "-C", str(ROOT / "slime"), "rev-parse", "HEAD"], text=True
     ).strip()
@@ -263,10 +289,17 @@ def main():
     os.umask(0o077)
     args.output.mkdir(parents=True, exist_ok=False)
     (args.output / "serving.json").write_text(
-        json.dumps(serving_config(args.student, args.teacher), indent=2) + "\n"
+        json.dumps(serving_config(args.student, args.teacher, args.profile), indent=2)
+        + "\n"
     )
     (args.output / "hooks.json").write_text(
-        json.dumps({"distillation_max_policy_lag": args.max_policy_lag}) + "\n"
+        json.dumps(
+            {
+                "distillation_max_policy_lag": args.max_policy_lag,
+                "distillation_teacher_concurrency": 8 if args.profile == "7b32b" else 2,
+            }
+        )
+        + "\n"
     )
     command = [
         sys.executable,
@@ -275,6 +308,7 @@ def main():
     ]
     manifest = {
         "models": models,
+        "profile": args.profile,
         "slime_revision": revision,
         "adapter_sha256": {
             p.name: fingerprint(p) for p in sorted((ROOT / "distillation").glob("*.py"))

@@ -9,6 +9,11 @@ umask 077
 : "${RUNTIME_IMAGE:?Validated A100 Slime Apptainer image}"
 : "${SLURM_JOB_ID:?Submit through Slurm}"
 MODE=${MODE:-synchronous}
+DISTILLATION_NODES=${SLURM_JOB_NUM_NODES:-2}
+export DISTILLATION_NODES
+export DISTILLATION_PROFILE=${DISTILLATION_PROFILE:-smoke}
+export ROLLOUTS=${ROLLOUTS:-3}
+export RESPONSE_TOKENS=${RESPONSE_TOKENS:-512}
 if [ -n "${APPTAINER_MODULE:-}" ]; then module load "$APPTAINER_MODULE"; fi
 command -v apptainer >/dev/null
 mkdir -m 700 "$RUN_ROOT"
@@ -31,13 +36,13 @@ export PYTHONPATH="$PROJECT_ROOT:$PROJECT_ROOT/slime:${PYTHONPATH:-}"
 export CUDA_DEVICE_MAX_CONNECTIONS=1
 
 # Exercise the actual candidate runtime's inter-node collective before training.
-srun --ntasks=2 --ntasks-per-node=1 --kill-on-bad-exit=1 \
+srun --ntasks="$DISTILLATION_NODES" --ntasks-per-node=1 --kill-on-bad-exit=1 \
     apptainer exec --nv --bind "$PROJECT_ROOT,$RUN_ROOT" "$RUNTIME_IMAGE" \
     bash -c '
         set -euo pipefail
         cd "$PROJECT_ROOT"
         source scripts/distillation-runtime-env.sh
-        python -m torch.distributed.run --nnodes=2 --nproc-per-node=4 \
+        python -m torch.distributed.run --nnodes="$DISTILLATION_NODES" --nproc-per-node=4 \
             --node-rank="$SLURM_NODEID" --master-addr="$RAY_HEAD_IP" --master-port=16400 \
             -m distillation.collective_probe
     ' > "$RUN_ROOT/collective.log" 2>&1
@@ -45,7 +50,7 @@ srun --ntasks=2 --ntasks-per-node=1 --kill-on-bad-exit=1 \
 # Each Slurm step owns its processes; never stop another job's Ray instance.
 pids=()
 cleanup() {
-    timeout 20 srun --overlap --ntasks=2 --ntasks-per-node=1 bash -c '
+    timeout 20 srun --overlap --ntasks="$DISTILLATION_NODES" --ntasks-per-node=1 bash -c '
         source_logs="/tmp/edot-${SLURM_JOB_ID}/ray/session_latest/logs"
         if [ -d "$source_logs" ]; then
             cp -R "$source_logs" "$RUN_ROOT/ray-logs-${SLURM_NODEID}"
@@ -64,7 +69,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-srun --overlap --ntasks=2 --ntasks-per-node=1 --kill-on-bad-exit=1 \
+srun --overlap --ntasks="$DISTILLATION_NODES" --ntasks-per-node=1 --kill-on-bad-exit=1 \
     apptainer exec --nv --bind "$PROJECT_ROOT,$MODEL_ROOT,$RUN_ROOT,$(dirname "$TRAIN_DATA")" \
     "$RUNTIME_IMAGE" bash "$PROJECT_ROOT/scripts/distillation-node.sh" \
     > "$RUN_ROOT/ray.log" 2>&1 &
@@ -79,5 +84,7 @@ srun --overlap --nodes=1 --ntasks=1 --nodelist="$HEAD_NODE" \
         source scripts/distillation-runtime-env.sh
         python -m distillation.cluster_ready
         python -m distillation.launch --student "$MODEL_ROOT/student" --teacher "$MODEL_ROOT/teacher" \
-            --data "$TRAIN_DATA" --output "$RUN_ROOT/train" --mode "$MODE" --execute
+            --data "$TRAIN_DATA" --output "$RUN_ROOT/train" --mode "$MODE" \
+            --profile "$DISTILLATION_PROFILE" --rollouts "$ROLLOUTS" \
+            --response-tokens "$RESPONSE_TOKENS" --execute
     ' > "$RUN_ROOT/driver.log" 2>&1

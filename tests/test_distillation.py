@@ -241,6 +241,34 @@ class PolicyAgeTests(unittest.TestCase):
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_larger_profile_resource_layout(self):
+        args = SimpleNamespace(
+            student=Path("/student"),
+            teacher=Path("/teacher"),
+            data=Path("/data"),
+            mode="bounded_async",
+            rollouts=20,
+            response_tokens=2048,
+            seed=42,
+            profile="7b32b",
+        )
+        command = training_args(args, Path("/run"))
+        for option, expected in [
+            ("--hidden-size", "3584"),
+            ("--num-attention-heads", "28"),
+            ("--tensor-model-parallel-size", "4"),
+            ("--global-batch-size", "64"),
+            ("--rollout-num-gpus", "8"),
+            ("--sglang-server-concurrency", "8"),
+        ]:
+            self.assertEqual(command[command.index(option) + 1], expected)
+        config = serving_config(args.student, args.teacher, args.profile)["sglang"]
+        self.assertEqual([m["server_groups"][0]["num_gpus"] for m in config], [4, 4])
+        self.assertEqual(
+            [m["server_groups"][0]["num_gpus_per_engine"] for m in config], [2, 4]
+        )
+        self.assertEqual([m["update_weights"] for m in config], [True, False])
+
     def test_real_slime_reward_accessor_and_custom_config_contract(self):
         # Exercise the pinned accessor and configuration statements without
         # importing the GPU-only argument parser. This is a bounded contract check.
