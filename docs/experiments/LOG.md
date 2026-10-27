@@ -8,11 +8,11 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
-### 2026-10-27 · komondor-A-a2 / komondor-B-a2 / komondor-C-a2 · submitted
+### 2026-10-27 · komondor-A-a2 / komondor-B-a2 / komondor-C-a2 · A completed; B running; C queued
 
 - Question: Do the three execution policies complete training after correcting the shared reward contract?
 - Setup: Source `04f7283`, existing runtime/models, fresh separate outputs; the two-node CPU Ray gate and all 17 targeted CPU regressions passed.
-- Result: A `14673098`, B `14673099`, C `14673100` submitted concurrently as authorized. Completed optimizer updates and policy-specific invariants remain unverified.
+- Result: A `14673098` completed in 8m26s (about 1.124 GPU-hours): three finite optimizer-step metrics, checkpoint saved, 24 responses with zero reported lag and no mixed versions. B `14673099` is running; C `14673100` remains queued. No learning-quality claim. See [A report](policy-distillation/A/REPORT.md).
 - Resources: Each job has eight GPUs across two nodes and a 30-minute cap; up to 24 GPUs concurrently.
 - Evidence: Private project `edotenv/abc-komondor-20261027/`, outputs `A-a2`, `B-a2`, `C-a2`, and `submissions.txt`. Previous failures are retained.
 
