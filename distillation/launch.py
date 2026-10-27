@@ -213,7 +213,7 @@ def training_args(args, output):
         }
         if getattr(args, "save_interval", None):
             overrides["--save-interval"] = str(args.save_interval)
-        command += ["--save-hf", str(output / "hf-checkpoints" / "{}")]
+        command += ["--save-hf", str(output / "hf-checkpoints" / "{rollout_id}")]
         for option, value in overrides.items():
             command[command.index(option) + 1] = value
     return command

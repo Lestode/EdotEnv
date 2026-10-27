@@ -262,6 +262,10 @@ class ConfigurationTests(unittest.TestCase):
             ("--sglang-server-concurrency", "8"),
         ]:
             self.assertEqual(command[command.index(option) + 1], expected)
+        self.assertEqual(
+            command[command.index("--save-hf") + 1].format(rollout_id=9),
+            "/run/hf-checkpoints/9",
+        )
         config = serving_config(args.student, args.teacher, args.profile)["sglang"]
         self.assertEqual([m["server_groups"][0]["num_gpus"] for m in config], [4, 4])
         self.assertEqual(
