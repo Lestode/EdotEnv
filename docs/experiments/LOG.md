@@ -8,6 +8,14 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · euler-preparation-a3 · submitted
+
+- Question: Does node-local extraction allow runtime preparation to complete?
+- Setup: Source `6ccf09b`, new `runtime-a3`/`models-a3`; 150 GB Slurm-managed local scratch for extraction and compilation, same pinned public image and uv environment.
+- Result: CPU job `18541043` submitted after the a2 timeout. Runtime imports, models, Ray and GPU paths remain unvalidated on Euler.
+- Resources: Eight CPUs, 64 GiB RAM, two-hour cap; no GPUs requested.
+- Evidence: Private Euler scratch `edotenv/abc-20261026/prepare-a3-18541043.log` and `submissions.txt`. No further long blind retry if this attempt fails.
+
 ### 2026-10-27 · euler-preparation-a2 · failed
 
 - Question: Does the corrected Euler proxy and external uv environment permit runtime/model staging?
