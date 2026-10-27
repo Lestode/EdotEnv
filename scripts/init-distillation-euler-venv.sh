@@ -6,6 +6,11 @@ set -euo pipefail
 : "${UV_BIN:?Host uv binary bound into the container}"
 export UV_CACHE_DIR="$RUNTIME_ROOT/cache/uv"
 export TMPDIR="${RUNTIME_LOCAL_TMP:?Bound node-local build directory}"
+# The image's default compiler cache is read-only when mounted as a SIF.
+export CCACHE_DIR="$TMPDIR/ccache"
+export CCACHE_TEMPDIR="$TMPDIR/ccache-tmp"
+export CCACHE_LOGFILE="$RUNTIME_ROOT/ccache.log"
+mkdir "$CCACHE_DIR" "$CCACHE_TEMPDIR"
 "$UV_BIN" venv --python /opt/sglang/bin/python --system-site-packages "$RUNTIME_ENV"
 # The base interpreter is itself in a venv; uv may resolve its underlying Python.
 # Add the pinned stack after this venv's packages so local FA2 takes precedence.

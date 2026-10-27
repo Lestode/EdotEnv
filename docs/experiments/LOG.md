@@ -8,12 +8,12 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
-### 2026-10-27 · euler-preparation-a3 · submitted
+### 2026-10-27 · euler-preparation-a3 · failed
 
 - Question: Does node-local extraction allow runtime preparation to complete?
 - Setup: Source `6ccf09b`, new `runtime-a3`/`models-a3`; 150 GB Slurm-managed local scratch for extraction and compilation, same pinned public image and uv environment.
-- Result: CPU job `18541043` submitted after the a2 timeout. Runtime imports, models, Ray and GPU paths remain unvalidated on Euler.
-- Resources: Eight CPUs, 64 GiB RAM, two-hour cap; no GPUs requested.
+- Result: Job `18541043` produced the 13 GB SIF, then FlashAttention compilation failed because ccache attempted to write to the read-only image. Runtime imports, models, Ray and GPU paths remain unvalidated.
+- Resources: Eight CPUs, 64 GiB RAM, elapsed 22m16s, exit `1:0`; zero GPUs.
 - Evidence: Private Euler scratch `edotenv/abc-20261026/prepare-a3-18541043.log` and `submissions.txt`. No further long blind retry if this attempt fails.
 
 ### 2026-10-27 · euler-preparation-a2 · failed

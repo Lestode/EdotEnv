@@ -47,3 +47,10 @@ uses 150 GB of Slurm-managed node-local scratch and a two-hour cap. Euler's
 [storage guidance](https://docs.hpc.ethz.ch/hardware/storage/#tmp) recommends
 local storage for many small files; shared-scratch extraction is a suspected
 bottleneck, not a demonstrated root cause. Failed artifacts remain preserved.
+
+The local-scratch retry `18541043` completed the public SIF, then failed after
+22m16s compiling FlashAttention: ccache tried to write to the read-only image.
+A targeted correction moves compiler-cache writes to writable job storage and
+allows reuse of the completed image after provenance and container checks.
+This avoids repeating extraction; neither training nor runtime validation has
+yet succeeded on Euler.

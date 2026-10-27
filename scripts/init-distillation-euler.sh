@@ -20,7 +20,15 @@ df -h "$RUNTIME_LOCAL_TMP" > "$RUNTIME_ROOT/local-storage.txt"
 image=docker://slimerl/slime@sha256:6379b872c6cc2535fb8c0e073a79bb1f41e365ca4859dd308e99ba14eb87936d
 printf '%s\n' "$image" > "$RUNTIME_ROOT/base-image.txt"
 apptainer version > "$RUNTIME_ROOT/apptainer-version.txt"
-apptainer pull "$RUNTIME_ROOT/base.sif" "$image" 2>&1 | tee "$RUNTIME_ROOT/pull.log"
+if [ -n "${DISTILLATION_BASE_SIF:-}" ]; then
+    base_sif=$(realpath -e "$DISTILLATION_BASE_SIF")
+    test "$(cat "$(dirname "$base_sif")/base-image.txt")" = "$image"
+    apptainer inspect "$base_sif" > "$RUNTIME_ROOT/reused-image-inspect.txt"
+    sha256sum "$base_sif" > "$RUNTIME_ROOT/reused-image-sha256.txt"
+    ln -s "$base_sif" "$RUNTIME_ROOT/base.sif"
+else
+    apptainer pull "$RUNTIME_ROOT/base.sif" "$image" 2>&1 | tee "$RUNTIME_ROOT/pull.log"
+fi
 export RUNTIME_ENV="$RUNTIME_ROOT/venv"
 export UV_BIN="$uv"
 apptainer exec --bind "$PROJECT_ROOT,$RUNTIME_ROOT,$RUNTIME_LOCAL_TMP,$uv:$uv:ro" \
