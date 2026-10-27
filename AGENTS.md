@@ -27,6 +27,7 @@ transit through its existing SSH setup are permitted.
 - Do not run builds, student generation, teacher scoring, or training workloads
   on greengoblin. Prepare artifacts locally and use authorized Komondor compute
   allocations for cluster execution.
+- Always check for and reuse an existing authenticated Komondor session first; follow [connection guidance](docs/KOMONDOR.md).
 - Use SSH transit settings that preserve gateway state; do not automatically
   add host keys or create persistent SSH control sockets on the gateway.
 - If an operation would require a gateway change, stop that operation, report

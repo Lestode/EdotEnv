@@ -115,8 +115,9 @@ for downloads. Container execution requires Euler Apptainer access. Set
 `RUNTIME_IMAGE=$RUNTIME_ROOT/base.sif` and `RUNTIME_ENV=$RUNTIME_ROOT/venv`
 for subsequent Euler jobs; the latter is bound into the container and placed
 first on its executable path. The environment must pass preparation before use. The
-[two-node CPU Ray check](../scripts/distillation-euler-ray.slurm) preserves startup
-logs and must pass before GPU smoke jobs. These cluster-specific scripts share
+[Euler two-node CPU Ray check](../scripts/distillation-euler-ray.slurm) and
+[Komondor counterpart](../scripts/distillation-komondor-ray.slurm) share the same
+startup diagnostic and preserve logs. This check must pass before GPU smoke jobs. These cluster-specific scripts share
 [the execution body](../scripts/distillation-run.sh); they do not change A/B/C semantics.
 
 [Smoke prompts](../configs/distillation/smoke.jsonl) are for execution checks only.
