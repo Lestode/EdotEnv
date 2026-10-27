@@ -118,6 +118,8 @@ def training_args(args, output):
         f"distillation.hooks.{args.mode}",
         "--custom-rm-path",
         "distillation.hooks.score_teacher",
+        "--reward-key",
+        "task_reward",
         "--custom-reward-post-process-path",
         "distillation.hooks.post_process_rewards",
         "--custom-config-path",

@@ -59,7 +59,11 @@ async def score_teacher(args, sample, **kwargs):
             response.raise_for_status()
             result = await response.json()
     scores = response_log_probs(result, sample.tokens, sample.response_length)
-    return {"teacher_log_probs": scores, "teacher_seconds": time.monotonic() - start}
+    return {
+        "task_reward": 0.0,
+        "teacher_log_probs": scores,
+        "teacher_seconds": time.monotonic() - start,
+    }
 
 
 def post_process_rewards(args, samples, **kwargs):
@@ -68,7 +72,7 @@ def post_process_rewards(args, samples, **kwargs):
     if not samples:
         raise ValueError("Cannot train on an empty batch")
     for sample in samples:
-        reward = sample.get_reward_value(args)
+        reward = sample.reward
         scores = reward["teacher_log_probs"]
         if len(scores) != sample.response_length or not scores:
             raise ValueError("Teacher scores are not aligned with the response")

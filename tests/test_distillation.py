@@ -12,6 +12,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from collections import defaultdict
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -61,6 +62,7 @@ class ScoringTests(unittest.IsolatedAsyncioTestCase):
         rewards = await asyncio.gather(*(score_teacher(args, sample) for _ in range(3)))
         for reward in rewards:
             self.assertEqual(reward["teacher_log_probs"], [-0.4, -0.7])
+            self.assertEqual(reward["task_reward"], 0.0)
             self.assertGreaterEqual(reward["teacher_seconds"], 0)
 
     async def test_missing_teacher_does_not_fall_back_to_student(self):
@@ -92,7 +94,7 @@ class ScoringTests(unittest.IsolatedAsyncioTestCase):
     def test_postprocessing_does_not_inject_scalar_reward(self):
         sample = SimpleNamespace(
             response_length=2,
-            get_reward_value=lambda _: {"teacher_log_probs": [-0.4, -0.7]},
+            reward={"task_reward": 0.0, "teacher_log_probs": [-0.4, -0.7]},
         )
         self.assertEqual(post_process_rewards(None, [sample]), ([0.0], [0.0]))
         torch.testing.assert_close(sample.teacher_log_probs, torch.tensor([-0.4, -0.7]))
@@ -262,8 +264,8 @@ class ConfigurationTests(unittest.TestCase):
             compile(ast.fix_missing_locations(definition), str(source), "exec"),
             {"parser": parser},
         )
-        args = parser.parse_args([])
-        self.assertIsNone(args.reward_key)
+        args = parser.parse_args(["--reward-key", "task_reward"])
+        self.assertEqual(args.reward_key, "task_reward")
         loader = next(
             node
             for node in ast.walk(tree)
@@ -284,7 +286,33 @@ class ConfigurationTests(unittest.TestCase):
         with patch.object(sys, "path", [str(ROOT / "slime"), *sys.path]):
             from slime.utils.types import Sample
 
-        sample = Sample(response_length=2, reward={"teacher_log_probs": [-0.4, -0.7]})
+        sample = Sample(
+            response_length=2,
+            group_index=0,
+            reward={"task_reward": 0.0, "teacher_log_probs": [-0.4, -0.7]},
+        )
+        self.assertEqual(sample.get_reward_value(args), 0.0)
+        # Slime logs scalar rewards before invoking our postprocessing hook.
+        namespace = {"Sample": Sample, "defaultdict": defaultdict}
+        for relative, function in [
+            ("slime/utils/misc.py", "group_by"),
+            ("slime/observability/rollout_metrics.py", "_compute_zero_std_metrics"),
+        ]:
+            path = ROOT / "slime" / relative
+            node = next(
+                n
+                for n in ast.parse(path.read_text()).body
+                if isinstance(n, ast.FunctionDef) and n.name == function
+            )
+            exec(
+                compile(ast.Module(body=[node], type_ignores=[]), str(path), "exec"),
+                namespace,
+            )
+        args.advantage_estimator = "grpo"
+        self.assertEqual(
+            namespace["_compute_zero_std_metrics"](args, [sample]),
+            {"zero_std/count_0.0": 1},
+        )
         self.assertEqual(post_process_rewards(args, [sample]), ([0.0], [0.0]))
         torch.testing.assert_close(sample.teacher_log_probs, torch.tensor([-0.4, -0.7]))
 
@@ -344,6 +372,7 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(
             sum(m["server_groups"][0]["num_gpus"] for m in config["sglang"]), 4
         )
+        self.assertEqual(sync[sync.index("--reward-key") + 1], "task_reward")
         self.assertIn("--untie-embeddings-and-output-weights", sync)
         self.assertNotIn("--use-rollout-logprobs", sync)
         self.assertEqual(sync[sync.index("--num-gpus-per-node") + 1], "4")
