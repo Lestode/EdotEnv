@@ -18,6 +18,23 @@ use uv for new project-managed Python environments. CI remains on GitHub runners
 The [distillation journal](experiments/LOG.md) records current CPU and runtime
 qualification; historical single-GPU evidence below is not a training result.
 
+## Allocation preference
+
+Decision, 27 October 2026: fully idle nodes and whole-node exclusivity are not
+requirements. Prefer using available GPUs on shared nodes when the job's CPU,
+memory and placement needs can be met. Record the actual allocation and node
+sharing in experiment evidence; sharing may affect timing comparisons.
+
+The current A/B/C submissions requested exclusive nodes. This is a launcher
+choice, not an experimental requirement. Future submissions should avoid that
+restriction unless a concrete runtime or measurement need justifies it.
+Removing exclusivity alone does not make a four-GPU-per-node layout fit
+scattered single GPUs; placement must also be feasible.
+
+A scheduler snapshot on 27 October showed 34 unallocated GPUs in `gpu`, one in
+`ai`, and four in `test`, with no fully idle nodes. These are historical counts,
+not a reservation or a guarantee of schedulability.
+
 ## Observed cluster resources and limits
 
 - Slurm advertises four A100-SXM4-40GB GPUs per standard `gpu` node (one node
