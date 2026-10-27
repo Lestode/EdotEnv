@@ -8,6 +8,13 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · throughput-7b32b-A/B/C-12x1-a1 · submitted
+
+- Decision: User explicitly selected one 12×1 job per A/B/C despite the provisional later scheduler estimates. This is three experiments, not repeated trials. Original queued jobs `14675577`/`14675578`/`14675579` were cancelled before their replacements were released; zero GPU use on originals.
+- Jobs: A `14676046`, B `14676047`, C `14676048`, independent with no baseline dependency. Source `b3aed46` in private `source-layout-a2`; Slime pin unchanged. CPU layout contract passed all19 tests; cross-node tensor-parallel GPU execution remains to be checked by these bounded runs.
+- Resources: Each12 GPUs on12 nodes, requested4 CPUs/64GiB per node, 30-minute cap, node sharing allowed. Same20 updates, model roles, batch64 and2048 response-token cap as before.
+- Evidence: `throughput-7b32b-20261027/submissions.txt` and separate `A-capacity-12x1-a1`, `B-capacity-12x1-a1`, `C-capacity-12x1-a1` outputs. Record topology and network effects; these timings cannot be assumed equivalent to3×4.
+
 ### 2026-10-27 · throughput-7b32b-teacher-baseline · completed across attempts
 
 - Result: Continuation `14675573` completed in 11m25s, all eight answers correct, one truncated. Combined with retained first-attempt results: 29/32 correct, four truncated, zero request failures. Original indices cover 0–31 exactly once; data hashes, model path, decoding, tokenizer, batch size and grader match.

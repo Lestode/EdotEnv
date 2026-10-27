@@ -17,7 +17,7 @@ See the [pilot protocol](experiments/policy-distillation/THROUGHPUT.md).
 Preparation `14674318`, final-source CPU check `14674338`, and dependent teacher
 baseline `14674339` are submitted. The contract check passed all 18 tests and model preparation completed. Teacher
 baseline completed across two attempts: 29/32 correct, four truncated; the
-matched original 7B baseline was 27/32 with five truncated. A/B/C short smoke jobs `14675577`, `14675578`, `14675579` are now submitted independently of the baseline, per the user's revised concurrency decision. See the throughput protocol; review results before longer runs.
+matched original 7B baseline was 27/32 with five truncated. A/B/C short smoke jobs `14676046`, `14676047`, `14676048` now use12 nodes ×1GPU each, independently of the baseline; they replace the cancelled pending3×4 jobs per the user's explicit request. The19 CPU contract tests passed; GPU execution on this layout remains unvalidated. See the throughput protocol; review results before longer runs.
 The user extended the capacity pilot to matched A/B/C runs, with checkpoint
 evaluations and a consolidated Markdown/PDF report after completion. Each pilot
 has 12 GPUs and a 30-minute cap; keep total active allocation at most 24 GPUs.
