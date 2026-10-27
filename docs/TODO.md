@@ -33,8 +33,9 @@ training still need evidence.
 The user has authorized separate execution checks for
 [A, B and C](experiments/policy-distillation/README.md#concrete-comparisons), followed
 by separate measurements. The previous checkpoint hold is lifted for this bounded
-validation. Ray startup remains the shared blocker; diagnose it on allocated CPUs
-before another GPU attempt. B's draining worker adapter and single-version
+validation. The two-node CPU Ray check passed on Komondor; synchronous GPU smoke
+job `14672502` is running, with B/C gated on its outcome. GPU runtime integration
+and actual training updates remain unvalidated. B's draining worker adapter and single-version
 enforcement passed CPU regressions in CI; full runtime integration remains
 unvalidated. The user switched validation back to Komondor on 27 October;
 [existing-session reuse](KOMONDOR.md) restored access without a fresh eduID prompt.

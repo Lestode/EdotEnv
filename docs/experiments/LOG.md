@@ -8,6 +8,14 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · komondor-A-a1 · running
+
+- Question: Does synchronous distillation complete its three-update smoke workload after the two-node CPU Ray gate passed?
+- Setup: Source `bf6125d`, pinned Slime and existing validated Komondor runtime/models; fresh output under `edotenv/abc-komondor-20261027/A-a1`. Ray startup logs are retained before cleanup.
+- Result: Job `14672502` is running and beginning its collective probe. Training is not yet validated; B/C remain gated on success.
+- Resources: Eight A100 GPUs across two nodes, 30-minute cap (at most four GPU-hours).
+- Evidence: Private project `edotenv/abc-komondor-20261027/`, including `submissions.txt`, per-stage logs and eventual manifest.
+
 ### 2026-10-27 · komondor-ray-20261027-a1 · completed
 
 - Question: Does the existing Komondor runtime start an authenticated Ray cluster across two nodes?
