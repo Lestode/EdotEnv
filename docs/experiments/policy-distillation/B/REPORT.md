@@ -1,6 +1,6 @@
 # B · Bounded overlap with complete responses
 
-Status, 27 October 2026: First attempt was cancelled during serving startup after A exposed a shared reward-contract bug. Corrected retry `14673099` is submitted after all 17 CPU regressions passed.
+Status, 27 October 2026: corrected B-a2 job `14673099` completed all three training updates and saved its checkpoint. Losses and nonzero gradient norms were finite. Across 24 consumed responses, 16 were one publication stale and none mixed policy versions. Producer-drain completion was logged before publication.
 
 Generate and score while training, with at most one publication of lag. Before
 publishing new weights, drain active work; reject any response spanning policy
@@ -18,4 +18,4 @@ exercise the pinned worker's pause and dispatch methods, repeated rounds, and
 mixed-version rejection. They isolate these contracts from GPU imports and do
 not establish complete runtime behavior.
 
-First attempt used about 0.636 GPU-hours (4m46s on eight GPUs). The retry has an eight-GPU, 30-minute cap. Drain behavior and completed updates remain unvalidated on GPUs; learning quality is unmeasured. See the [journal](../../LOG.md) for retained evidence.
+B-a2 took 9m15s on eight GPUs (about 1.233 GPU-hours), including startup and checkpointing. The first cancelled attempt used about 0.636 GPU-hours. The bounded execution smoke and observed B invariants passed; learning quality and steady-state speed remain unmeasured. Retained logs include post-warmup `freeze_gc` connection failures before subsequent successful serving and training. Evidence: private `B-a2/train/manifest.json`, `train.log`, rollouts and checkpoint; see the [journal](../../LOG.md).

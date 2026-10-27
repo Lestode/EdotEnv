@@ -8,6 +8,13 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · komondor-B-a2 · completed
+
+- Result: Job `14673099` completed three updates with finite losses and nonzero finite gradients, saved its checkpoint, and logged producer draining. Of 24 consumed responses, 16 were one publication stale; none mixed versions. Observed B invariants passed, not learning quality.
+- Resources: Eight GPUs, 9m15s, about 1.233 GPU-hours; exclusive allocation. C-a3 `14673436` has started with sharing permitted.
+- Limitations: Post-warmup `freeze_gc` connection errors were retained; serving and training subsequently succeeded. Startup and checkpointing dominate this short run, so elapsed time is not a throughput comparison.
+- Evidence: [B report](policy-distillation/B/REPORT.md), private `edotenv/abc-komondor-20261027/B-a2/train/`.
+
 ### 2026-10-27 · komondor-C-a3 · submitted
 
 - Question: Can C obtain an allocation without unnecessary whole-node exclusivity?
