@@ -1,10 +1,12 @@
 # Larger-model throughput and learning pilot
 
-Status: preparation and all19 layout/adapter CPU checks passed. The user selected
-one12×1 smoke run per condition: A `14676046`, B `14676047`, C `14676048`.
-These replace cancelled pending3×4 jobs and run independently of the baseline.
-Source `b3aed46`, private root `edotenv/throughput-7b32b-20261027`, checkout
-`source-layout-a2`. Distributed GPU execution on this layout remains unvalidated.
+Status: preparation and all 19 layout/adapter CPU checks passed. The user
+returned to one 3×4 smoke run per condition: A `14676512`, B `14676513`,
+C `14676514`. These replace cancelled pending 12×1 jobs, with no baseline
+dependency. Source `b3aed46`, private root `edotenv/throughput-7b32b-20261027`,
+checkout `source-layout-a2`. Execution for the larger model pair remains
+unvalidated. The completed teacher baseline scored 29/32 versus 27/32 for the
+original student on the matched development questions.
 
 The user authorized upgrading to a 7B student and frozen 32B teacher, measuring
 pipeline waiting, GPU productivity by role, and quality versus tokens, time and

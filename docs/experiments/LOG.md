@@ -8,6 +8,13 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · throughput-7b32b-A/B/C-3x4-a2 · submitted
+
+- Decision: User requested returning to four GPUs per node. Pending 12×1 jobs `14676046`/`14676047`/`14676048` were cancelled before replacements were released; no GPU time was used. Exactly one active submission per condition.
+- Jobs: A `14676512`, B `14676513`, C `14676514`, independent with no baseline dependencies. Source `b3aed46`, unchanged role totals and smoke workload.
+- Resources: Each 12 GPUs across three nodes, requested 16 CPUs/128 GiB per node, 30-minute cap, sharing allowed. Twenty updates, batch 64, 2048 response tokens, checkpoints at 10 and 20.
+- Evidence: Private `throughput-7b32b-20261027/submissions.txt` and separate `A-capacity-3x4-a2`, `B-capacity-3x4-a2`, `C-capacity-3x4-a2` outputs. Earlier attempts and allocation decisions remain recorded.
+
 ### 2026-10-27 · throughput-7b32b-A/B/C-12x1-a1 · submitted
 
 - Decision: User explicitly selected one 12×1 job per A/B/C despite the provisional later scheduler estimates. This is three experiments, not repeated trials. Original queued jobs `14675577`/`14675578`/`14675579` were cancelled before their replacements were released; zero GPU use on originals.
