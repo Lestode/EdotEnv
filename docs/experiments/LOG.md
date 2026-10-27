@@ -8,10 +8,10 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
-### 2026-10-27 · fragmented-allocation-contract · submitted
+### 2026-10-27 · fragmented-allocation-contract · completed
 
 - Change: Source `b3aed46` adds uniform 1/2/4-GPU-per-node layouts across Ray readiness, collective probing and model placement, retaining role totals. Uneven allocations remain unsupported. Pinned uv/Ruff lint and formatting passed.
-- Validation: CPU contract `14675861` is queued, four CPUs/16GiB/five-minute cap, zero GPUs. Source snapshot at private `throughput-7b32b-20261027/source-layout-a1` contains the pre-format equivalent changes and regression tests; no GPU validation claimed.
+- Validation: CPU contract `14675861` passed all 19 tests and shell syntax checks, exit0 in43s, four CPUs/16GiB, zero GPUs. Source snapshot at private `throughput-7b32b-20261027/source-layout-a1` contains the pre-format equivalent changes and regression tests; no GPU validation claimed.
 - Scheduling: Slurm test-only queries predicted 29 October for 12×1 and 6×2 with four CPUs/64GiB per node, versus 28 October for the existing 3×4 jobs. These estimates are provisional, not a controlled performance comparison. No alternate GPU jobs were submitted; preserve A/B/C queue positions.
 - Evidence: `layout-contract-14675861.log`, `submissions.txt`; the main monitor tracks this gate alongside the existing A/B/C jobs.
 
