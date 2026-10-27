@@ -8,6 +8,14 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · komondor-ray-20261027-a1 · completed
+
+- Question: Does the existing Komondor runtime start an authenticated Ray cluster across two nodes?
+- Setup: Source `79cc198`; existing `runtime-sandbox`, two CPU nodes, four CPUs and 16 GiB RAM per node, five-minute cap.
+- Result: Job `14672379` completed in 1m25s, exit `0:0`. The driver reported success with remote tasks on two distinct hosts. The server step was explicitly killed by owned-step cleanup after success.
+- Resources: Eight CPUs; zero GPUs.
+- Evidence: Private project `edotenv/komondor-ray-20261027-a1/result/driver.log` and retained Ray logs. This validates CPU startup, not GPU model initialization or training.
+
 ### 2026-10-27 · euler-preparation-a4 · submitted
 
 - Question: Does a writable compiler cache resolve the observed FlashAttention build failure?

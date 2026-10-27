@@ -45,6 +45,12 @@ srun --ntasks=2 --ntasks-per-node=1 --kill-on-bad-exit=1 \
 # Each Slurm step owns its processes; never stop another job's Ray instance.
 pids=()
 cleanup() {
+    timeout 20 srun --overlap --ntasks=2 --ntasks-per-node=1 bash -c '
+        source_logs="/tmp/edot-${SLURM_JOB_ID}/ray/session_latest/logs"
+        if [ -d "$source_logs" ]; then
+            cp -R "$source_logs" "$RUN_ROOT/ray-logs-${SLURM_NODEID}"
+        fi
+    ' || true
     if [ -f "$RUN_ROOT/ray-step-id" ]; then
         read -r ray_step < "$RUN_ROOT/ray-step-id"
         case "$ray_step" in
