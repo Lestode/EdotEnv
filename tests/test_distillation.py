@@ -28,6 +28,7 @@ from distillation.hooks import (
     score_teacher,
     validate_sample_policy,
 )
+from distillation.layout import layout, nodes_match
 from distillation.launch import ROOT, serving_config, training_args, validate_options
 from distillation.policies import DrainBeforePublication
 from distillation.preflight import fingerprint, verify_models
@@ -272,6 +273,45 @@ class ConfigurationTests(unittest.TestCase):
             [m["server_groups"][0]["num_gpus_per_engine"] for m in config], [2, 4]
         )
         self.assertEqual([m["update_weights"] for m in config], [True, False])
+
+    def test_fragmented_layout_preserves_gpu_roles_and_rejects_mismatch(self):
+        args = SimpleNamespace(
+            student=Path("/student"),
+            teacher=Path("/teacher"),
+            data=Path("/data"),
+            mode="bounded_async",
+            rollouts=20,
+            response_tokens=2048,
+            seed=42,
+            profile="7b32b",
+        )
+        for per_node in (1, 2, 4):
+            args.gpus_per_node = per_node
+            allocation = layout(args.profile, per_node)
+            self.assertEqual(allocation["nodes"] * per_node, 12)
+            command = training_args(args, Path("/run"))
+
+            def option(key):
+                return int(command[command.index(key) + 1])
+
+            self.assertEqual(
+                option("--actor-num-nodes") * option("--actor-num-gpus-per-node"), 4
+            )
+            self.assertEqual(option("--num-gpus-per-node"), per_node)
+            self.assertEqual(option("--rollout-num-gpus"), 8)
+            self.assertEqual(option("--tensor-model-parallel-size"), 4)
+            nodes = [
+                {"Alive": True, "Resources": {"GPU": per_node}}
+                for _ in range(allocation["nodes"])
+            ]
+            self.assertTrue(nodes_match(nodes, allocation["nodes"], per_node))
+            nodes[0]["Resources"]["GPU"] = per_node + 1
+            self.assertFalse(nodes_match(nodes, allocation["nodes"], per_node))
+            with self.assertRaises(ValueError):
+                layout(args.profile, per_node, allocation["nodes"] + 1)
+        for invalid in (0, 3, 8):
+            with self.assertRaises(ValueError):
+                layout("7b32b", invalid)
 
     def test_real_slime_reward_accessor_and_custom_config_contract(self):
         # Exercise the pinned accessor and configuration statements without

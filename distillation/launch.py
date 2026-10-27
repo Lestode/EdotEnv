@@ -8,6 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from distillation.layout import layout
 from distillation.preflight import ROOT, fingerprint, verify_models
 
 SLIME_REVISION = "18868a79b0b083a093798a94ed0f8cb4f71b9c14"
@@ -45,6 +46,9 @@ def serving_config(student, teacher, profile="smoke"):
 
 
 def training_args(args, output):
+    allocation = layout(
+        getattr(args, "profile", "smoke"), getattr(args, "gpus_per_node", 4)
+    )
     command = [
         "--rollout-session-id",
         str(output),
@@ -83,11 +87,11 @@ def training_args(args, output):
         "--max-position-embeddings",
         "131072",
         "--actor-num-nodes",
-        "1",
+        str(allocation["training_nodes"]),
         "--actor-num-gpus-per-node",
-        "4",
+        str(allocation["gpus_per_node"]),
         "--num-gpus-per-node",
-        "4",
+        str(allocation["gpus_per_node"]),
         "--rollout-num-gpus",
         "4",
         "--tensor-model-parallel-size",
@@ -220,6 +224,7 @@ def training_args(args, output):
 
 
 def validate_options(args):
+    layout(getattr(args, "profile", "smoke"), getattr(args, "gpus_per_node", 4))
     if args.rollouts < 1 or not 1 <= args.response_tokens <= 2048:
         raise ValueError("Require positive rollouts and 1–2048 response tokens")
     if args.max_policy_lag < 0 or (
@@ -254,6 +259,7 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--save-interval", type=int, default=10)
     parser.add_argument("--profile", choices=["smoke", "7b32b"], default="smoke")
+    parser.add_argument("--gpus-per-node", type=int, choices=(1, 2, 4), default=4)
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     for key in ("student", "teacher", "data", "output"):
@@ -309,6 +315,7 @@ def main():
     manifest = {
         "models": models,
         "profile": args.profile,
+        "allocation": layout(args.profile, args.gpus_per_node),
         "slime_revision": revision,
         "adapter_sha256": {
             p.name: fingerprint(p) for p in sorted((ROOT / "distillation").glob("*.py"))

@@ -1,12 +1,19 @@
-"""Wait for the dedicated two-node Ray cluster before allocating model roles."""
+"""Wait for the allocated Ray cluster before allocating model roles."""
 
 import os
 import time
+
+from distillation.layout import layout, nodes_match
 
 
 def main():
     import ray
 
+    allocation = layout(
+        os.environ.get("DISTILLATION_PROFILE", "smoke"),
+        int(os.environ["DISTILLATION_GPUS_PER_NODE"]),
+        int(os.environ["DISTILLATION_NODES"]),
+    )
     # Cold Apptainer startup plus native-kernel probes can exceed three minutes.
     deadline = time.monotonic() + 600
     while time.monotonic() < deadline:
@@ -19,13 +26,14 @@ def main():
         raise TimeoutError("Ray head did not become ready")
     try:
         while time.monotonic() < deadline:
-            nodes = [node for node in ray.nodes() if node["Alive"]]
-            if len(nodes) == int(os.environ.get("DISTILLATION_NODES", "2")) and all(
-                node["Resources"].get("GPU") == 4 for node in nodes
+            if nodes_match(
+                ray.nodes(), allocation["nodes"], allocation["gpus_per_node"]
             ):
                 return
             time.sleep(2)
-        raise TimeoutError("Expected requested Ray node count with four GPUs each")
+        raise TimeoutError(
+            "Ray resources do not match the requested uniform allocation"
+        )
     finally:
         ray.shutdown()
 

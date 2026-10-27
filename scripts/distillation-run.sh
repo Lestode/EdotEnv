@@ -14,6 +14,20 @@ export DISTILLATION_NODES
 export DISTILLATION_PROFILE=${DISTILLATION_PROFILE:-smoke}
 export ROLLOUTS=${ROLLOUTS:-3}
 export RESPONSE_TOKENS=${RESPONSE_TOKENS:-512}
+# Slurm's per-node request may be numeric or a typed GPU resource (Euler).
+# A uniform allocation is required by pinned Slime's serving placement.
+: "${SLURM_GPUS_PER_NODE:?Submit with --gpus-per-node=1,2,or4}"
+export DISTILLATION_GPUS_PER_NODE="${SLURM_GPUS_PER_NODE##*:}"
+case "$DISTILLATION_GPUS_PER_NODE" in
+    1|2|4) ;;
+    *) echo "Unsupported uniform GPU request: $SLURM_GPUS_PER_NODE" >&2; exit 2 ;;
+esac
+expected_total=8
+if [ "$DISTILLATION_PROFILE" = 7b32b ]; then expected_total=12; fi
+if [ "$((DISTILLATION_NODES * DISTILLATION_GPUS_PER_NODE))" -ne "$expected_total" ]; then
+    echo "Allocation must total $expected_total GPUs for $DISTILLATION_PROFILE" >&2
+    exit 2
+fi
 if [ -n "${APPTAINER_MODULE:-}" ]; then module load "$APPTAINER_MODULE"; fi
 command -v apptainer >/dev/null
 mkdir -m 700 "$RUN_ROOT"
@@ -42,7 +56,7 @@ srun --ntasks="$DISTILLATION_NODES" --ntasks-per-node=1 --kill-on-bad-exit=1 \
         set -euo pipefail
         cd "$PROJECT_ROOT"
         source scripts/distillation-runtime-env.sh
-        python -m torch.distributed.run --nnodes="$DISTILLATION_NODES" --nproc-per-node=4 \
+        python -m torch.distributed.run --nnodes="$DISTILLATION_NODES" --nproc-per-node="$DISTILLATION_GPUS_PER_NODE" \
             --node-rank="$SLURM_NODEID" --master-addr="$RAY_HEAD_IP" --master-port=16400 \
             -m distillation.collective_probe
     ' > "$RUN_ROOT/collective.log" 2>&1
@@ -75,7 +89,7 @@ srun --overlap --ntasks="$DISTILLATION_NODES" --ntasks-per-node=1 --kill-on-bad-
     > "$RUN_ROOT/ray.log" 2>&1 &
 pids+=("$!")
 
-# A bounded wait also verifies that both nodes expose their four allocated GPUs.
+# Verify every requested node exposes exactly its allocated GPU count.
 srun --overlap --nodes=1 --ntasks=1 --nodelist="$HEAD_NODE" \
     apptainer exec --nv --bind "$PROJECT_ROOT,$MODEL_ROOT,$RUN_ROOT,$(dirname "$TRAIN_DATA")" \
     "$RUNTIME_IMAGE" bash -c '
@@ -86,5 +100,6 @@ srun --overlap --nodes=1 --ntasks=1 --nodelist="$HEAD_NODE" \
         python -m distillation.launch --student "$MODEL_ROOT/student" --teacher "$MODEL_ROOT/teacher" \
             --data "$TRAIN_DATA" --output "$RUN_ROOT/train" --mode "$MODE" \
             --profile "$DISTILLATION_PROFILE" --rollouts "$ROLLOUTS" \
+            --gpus-per-node "$DISTILLATION_GPUS_PER_NODE" \
             --response-tokens "$RESPONSE_TOKENS" --execute
     ' > "$RUN_ROOT/driver.log" 2>&1

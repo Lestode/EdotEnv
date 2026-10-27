@@ -32,12 +32,12 @@ cleanup_sampler() {
 trap cleanup_sampler EXIT
 if [ "$SLURM_NODEID" = 0 ]; then
     ray start --head --node-ip-address="$RAY_HEAD_IP" --port="$RAY_PORT" \
-        --num-gpus=4 --num-cpus=16 --temp-dir="$TMPDIR/ray" --disable-usage-stats --block
+        --num-gpus="$DISTILLATION_GPUS_PER_NODE" --num-cpus="${SLURM_CPUS_PER_TASK:-16}" --temp-dir="$TMPDIR/ray" --disable-usage-stats --block
 else
     for attempt in $(seq 1 60); do
         if (echo > "/dev/tcp/$RAY_HEAD_IP/$RAY_PORT") 2>/dev/null; then break; fi
         sleep 2
     done
     ray start --address="$RAY_ADDRESS" --node-ip-address="$ip" \
-        --num-gpus=4 --num-cpus=16 --disable-usage-stats --block
+        --num-gpus="$DISTILLATION_GPUS_PER_NODE" --num-cpus="${SLURM_CPUS_PER_TASK:-16}" --disable-usage-stats --block
 fi
