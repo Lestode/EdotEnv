@@ -8,6 +8,14 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · euler-preparation-a2 · queued
+
+- Question: Does the corrected Euler proxy and external uv environment permit runtime/model staging?
+- Setup: Source `bda1fc6`; new `runtime-a2` and `models-a2` under private Euler scratch `edotenv/abc-20261026`. Container-access group membership is now present; the preceding CPU shell check passed.
+- Result: Slurm `18523280` is pending with `PartitionDown`; all advertised partitions reported down. No container or training execution yet.
+- Resources: Requested eight CPUs, 64 GiB RAM, one-hour cap; no allocation or GPU usage so far.
+- Evidence: Scheduler state; output will be `prepare-a2-18523280.log`. Continue only after preparation and CPU Ray validation pass.
+
 ### 2026-10-26 · euler-preparation-a1 · failed
 
 - Question: Can Euler stage the runtime before A/B/C smoke checks?

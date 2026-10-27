@@ -37,3 +37,11 @@ without building a custom image on Euler. The inspected account lacked the
 container-access group; the supported `get-access` workflow confirmed successful
 addition and warned that propagation can take up to 90 minutes. Actual container
 execution and the revised runtime remain unvalidated.
+
+27 October: SSH works again and `ID-HPC-SINGULARITY` membership is present.
+The CPU shell check `18477373` completed successfully. Preparation retry
+`18523280` uses source `bda1fc6` and fresh runtime/model directories, but is
+pending with `PartitionDown`; all advertised partitions reported down at
+inspection. No resources are allocated and no GPU jobs have been submitted
+for this retry. The scheduled follow-up will inspect this job before submitting
+anything else. Container execution itself remains unvalidated.
