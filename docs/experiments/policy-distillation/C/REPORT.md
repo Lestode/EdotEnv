@@ -1,6 +1,6 @@
 # C · Mid-response updates with rebuilt cache
 
-Status, 26 October 2026: selected; no C training attempt has run.
+Status, 27 October 2026: First attempt was cancelled while pending after A exposed a shared reward-contract bug. Corrected retry `14673100` is submitted after all 17 CPU regressions passed.
 
 Use the same overlap and one-publication lag bound as B, but permit Slime to
 abort unfinished generation, flush KV cache, publish weights and resume partial
@@ -13,5 +13,4 @@ separate condition-C manifests and outputs. Record mixed-version response counts
 zero means the mid-response shortcut was not exercised. Compare with B only
 after establishing which behavior actually occurred.
 
-No results or resource use yet. CPU regression and cluster startup checks precede
-the bounded training smoke. Learning quality remains unmeasured.
+The first attempt used no GPUs. The retry has an eight-GPU, 30-minute cap. Completed updates and mixed-version behavior remain unvalidated; learning quality is unmeasured. See the [journal](../../LOG.md) for retained evidence.

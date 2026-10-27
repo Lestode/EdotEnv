@@ -1,8 +1,6 @@
 # A · Synchronous distillation
 
-Status, 26 October 2026: selected for renewed execution validation. Earlier smoke
-attempts stopped during distributed startup, before model loading or updates;
-see the [checkpoint](../REPORT.md) and [journal](../../LOG.md).
+Status, 27 October 2026: First attempt reached rollout processing, then failed on the shared scalar-reward contract before an optimizer update. The correction passed 17 CPU tests; retry `14673098` is submitted.
 
 Collect a batch, train, then publish weights. Each response must use one policy
 version with zero lag. This is the learning reference if execution and subsequent
@@ -12,7 +10,4 @@ Use `MODE=synchronous`. The [common protocol](../README.md#separate-execution-ch
 defines the initial model, workload and evidence requirements. Each attempt gets
 a new output directory and manifest identifying condition A.
 
-No new results or resource use yet. Before another GPU attempt, resolve the
-shared Ray startup blocker with a bounded CPU check. Report training results,
-elapsed time and resource use here after execution; learning quality remains
-unmeasured.
+First attempt used about 1.689 GPU-hours (12m40s on eight GPUs). The retry has an eight-GPU, 30-minute cap. No completed update or learning-quality result yet. See the [journal](../../LOG.md) for retained evidence.

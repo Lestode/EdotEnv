@@ -8,11 +8,19 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
-### 2026-10-27 · komondor-reward-contract · submitted
+### 2026-10-27 · komondor-A-a2 / komondor-B-a2 / komondor-C-a2 · submitted
+
+- Question: Do the three execution policies complete training after correcting the shared reward contract?
+- Setup: Source `04f7283`, existing runtime/models, fresh separate outputs; the two-node CPU Ray gate and all 17 targeted CPU regressions passed.
+- Result: A `14673098`, B `14673099`, C `14673100` submitted concurrently as authorized. Completed optimizer updates and policy-specific invariants remain unverified.
+- Resources: Each job has eight GPUs across two nodes and a 30-minute cap; up to 24 GPUs concurrently.
+- Evidence: Private project `edotenv/abc-komondor-20261027/`, outputs `A-a2`, `B-a2`, `C-a2`, and `submissions.txt`. Previous failures are retained.
+
+### 2026-10-27 · komondor-reward-contract · completed
 
 - Question: Does the adapter expose the scalar expected by Slime logging while preserving teacher token scores and zero task reward?
 - Setup: Source `04f7283`, actual pinned Slime sample accessor and zero-variance metric tested before postprocessing; teacher scores remain in the structured payload. The launcher selects `task_reward=0` using Slime's reward-key setting.
-- Result: CPU regression job `14673025` submitted. GPU retries require its success.
+- Result: CPU regression job `14673025` passed all 17 targeted tests; elapsed 40 seconds, exit `0:0`. This validates the reward contract, not GPU training.
 - Resources: Four CPUs, 16 GiB RAM, five-minute cap; no GPUs.
 - Evidence: Private `edotenv/abc-komondor-20261027/reward-check-14673025.log`; corrected source in `source-a2`.
 
