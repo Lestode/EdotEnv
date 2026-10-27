@@ -14,10 +14,15 @@ Start with 12 A100-40GB GPUs: four training (TP4), four student generation
 (two TP2 engines), four teacher scoring (TP4). Generation admits up to 16
 concurrent requests across engines; teacher requests are bounded to eight.
 Global batch 64, microbatch one, full activation recomputation, 2048 response
-tokens. First run B for 20 updates with a 30-minute cap, saving HF checkpoints
-every ten updates for separate evaluation. This is a capacity pilot; synthetic
-smoke prompts cannot support a learning claim. Longer learning comparisons
-require representative training data disjoint from evaluation.
+tokens. Run separate A, B and C pilots from the same original student, each
+targeting 20 updates with a 30-minute cap and HF checkpoints every ten updates.
+Keep workload, seed, allocation and concurrency settings matched; record actual
+placement and node sharing. At most two 12-GPU pilots may run concurrently,
+including evaluation allocations within the 24-GPU total budget.
+This is a capacity pilot; synthetic smoke prompts cannot support a general
+learning claim. Evaluate saved checkpoints to detect changes on the fixed
+development set, with uncertainty and truncation reported. Longer learning
+comparisons require representative training data disjoint from evaluation.
 
 Use existing stage timers, teacher request/queue durations, ready-queue counts
 at batch boundaries, and GPU UUID/utilization/memory/power samples every two
@@ -38,3 +43,17 @@ The public MATH training split is a candidate for subsequent learning runs:
 normalized problem overlap with all MATH-500 evaluation rows, and retain hashes.
 Do not use the MATH test split for training. This does not rule out all semantic
 overlap or model pretraining contamination.
+
+## Consolidated report
+
+The user requests a full report after all three pilots and checkpoint evaluations
+finish. Deliver a shareable Markdown report and PDF with the exact model/data/code
+revisions and configurations, per-condition outcomes, quality at baseline and
+saved checkpoints, training tokens and elapsed/allocated GPU-hours, stage waiting,
+queue snapshots, GPU telemetry by role, and measured throughput.
+Include readable comparison tables and plots, retained failures, the limits of
+single-seed/small-development-set evidence, and concrete optimization priorities.
+Separate observed bottlenecks from hypotheses. Explicitly state whether C
+produced mixed-version responses and whether its distinctive shortcut was tested.
+Do not rank speed by total job time without separating startup and checkpointing.
+Do not present GPU-utilization telemetry as a measured roofline.
