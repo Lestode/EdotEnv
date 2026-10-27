@@ -8,6 +8,21 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · fragmented-allocation-contract · submitted
+
+- Change: Source `b3aed46` adds uniform 1/2/4-GPU-per-node layouts across Ray readiness, collective probing and model placement, retaining role totals. Uneven allocations remain unsupported. Pinned uv/Ruff lint and formatting passed.
+- Validation: CPU contract `14675861` is queued, four CPUs/16GiB/five-minute cap, zero GPUs. Source snapshot at private `throughput-7b32b-20261027/source-layout-a1` contains the pre-format equivalent changes and regression tests; no GPU validation claimed.
+- Scheduling: Slurm test-only queries predicted 29 October for 12×1 and 6×2 with four CPUs/64GiB per node, versus 28 October for the existing 3×4 jobs. These estimates are provisional, not a controlled performance comparison. No alternate GPU jobs were submitted; preserve A/B/C queue positions.
+- Evidence: `layout-contract-14675861.log`, `submissions.txt`; the main monitor tracks this gate alongside the existing A/B/C jobs.
+
+### 2026-10-27 · throughput-7b32b-A/B/C-capacity-a1 · submitted concurrently
+
+- Decision: User removed baseline-before-training gating and the prior 24-GPU concurrency cap for this short smoke batch. Slurm schedules the independent jobs; baseline continuation runs separately.
+- Jobs: A `14675577`, B `14675578`, C `14675579`, submitted without dependencies after verifying preparation and CPU contract success and checking for existing submissions.
+- Setup: Source `f7b5aaa`, profile `7b32b`, 20 updates, batch64, 2048 response tokens, checkpoints at10/20; same original student per condition.
+- Resources: Each12 GPUs across three nodes, 30-minute cap, no exclusivity; up to36 training GPUs plus4 baseline GPUs concurrently.
+- Evidence: Private `edotenv/throughput-7b32b-20261027/submissions.txt` and separate `A-capacity-a1`, `B-capacity-a1`, `C-capacity-a1` outputs. Synthetic prompts limit quality interpretation. No longer run authorized in this batch.
+
 ### 2026-10-27 · throughput-7b32b-teacher-baseline · partial; continuation submitted
 
 - Result: Teacher baseline `14674339` hit its 30-minute limit (accounting: 30m07s). It retained 24/32 answers: 21 correct, three truncated, zero request failures. This is not a completed 32-question baseline. The interrupted summary still says running; scheduler accounting is authoritative.

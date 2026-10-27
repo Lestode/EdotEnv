@@ -8,9 +8,18 @@
 This is our initial pair. Exact tokenizer metadata compatibility passed on
 Komondor for the [pinned revisions](../configs/distillation/models.json).
 Both frozen-model development baselines completed before any training updates;
-see the [results and limits](experiments/LOG.md). Preserve that prerequisite for
-new model/task pairs, including execution checks that update weights. Teacher
-token alignment must pass before a generated batch is used for training.
+see the [results and limits](experiments/LOG.md). Baseline completion is not a
+prerequisite for training. Teacher token alignment must pass before a generated
+batch is used for training.
+
+## Run independent work concurrently
+
+Run independent baseline evaluations and training experiments concurrently within
+the authorized resource budget. Wait only for genuine correctness or data
+dependencies. Evaluate baselines from immutable original checkpoints; complete
+and inspect the matched baselines before drawing learning-quality conclusions.
+This replaces the baseline-before-training requirement by user decision on
+27 October 2026.
 
 ## Validate before scaling
 
