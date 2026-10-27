@@ -8,6 +8,15 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · throughput-7b32b-teacher-baseline · partial; continuation submitted
+
+- Result: Teacher baseline `14674339` hit its 30-minute limit (accounting: 30m07s). It retained 24/32 answers: 21 correct, three truncated, zero request failures. This is not a completed 32-question baseline. The interrupted summary still says running; scheduler accounting is authoritative.
+- Diagnosis: Startup plus sequential batches waiting for long responses exhausted the cap; logs show tail decode around 18 tokens/s with one request left. No model-loading or scoring exception was observed.
+- Continuation: `14675573` evaluates only original indices 24–31, same model/decoding/grader. Original data hash and retained indices were verified; separate subset hash and index mapping are in `baseline-continuation.json`. Merge only after all eight finish, checking model/settings and disjoint coverage.
+- Resources: First attempt about 2.008 allocated GPU-hours; continuation four GPUs, 30-minute cap. A/B/C training remains gated.
+- Evidence: Private `edotenv/throughput-7b32b-20261027/baseline-teacher-a1`, `baseline-teacher-a2`, scheduler logs and submissions.
+
+
 ### 2026-10-27 · throughput-7b32b-preparation · staging
 
 - Question: Can the upgraded pair run with four training, four generation and four teacher GPUs, and produce useful capacity and checkpoint-quality measurements?

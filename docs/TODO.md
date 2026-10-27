@@ -15,8 +15,9 @@ The user now authorizes a larger 7B-student/32B-teacher throughput and learning
 pilot with lightweight stage/queue/GPU measurements and checkpoint evaluation.
 See the [pilot protocol](experiments/policy-distillation/THROUGHPUT.md).
 Preparation `14674318`, final-source CPU check `14674338`, and dependent teacher
-baseline `14674339` are submitted. The contract check passed all 18 tests; preparation is downloading
-the 32B model after its own tests passed. Teacher baseline remains pending.
+baseline `14674339` are submitted. The contract check passed all 18 tests and model preparation completed. Teacher
+baseline timed out after 24/32 answers; continuation `14675573` covers only the
+remaining eight questions. Training remains gated on the completed baseline.
 The user extended the capacity pilot to matched A/B/C runs, with checkpoint
 evaluations and a consolidated Markdown/PDF report after completion. Each pilot
 has 12 GPUs and a 30-minute cap; keep total active allocation at most 24 GPUs.

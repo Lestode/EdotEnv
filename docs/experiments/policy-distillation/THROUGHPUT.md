@@ -1,15 +1,19 @@
 # Larger-model throughput and learning pilot
 
-Status: final-source CPU contract `14674338` passed all 18 tests. Preparation
-`14674318` passed its tests and is downloading the 32B snapshot; teacher baseline
-`14674339` waits for preparation. No larger-model training submitted
-yet. Source `f7b5aaa`, private run root `edotenv/throughput-7b32b-20261027`.
+Status: preparation and all 18 CPU contracts passed. Teacher baseline
+`14674339` timed out after 24/32 retained answers (21 correct, three truncated).
+Continuation `14675573` evaluates only the remaining eight questions with
+unchanged settings; training remains gated on a completed baseline.
+Source `f7b5aaa`, private root `edotenv/throughput-7b32b-20261027`.
 
 The user authorized upgrading to a 7B student and frozen 32B teacher, measuring
 pipeline waiting, GPU productivity by role, and quality versus tokens, time and
 GPU-hours. Use pinned DeepSeek-R1-Distill-Qwen checkpoints; their tokenizer
 metadata matches exactly. Reuse the completed 7B frozen baseline where its model,
-data and decoding settings match; establish the 32B baseline before training.
+data and decoding settings match. Run the 32B baseline concurrently with training
+within the existing total GPU budget, following the
+[concurrency rule](../../EXPERIMENTS.md#run-independent-work-concurrently).
+Baseline completion is required for quality interpretation, not training startup.
 
 Start with 12 A100-40GB GPUs: four training (TP4), four student generation
 (two TP2 engines), four teacher scoring (TP4). Generation admits up to 16
