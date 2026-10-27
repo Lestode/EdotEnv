@@ -1,6 +1,6 @@
 # C · Mid-response updates with rebuilt cache
 
-Status, 27 October 2026: First attempt was cancelled while pending after A exposed a shared reward-contract bug. Corrected retry `14673100` was replaced while pending by non-exclusive C-a3 `14673436`, following the user's scheduling preference. All 17 CPU regressions passed; the training source and budget are unchanged.
+Status, 27 October 2026: non-exclusive C-a3 job `14673436` completed three updates with finite losses and nonzero finite gradients, and saved its checkpoint. Of 24 consumed responses, 16 were one publication stale; none mixed policy versions. The execution smoke passed, but the distinctive mid-response shortcut was not exercised.
 
 Use the same overlap and one-publication lag bound as B, but permit Slime to
 abort unfinished generation, flush KV cache, publish weights and resume partial
@@ -13,4 +13,4 @@ separate condition-C manifests and outputs. Record mixed-version response counts
 zero means the mid-response shortcut was not exercised. Compare with B only
 after establishing which behavior actually occurred.
 
-The first attempt used no GPUs. The retry has an eight-GPU, 30-minute cap. Completed updates and mixed-version behavior remain unvalidated; learning quality is unmeasured. See the [journal](../../LOG.md) for retained evidence.
+C-a3 took 6m55s on eight GPUs (about 0.922 GPU-hours). Earlier pending C submissions consumed no GPUs. Learning quality remains unmeasured. Source `04f7283`; evidence in private `C-a3/train/manifest.json`, `train.log`, rollouts and checkpoint. See the [journal](../../LOG.md).

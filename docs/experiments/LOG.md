@@ -8,6 +8,13 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · komondor-C-a3 · completed
+
+- Result: Job `14673436` completed three finite updates and saved its checkpoint; 16 of 24 consumed responses were one publication stale, none mixed versions. Execution passed; the mid-response shortcut was not exercised.
+- Resources: Eight GPUs, sharing permitted, 6m55s (about 0.922 GPU-hours).
+- Limits: All A/B/C runs used only three batches of eight responses and a 512-token cap. No post-training evaluation. Warm steps 1–2 report about 1.2s training and 6.1–6.3s waiting across conditions; overlapping timers must not be summed. Startup/checkpointing preclude a total-runtime speed ranking. Generation, scoring and coordination contributions still need separation.
+- Evidence: [C report](policy-distillation/C/REPORT.md), private `edotenv/abc-komondor-20261027/C-a3/train/`.
+
 ### 2026-10-27 · komondor-B-a2 · completed
 
 - Result: Job `14673099` completed three updates with finite losses and nonzero finite gradients, saved its checkpoint, and logged producer draining. Of 24 consumed responses, 16 were one publication stale; none mixed versions. Observed B invariants passed, not learning quality.

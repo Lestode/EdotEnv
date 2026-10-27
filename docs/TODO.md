@@ -37,7 +37,7 @@ validation. The two-node CPU Ray check passed. A reached rollout processing but
 failed because Slime metrics expected a scalar reward, not the teacher-score
 dictionary. B/C were cancelled to avoid repeating the shared defect. The reward-key correction passed all 17 CPU regressions (`14673025`).
 Corrected A/B/C retries `14673098`, `14673099`, `14673100` are submitted
-concurrently with separate outputs and eight-GPU/30-minute caps. A completed three training updates and saved its checkpoint with zero reported lag and mixed versions. B also completed three updates, with logged draining, lag at most one and no mixed responses. Non-exclusive C-a3 `14673436` is running; C's runtime behavior and all learning-quality comparisons remain unvalidated. B's draining worker adapter and single-version
+concurrently with separate outputs and eight-GPU/30-minute caps. A completed three training updates and saved its checkpoint with zero reported lag and mixed versions. B also completed three updates, with logged draining, lag at most one and no mixed responses. Non-exclusive C-a3 `14673436` also completed three updates, but zero mixed-version responses means its mid-response shortcut remains unexercised. All three saved checkpoints; post-training quality evaluation and a representative workload remain outstanding. The smoke monitor is stopped now that all outcomes are known. B's draining worker adapter and single-version
 enforcement passed CPU regressions in CI; full runtime integration remains
 unvalidated. The user switched validation back to Komondor on 27 October;
 [existing-session reuse](KOMONDOR.md) restored access without a fresh eduID prompt.
