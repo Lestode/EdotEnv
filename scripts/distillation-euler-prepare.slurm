@@ -5,7 +5,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem-per-cpu=8G
-#SBATCH --time=01:00:00
+#SBATCH --time=02:00:00
+#SBATCH --tmp=150G
 
 set -euo pipefail
 umask 077

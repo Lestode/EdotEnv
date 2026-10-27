@@ -40,8 +40,10 @@ execution and the revised runtime remain unvalidated.
 
 27 October: SSH works again and `ID-HPC-SINGULARITY` membership is present.
 The CPU shell check `18477373` completed successfully. Preparation retry
-`18523280` uses source `bda1fc6` and fresh runtime/model directories, but is
-pending with `PartitionDown`; all advertised partitions reported down at
-inspection. No resources are allocated and no GPU jobs have been submitted
-for this retry. The scheduled follow-up will inspect this job before submitting
-anything else. Container execution itself remains unvalidated.
+`18523280` initially waited for the cluster-wide network/Slurm outage, then
+hit its one-hour limit extracting the container on shared scratch. No SIF,
+model preparation or GPU execution completed. The next bounded CPU retry
+uses 150 GB of Slurm-managed node-local scratch and a two-hour cap. Euler's
+[storage guidance](https://docs.hpc.ethz.ch/hardware/storage/#tmp) recommends
+local storage for many small files; shared-scratch extraction is a suspected
+bottleneck, not a demonstrated root cause. Failed artifacts remain preserved.

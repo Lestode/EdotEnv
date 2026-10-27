@@ -5,7 +5,7 @@ set -euo pipefail
 : "${RUNTIME_ENV:?New external virtual environment}"
 : "${UV_BIN:?Host uv binary bound into the container}"
 export UV_CACHE_DIR="$RUNTIME_ROOT/cache/uv"
-export TMPDIR="$RUNTIME_ROOT/tmp"
+export TMPDIR="${RUNTIME_LOCAL_TMP:?Bound node-local build directory}"
 "$UV_BIN" venv --python /opt/sglang/bin/python --system-site-packages "$RUNTIME_ENV"
 # The base interpreter is itself in a venv; uv may resolve its underlying Python.
 # Add the pinned stack after this venv's packages so local FA2 takes precedence.

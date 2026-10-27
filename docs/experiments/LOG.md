@@ -8,13 +8,13 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
-### 2026-10-27 · euler-preparation-a2 · queued
+### 2026-10-27 · euler-preparation-a2 · failed
 
 - Question: Does the corrected Euler proxy and external uv environment permit runtime/model staging?
 - Setup: Source `bda1fc6`; new `runtime-a2` and `models-a2` under private Euler scratch `edotenv/abc-20261026`. Container-access group membership is now present; the preceding CPU shell check passed.
-- Result: Slurm `18523280` is pending with `PartitionDown`; all advertised partitions reported down. No container or training execution yet.
-- Resources: Requested eight CPUs, 64 GiB RAM, one-hour cap; no allocation or GPU usage so far.
-- Evidence: Scheduler state; output will be `prepare-a2-18523280.log`. Continue only after preparation and CPU Ray validation pass.
+- Result: After the queues reopened, Slurm `18523280` reached its one-hour limit during container extraction on shared scratch. No SIF, dependency build, models or training results were produced.
+- Resources: Eight CPUs, 64 GiB RAM; elapsed 1h00m29s; zero GPU usage.
+- Evidence: `prepare-a2-18523280.log` and scheduler accounting. Retry uses Slurm node-local scratch for extraction/builds, following Euler storage guidance, with a two-hour CPU cap; GPU gates remain unchanged.
 
 ### 2026-10-26 · euler-preparation-a1 · failed
 

@@ -10,13 +10,19 @@ umask 077
 mkdir -m 700 "$RUNTIME_ROOT"
 mkdir "$RUNTIME_ROOT/cache" "$RUNTIME_ROOT/tmp"
 export APPTAINER_CACHEDIR="$RUNTIME_ROOT/cache"
-export APPTAINER_TMPDIR="$RUNTIME_ROOT/tmp"
+# Many small extraction files belong on Slurm-provided node-local storage.
+: "${TMPDIR:?Request local scratch with sbatch --tmp}"
+export RUNTIME_LOCAL_TMP
+RUNTIME_LOCAL_TMP=$(mktemp -d "$TMPDIR/edot-runtime.XXXXXX")
+export APPTAINER_TMPDIR="$RUNTIME_LOCAL_TMP"
+export APPTAINERENV_TMPDIR="$RUNTIME_LOCAL_TMP"
+df -h "$RUNTIME_LOCAL_TMP" > "$RUNTIME_ROOT/local-storage.txt"
 image=docker://slimerl/slime@sha256:6379b872c6cc2535fb8c0e073a79bb1f41e365ca4859dd308e99ba14eb87936d
 printf '%s\n' "$image" > "$RUNTIME_ROOT/base-image.txt"
 apptainer version > "$RUNTIME_ROOT/apptainer-version.txt"
 apptainer pull "$RUNTIME_ROOT/base.sif" "$image" 2>&1 | tee "$RUNTIME_ROOT/pull.log"
 export RUNTIME_ENV="$RUNTIME_ROOT/venv"
 export UV_BIN="$uv"
-apptainer exec --bind "$PROJECT_ROOT,$RUNTIME_ROOT,$uv:$uv:ro" \
+apptainer exec --bind "$PROJECT_ROOT,$RUNTIME_ROOT,$RUNTIME_LOCAL_TMP,$uv:$uv:ro" \
     "$RUNTIME_ROOT/base.sif" bash "$PROJECT_ROOT/scripts/init-distillation-euler-venv.sh" \
     2>&1 | tee "$RUNTIME_ROOT/venv.log"
