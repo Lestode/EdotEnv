@@ -8,6 +8,15 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · throughput-7b32b-preparation · submitted
+
+- Question: Can the upgraded pair run with four training, four generation and four teacher GPUs, and produce useful capacity and checkpoint-quality measurements?
+- Setup: Pinned 7B/32B tokenizer metadata matches. Reuse existing runtime and 7B weights; preparation `14674318` stages the 32B snapshot after CPU tests. Final-source contract check `14674338` includes the named HF checkpoint-export template. Source `f7b5aaa` is staged in `source-a2`.
+- Result: Both CPU jobs queued. Four-GPU teacher baseline `14674339` depends on both passing; no larger-model training submitted yet. Existing frozen 7B baseline is retained.
+- Resources: Preparation eight CPUs/32 GiB/45 minutes; contract four CPUs/16 GiB/five minutes; baseline four GPUs/30 minutes.
+- Evidence: Private `edotenv/throughput-7b32b-20261027/submissions.txt` and per-job logs; [pilot protocol](policy-distillation/THROUGHPUT.md).
+
+
 ### 2026-10-27 · komondor-C-a3 · completed
 
 - Result: Job `14673436` completed three finite updates and saved its checkpoint; 16 of 24 consumed responses were one publication stale, none mixed versions. Execution passed; the mid-response shortcut was not exercised.

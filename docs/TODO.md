@@ -11,6 +11,15 @@ tracks outstanding outcomes; detailed evidence belongs in the linked records.
 
 ## Policy distillation validation
 
+The user now authorizes a larger 7B-student/32B-teacher throughput and learning
+pilot with lightweight stage/queue/GPU measurements and checkpoint evaluation.
+See the [pilot protocol](experiments/policy-distillation/THROUGHPUT.md).
+Preparation `14674318`, final-source CPU check `14674338`, and dependent teacher
+baseline `14674339` are submitted; none had started at the latest check.
+The larger profile and three-node layout are not yet runtime-validated.
+Do not confuse these jobs with the completed 1.5B/7B A/B/C smoke tests.
+
+
 The [experiment design](experiments/policy-distillation/README.md) frames the
 initial technical validation, with a provisional resource setup. Quality loss
 relative to a trustworthy reference is the primary concern; speed and cost are
