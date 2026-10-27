@@ -25,9 +25,9 @@ requirements. Prefer using available GPUs on shared nodes when the job's CPU,
 memory and placement needs can be met. Record the actual allocation and node
 sharing in experiment evidence; sharing may affect timing comparisons.
 
-The current A/B/C submissions requested exclusive nodes. This is a launcher
-choice, not an experimental requirement. Future submissions should avoid that
-restriction unless a concrete runtime or measurement need justifies it.
+The Komondor launcher does not request whole-node exclusivity. Request it only
+when a concrete runtime or measurement need justifies it. Initial A/B/C
+submissions used exclusivity; allocation changes are recorded in the journal.
 Removing exclusivity alone does not make a four-GPU-per-node layout fit
 scattered single GPUs; placement must also be feasible.
 

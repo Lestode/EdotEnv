@@ -1,6 +1,6 @@
 # C · Mid-response updates with rebuilt cache
 
-Status, 27 October 2026: First attempt was cancelled while pending after A exposed a shared reward-contract bug. Corrected retry `14673100` is submitted after all 17 CPU regressions passed.
+Status, 27 October 2026: First attempt was cancelled while pending after A exposed a shared reward-contract bug. Corrected retry `14673100` was replaced while pending by non-exclusive C-a3 `14673436`, following the user's scheduling preference. All 17 CPU regressions passed; the training source and budget are unchanged.
 
 Use the same overlap and one-publication lag bound as B, but permit Slime to
 abort unfinished generation, flush KV cache, publish weights and resume partial

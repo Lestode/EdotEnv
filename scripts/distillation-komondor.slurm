@@ -8,7 +8,6 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=128G
 #SBATCH --time=00:30:00
-#SBATCH --exclusive
 
 set -euo pipefail
 : "${PROJECT_ROOT:?Shared initialized checkout}"

@@ -8,11 +8,19 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · komondor-C-a3 · submitted
+
+- Question: Can C obtain an allocation without unnecessary whole-node exclusivity?
+- Setup: User requested shared-node scheduling. Slurm denied updating pending C-a2 in place; it was cancelled before allocation, consuming no GPU time. Replacement C-a3 `14673436` uses the same `04f7283` training source and workload, with only the submission's exclusive directive removed.
+- Result: Submitted; Slurm confirms `OverSubscribe=OK`. B-a2 remains running. A's completed result used exclusive nodes; this difference must be retained in timing comparisons.
+- Resources: Eight GPUs across two nodes, 30-minute cap; no extra concurrent test.
+- Evidence: Private run directory `edotenv/abc-komondor-20261027/C-a3`, saved `C-a3-submission.slurm`, and `submissions.txt`.
+
 ### 2026-10-27 · komondor-A-a2 / komondor-B-a2 / komondor-C-a2 · A completed; B running; C queued
 
 - Question: Do the three execution policies complete training after correcting the shared reward contract?
 - Setup: Source `04f7283`, existing runtime/models, fresh separate outputs; the two-node CPU Ray gate and all 17 targeted CPU regressions passed.
-- Result: A `14673098` completed in 8m26s (about 1.124 GPU-hours): three finite optimizer-step metrics, checkpoint saved, 24 responses with zero reported lag and no mixed versions. B `14673099` is running; C `14673100` remains queued. No learning-quality claim. See [A report](policy-distillation/A/REPORT.md).
+- Result: A `14673098` completed in 8m26s (about 1.124 GPU-hours): three finite optimizer-step metrics, checkpoint saved, 24 responses with zero reported lag and no mixed versions. B `14673099` is running; C `14673100` was subsequently cancelled while pending and replaced by non-exclusive C-a3. No learning-quality claim. See [A report](policy-distillation/A/REPORT.md).
 - Resources: Each job has eight GPUs across two nodes and a 30-minute cap; up to 24 GPUs concurrently.
 - Evidence: Private project `edotenv/abc-komondor-20261027/`, outputs `A-a2`, `B-a2`, `C-a2`, and `submissions.txt`. Previous failures are retained.
 
