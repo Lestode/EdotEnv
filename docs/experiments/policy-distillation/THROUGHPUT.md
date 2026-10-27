@@ -2,8 +2,10 @@
 
 Status: preparation and all 18 CPU contracts passed. Teacher baseline
 `14674339` timed out after 24/32 retained answers (21 correct, three truncated).
-Continuation `14675573` evaluates only the remaining eight questions with
-unchanged settings. A/B/C smoke jobs are submitted concurrently: A `14675577`,
+Continuation `14675573` completed the remaining eight questions. The verified
+combined baseline is 29/32 correct with four truncated responses, versus 27/32
+with five truncated responses for the original 7B student; this small development
+comparison does not establish a definitive capability gap. A/B/C smoke jobs are submitted concurrently: A `14675577`,
 B `14675578`, C `14675579`; they do not depend on baseline completion.
 Source `f7b5aaa`, private root `edotenv/throughput-7b32b-20261027`.
 

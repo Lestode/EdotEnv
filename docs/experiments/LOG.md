@@ -8,6 +8,14 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-27 · throughput-7b32b-teacher-baseline · completed across attempts
+
+- Result: Continuation `14675573` completed in 11m25s, all eight answers correct, one truncated. Combined with retained first-attempt results: 29/32 correct, four truncated, zero request failures. Original indices cover 0–31 exactly once; data hashes, model path, decoding, tokenizer, batch size and grader match.
+- Comparison: The immutable 7B baseline scored 27/32 with five truncated responses on the same questions/settings. A two-question difference on this small development set is not a definitive capability advantage.
+- Resources: Both teacher attempts together about 2.769 allocated GPU-hours. A/B/C remain independently queued.
+- Evidence: Private `edotenv/throughput-7b32b-20261027/baseline-teacher-combined/summary.json`, original responses and `baseline-continuation.json`; failed first attempt preserved.
+
+
 ### 2026-10-27 · fragmented-allocation-contract · completed
 
 - Change: Source `b3aed46` adds uniform 1/2/4-GPU-per-node layouts across Ray readiness, collective probing and model placement, retaining role totals. Uneven allocations remain unsupported. Pinned uv/Ruff lint and formatting passed.
