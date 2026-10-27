@@ -8,11 +8,11 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
-### 2026-10-27 · throughput-7b32b-preparation · submitted
+### 2026-10-27 · throughput-7b32b-preparation · staging
 
 - Question: Can the upgraded pair run with four training, four generation and four teacher GPUs, and produce useful capacity and checkpoint-quality measurements?
 - Setup: Pinned 7B/32B tokenizer metadata matches. Reuse existing runtime and 7B weights; preparation `14674318` stages the 32B snapshot after CPU tests. Final-source contract check `14674338` includes the named HF checkpoint-export template. Source `f7b5aaa` is staged in `source-a2`.
-- Result: Both CPU jobs queued. On the user's request to improve scheduling, their eligible partitions were widened in place to `cpu,cpu-short,test`; job IDs, CPU/memory limits and downstream dependencies are unchanged. No GPUs were added. Four-GPU teacher baseline `14674339` depends on both passing; no larger-model training submitted yet. Existing frozen 7B baseline is retained.
+- Result: Final-source contract job `14674338` passed all 18 tests in 47 seconds (exit `0:0`). Preparation `14674318` also passed 18 tests and is downloading the 32B snapshot. On the user's request to improve scheduling, their eligible partitions were widened in place to `cpu,cpu-short,test`; job IDs, CPU/memory limits and downstream dependencies are unchanged. No GPUs were added. Four-GPU teacher baseline `14674339` depends on both passing; no larger-model training submitted yet. Existing frozen 7B baseline is retained.
 - Resources: Preparation eight CPUs/32 GiB/45 minutes; contract four CPUs/16 GiB/five minutes; baseline four GPUs/30 minutes.
 - Evidence: Private `edotenv/throughput-7b32b-20261027/submissions.txt` and per-job logs; [pilot protocol](policy-distillation/THROUGHPUT.md).
 

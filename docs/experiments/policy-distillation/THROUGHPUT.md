@@ -1,7 +1,8 @@
 # Larger-model throughput and learning pilot
 
-Status: preparation `14674318` and final-source CPU contract `14674338` queued;
-teacher baseline `14674339` waits for both. No larger-model training submitted
+Status: final-source CPU contract `14674338` passed all 18 tests. Preparation
+`14674318` passed its tests and is downloading the 32B snapshot; teacher baseline
+`14674339` waits for preparation. No larger-model training submitted
 yet. Source `f7b5aaa`, private run root `edotenv/throughput-7b32b-20261027`.
 
 The user authorized upgrading to a 7B student and frozen 32B teacher, measuring
