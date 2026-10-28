@@ -261,6 +261,7 @@ class ConfigurationTests(unittest.TestCase):
             ("--global-batch-size", "64"),
             ("--rollout-num-gpus", "8"),
             ("--sglang-server-concurrency", "8"),
+            ("--optimizer-offload-fraction", "0.5"),
         ]:
             self.assertEqual(command[command.index(option) + 1], expected)
         self.assertEqual(

@@ -21,6 +21,12 @@ training launcher still needs end-to-end execution. Earlier failures are retaine
 passed in `14689413`; larger-model training remains unvalidated. Teacher baseline:
 29/32 versus original student 27/32.
 
+Current memory blocker: the Ray-fixed A attempt completed one optimizer update
+then exhausted GPU memory during TP weight gathering for publication. The next
+candidate keeps 50% of optimizer state on CPU using Megatron’s supported hybrid
+optimizer. This changes host-memory and transfer costs and remains unvalidated
+for full training/checkpoint export. Validate A first; B/C remain stopped/held.
+
 The user authorized upgrading to a 7B student and frozen 32B teacher, measuring
 pipeline waiting, GPU productivity by role, and quality versus tokens, time and
 GPU-hours. Use pinned DeepSeek-R1-Distill-Qwen checkpoints; their tokenizer

@@ -8,6 +8,31 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · offload-check-14695604 · completed
+
+- Candidate: The 7B/32B profile uses Megatron optimizer CPU offload fraction 0.5,
+  preserving model layout, batch size, optimizer hyperparameters and precision.
+- Result: 19 CPU regressions passed; the installed hybrid optimizer completed
+  three tiny GPU updates with finite changed parameters and saved/reloaded its
+  optimizer state. This does not establish full distributed checkpoint export.
+- Resources: One AI GPU, four CPUs, 16 GiB; 1m37s, 0.0269 GPU-hours.
+- Evidence: `throughput-7b32b-20261027/offload-check-14695604.log` and
+  `offload-probe.py`. Retry A alone with its existing 128 GiB/node allocation;
+  verify repeated publication, checkpoints and host-memory pressure before B/C.
+
+### 2026-10-28 · throughput-7b32b-A-ray-a2 · failed after first update
+
+- A `14692928` ran 16m10s on 12 GPUs (3.23 allocated GPU-hours). Ray attachment,
+  serving and the first training update succeeded: 64 responses, mean length
+  575.98 tokens, loss -0.11430, gradient norm 0.94442, policy age zero.
+- Failure: CUDA OOM in Slime's TP parameter all-gather during weight publication
+  after step 0. A 1.02 GiB allocation failed with about 1005 MiB free on a
+  39.52 GiB GPU. No update-10 export exists for evaluation.
+- B `14692929` was cancelled during startup to avoid the shared publication
+  failure; C `14692971` is held. This is GPU memory, not host RAM or Ray startup.
+- Evidence: `A-capacity-ray-a2/train/train.log`, rollout `0.pt`, and GPU telemetry.
+  Investigate publication peak memory and supported memory controls before retry.
+
 ### 2026-10-28 · throughput-7b32b-A/B/C-ray-a2 · submitted
 
 - Jobs: A `14692928`, B `14692929`, C `14692971`, separate fresh outputs

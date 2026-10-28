@@ -217,6 +217,8 @@ def training_args(args, output):
         }
         if getattr(args, "save_interval", None):
             overrides["--save-interval"] = str(args.save_interval)
+        # Leave GPU headroom for TP weight gathering after optimizer state exists.
+        command += ["--optimizer-cpu-offload", "--optimizer-offload-fraction", "0.5"]
         command += ["--save-hf", str(output / "hf-checkpoints" / "{rollout_id}")]
         for option, value in overrides.items():
             command[command.index(option) + 1] = value
