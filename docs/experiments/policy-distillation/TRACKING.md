@@ -21,5 +21,6 @@ absent. No prompts, responses, raw logs, GPU UUIDs or model payloads are uploade
 by this exporter. Avoid importing an attempt twice; native live tracking and
 historical imports must remain clearly distinguished.
 
-Current integration is awaiting cluster checks and W&B login/destination; no
-online dashboard has been verified yet.
+Cluster check `14700226` completed in 31 seconds: 19 distillation tests, one
+numeric-export test, and shell syntax passed. W&B authentication, upload and
+live dashboard behavior remain unvalidated; login and destination are pending.

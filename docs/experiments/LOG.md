@@ -8,6 +8,17 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · tracking-check-14700226 · passed; pilots blocked
+
+The W&B integration snapshot corresponding to `01f47fb` passed 19 distillation
+checks, one numeric-export check and shell syntax in 31 seconds (one AI GPU
+allocated for runtime access, no training). Cloud authentication/upload remain
+unvalidated. Model-only preflight `14700178` separately failed because replay
+batch dumps activate trainer recovery, which requires optimizer state. Awaiting
+user decision on disabling those dumps; save test `14699990` and new A/B/C
+`14700179`/`14700180`/`14700181` remain dependency-blocked. Old C `14697823`
+also hit host OOM at full checkpoint saving. Logs remain in the throughput base.
+
 ### 2026-10-28 · model-only-save validation · preparing
 
 A `14697224` and B `14697822` exceeded 128 GiB host RAM while saving
