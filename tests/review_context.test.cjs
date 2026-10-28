@@ -133,7 +133,9 @@ const dependencySource = workflow.split('        id: dependency\n')[1]
   .split('\n').map(line => line.replace(/^ {12}/, '')).join('\n');
 const resolveDependency = new AsyncFunction('github', 'context', 'core', 'process', dependencySource);
 
-function dependencyFixture({ text = workflow, head = 'b'.repeat(40), size = Buffer.byteLength(text) } = {}) {
+const proposedWorkflow = `      - name: Fetch the pinned private reviewer\n        with:\n          repository: Lestode/review-agents\n          ref: ${'a'.repeat(40)}\n      - name: Next step\n`;
+
+function dependencyFixture({ text = proposedWorkflow, head = 'b'.repeat(40), size = Buffer.byteLength(text) } = {}) {
   const outputs = {}, reads = [];
   const github = { rest: {
     pulls: { get: async () => ({ data: { head: { sha: head,
@@ -153,7 +155,7 @@ function dependencyFixture({ text = workflow, head = 'b'.repeat(40), size = Buff
 test('dependency evidence is resolved from the captured fork snapshot as data', async () => {
   const f = dependencyFixture();
   await f.run();
-  assert.equal(f.outputs.sha, '5bcbc44839b48d2fab2b0d862b6eee027d87b5e7');
+  assert.equal(f.outputs.sha, 'a'.repeat(40));
   assert.deepEqual(f.reads, [{ owner: 'contributor', repo: 'fork',
     path: '.github/workflows/documentation-review.yml', ref: 'b'.repeat(40) }]);
   assert.ok(workflow.includes('path: .review-agent/proposed-dependency'));
@@ -163,12 +165,12 @@ test('dependency evidence is resolved from the captured fork snapshot as data', 
 
 test('dependency evidence rejects mutable pins, other repositories and ambiguous checkout steps', async () => {
   for (const text of [
-    workflow.replace('ref: 5bcbc44839b48d2fab2b0d862b6eee027d87b5e7', 'ref: main'),
-    workflow.replace('repository: Lestode/review-agents', 'repository: attacker/repo'),
-    workflow + '\n      - name: Fetch the pinned private reviewer\n',
-    workflow.replace('Fetch the pinned private reviewer', 'Missing checkout'),
-    workflow.replace('          ref: 5bcbc44839b48d2fab2b0d862b6eee027d87b5e7',
-      '          ref: 5bcbc44839b48d2fab2b0d862b6eee027d87b5e7\n          ref: main'),
+    proposedWorkflow.replace(`ref: ${'a'.repeat(40)}`, 'ref: main'),
+    proposedWorkflow.replace('repository: Lestode/review-agents', 'repository: attacker/repo'),
+    proposedWorkflow + '\n      - name: Fetch the pinned private reviewer\n',
+    proposedWorkflow.replace('Fetch the pinned private reviewer', 'Missing checkout'),
+    proposedWorkflow.replace(`          ref: ${'a'.repeat(40)}`,
+      `          ref: ${'a'.repeat(40)}\n          ref: main`),
   ]) {
     const f = dependencyFixture({ text });
     await assert.rejects(f.run(), /ambiguous|fixed private repository/);
