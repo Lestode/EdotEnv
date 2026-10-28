@@ -237,6 +237,10 @@ def training_args(args, output):
             command[command.index(option) + 1] = value
     if getattr(args, "checkpoint_mode", "full") == "model-only":
         command.append("--no-save-optim")
+        # Debug replay storage activates trainer recovery in pinned Slime.
+        # Model-only pilots intentionally cannot restore optimizer state.
+        replay_index = command.index("--save-debug-rollout-data")
+        del command[replay_index : replay_index + 2]
     if getattr(args, "wandb_project", None):
         command += [
             "--use-wandb",

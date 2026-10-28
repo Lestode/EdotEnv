@@ -270,9 +270,11 @@ class ConfigurationTests(unittest.TestCase):
             "/run/hf-checkpoints/9",
         )
         self.assertNotIn("--no-save-optim", command)
+        self.assertIn("--save-debug-rollout-data", command)
         args.checkpoint_mode = "model-only"
         model_only = training_args(args, Path("/run"))
         self.assertIn("--no-save-optim", model_only)
+        self.assertNotIn("--save-debug-rollout-data", model_only)
         self.assertIn("--save-hf", model_only)
         args.wandb_project = "edotenv"
         args.wandb_team = "team"

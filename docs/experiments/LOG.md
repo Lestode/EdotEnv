@@ -8,6 +8,16 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · model-only without replay dumps · authorized
+
+The user approved disabling replay/debug batch dumps for model-only pilots.
+The launcher now omits `--save-debug-rollout-data` only in that mode, avoiding
+Slime's implicit trainer-recovery requirement for optimizer state. Full saves
+retain their existing replay behavior. Metrics, GPU CSVs and model exports
+remain enabled; exact replay and optimizer-state recovery are unavailable.
+Validate this configuration through the full installed parser before the
+one-update save test and the dependent A/B/C pilots.
+
 ### 2026-10-28 · tracking-check-14700226 · passed; pilots blocked
 
 The W&B integration snapshot corresponding to `01f47fb` passed 19 distillation
