@@ -131,7 +131,7 @@ test('missing and oversized private evidence fail without silent omission or tru
 const dependencySource = workflow.split('        id: dependency\n')[1]
   .split('          script: |\n')[1].split(/\n {6}- /)[0]
   .split('\n').map(line => line.replace(/^ {12}/, '')).join('\n');
-const resolveDependency = new AsyncFunction('github', 'context', 'core', 'process', dependencySource);
+const resolveDependency = new AsyncFunction('require', 'github', 'context', 'core', 'process', dependencySource);
 
 const proposedWorkflow = workflow.replace(/          ref: [a-f0-9]{40}\n/, `          ref: ${'a'.repeat(40)}\n`);
 
@@ -146,10 +146,18 @@ function dependencyFixture({ text = proposedWorkflow, head = 'b'.repeat(40), siz
         content: Buffer.from(text).toString('base64') } };
     } },
   } };
-  return { outputs, reads, run: () => resolveDependency(github,
+  return { outputs, reads, run: () => resolveDependency(name => {
+    assert.equal(name, 'node:child_process');
+    return { execFileSync: (command, args, options) => {
+      assert.equal(command, 'python3');
+      assert.deepEqual(args, ['/accepted/scripts/resolve_review_dependency.py']);
+      return require('node:child_process').execFileSync(command,
+        [`${__dirname}/../scripts/resolve_review_dependency.py`], { ...options, stdio: ['pipe', 'pipe', 'pipe'] });
+    } };
+  }, github,
     { repo: { owner: 'owner', repo: 'project' }, payload: { pull_request: { number: 18 } } },
     { setOutput: (key, value) => { outputs[key] = value; } },
-    { env: { REVIEW_HEAD: 'b'.repeat(40) } }) };
+    { env: { REVIEW_HEAD: 'b'.repeat(40), GITHUB_WORKSPACE: '/accepted' } }) };
 }
 
 test('dependency evidence is resolved from the captured fork snapshot as data', async () => {
@@ -196,4 +204,23 @@ test('shell blocks and checkout lookalikes cannot select dependency evidence', a
     proposedWorkflow.replace('          ref: ' + 'a'.repeat(40), '        ref: ' + 'a'.repeat(40)),
     proposedWorkflow.replace('          path: .review-agent\n          persist-credentials: false', '          path: .review-agent\n          persist-credentials: false\n          extra-input: unrecognized'),
   ]) await assert.rejects(dependencyFixture({ text }).run(), /Unsupported|supported checkout/);
+});
+
+
+test('checkout-shaped multiline environment text cannot replace a real checkout', async () => {
+  const fake = proposedWorkflow.split('      - name: Fetch the pinned private reviewer\n')[1]
+    .split(/\n {6}- /)[0];
+  const real = proposedWorkflow.replace('Fetch the pinned private reviewer', 'Different checkout')
+    .replace('ref: ' + 'a'.repeat(40), 'ref: ' + 'c'.repeat(40));
+  const f = dependencyFixture({ text: 'env:\n  EXAMPLE: |\n      - name: Fetch the pinned private reviewer\n' +
+    fake + '\n      - name: Example ends\n' + real });
+  await assert.rejects(f.run(), /Unsupported|ambiguous/);
+});
+
+test('duplicate YAML keys, aliases and tagged objects are rejected', async () => {
+  for (const text of [
+    proposedWorkflow.replace(`          ref: ${'a'.repeat(40)}`, `          ref: ${'a'.repeat(40)}\n          ref: ${'c'.repeat(40)}`),
+    'env:\n  A: &example value\n  B: *example\n' + proposedWorkflow,
+    'env:\n  A: !!python/object/apply:os.system ["false"]\n' + proposedWorkflow,
+  ]) await assert.rejects(dependencyFixture({ text }).run(), /Unsupported|ambiguous/);
 });

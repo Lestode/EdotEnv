@@ -77,6 +77,8 @@ jobs:
           ssh-key: ${{ secrets.REVIEW_AGENTS_READ_KEY }}
           path: .review-agent
           persist-credentials: false
+      - name: Install accepted workflow parser
+        run: python3 -m pip install --disable-pip-version-check -r scripts/review-requirements.txt
       - name: Resolve proposed dependency evidence without executing proposal code
         id: dependency
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
@@ -98,37 +100,12 @@ jobs:
             if (data.type !== 'file' || data.encoding !== 'base64' || data.size > 20000) {
               throw new Error('Proposed reviewer workflow is missing or oversized.');
             }
-            const text = Buffer.from(data.content, 'base64').toString('utf8').replace(/\r\n/g, '\n');
-            const parts = text.split('      - name: Fetch the pinned private reviewer\n');
-            if (parts.length !== 2) throw new Error('Proposed reviewer checkout is ambiguous.');
-            const checkout = parts[1].split(/\n {6}- /)[0];
-            // Parse only the supported scalar mapping layout, never arbitrary YAML
-            // or shell text. Reject unknown keys, duplicate fields and block scalars.
-            const step = {}, inputs = {};
-            let inWith = false;
-            for (const line of checkout.split('\n')) {
-              if (!line.trim() || /^\s*#/.test(line)) continue;
-              if (line === '        with:' && !inWith) { inWith = true; continue; }
-              const field = inWith ? /^ {10}([a-z-]+): (.+)$/.exec(line)
-                : /^ {8}(id|uses): (.+?)(?: +#.*)?$/.exec(line);
-              const target = inWith ? inputs : step;
-              if (!field || Object.hasOwn(target, field[1])) {
-                throw new Error('Unsupported or ambiguous reviewer checkout layout.');
-              }
-              target[field[1]] = field[2];
-            }
-            const expected = {
-              repository: 'Lestode/review-agents', path: '.review-agent',
-              'ssh-key': '$' + '{{ secrets.REVIEW_AGENTS_READ_KEY }}', 'persist-credentials': 'false',
-            };
-            if (step.id !== 'shared_reviewer' ||
-                step.uses !== 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262' ||
-                Object.keys(inputs).length !== 5 ||
-                Object.entries(expected).some(([key, value]) => inputs[key] !== value) ||
-                !/^[a-f0-9]{40}$/.test(inputs.ref || '')) {
-              throw new Error('Dependency evidence requires the supported checkout, fixed private repository and full immutable SHA.');
-            }
-            core.setOutput('sha', inputs.ref);
+            const { execFileSync } = require('node:child_process');
+            const sha = execFileSync('python3',
+              [`${process.env.GITHUB_WORKSPACE}/scripts/resolve_review_dependency.py`], {
+                input: Buffer.from(data.content, 'base64'), encoding: 'utf8', maxBuffer: 4096,
+              }).trim();
+            core.setOutput('sha', sha);
       - name: Fetch proposed contracts as data only
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

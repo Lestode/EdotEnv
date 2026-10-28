@@ -173,14 +173,15 @@ blocking in either review.
 Both reviews include runner input/output, integration and compaction contracts,
 known limitations, and caller interfaces from the dependency pin proposed at the
 captured PR head. The trusted workflow reads only the fixed reviewer checkout
-step's supported scalar mapping, pinned checkout action and literal full SHA,
+step's actual mapping in `jobs.review.steps`, pinned checkout action and literal full SHA,
 requires the fixed private repository and checkout path, and fetches that
 revision into a separate ignored directory as evidence. It never imports or
 executes code from that directory. Runtime actions and configuration helpers
 continue to execute from the accepted checkout. Missing, ambiguous, mutable,
 oversized, or superseded proposal references stop evidence collection. This lets
 normal automatic reviews assess dependency upgrades without a manual branch run.
-The evidence identifies the proposed revision; it does not establish acceptance.
+The accepted parser uses pinned PyYAML with safe loading and rejects duplicate
+keys, aliases, tags and unsupported checkout layouts. The evidence identifies the proposed revision; it does not establish acceptance.
 Reviewers check acceptance against supplied proposal and discussion. Normal runs prepend accepted project customization; bootstrap runs
 do not activate proposed customization. Temporary context/configuration stays in
 the ignored private checkout and is never uploaded. Reports may cite dependency
