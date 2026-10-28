@@ -30,7 +30,7 @@ jobs:
           version: '0.13.5'
       - name: Install validation tools
         run: |
-          uv pip install --system pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt
+          uv pip install --system pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt -r scripts/review-requirements.txt
           uv pip install --system --index-url https://download.pytorch.org/whl/cpu 'torch==2.8.0+cpu'
           uv pip install --system -r requirements-distillation-test.txt
       - name: Check tracked project files
