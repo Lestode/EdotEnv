@@ -461,7 +461,7 @@ class ConfigurationTests(unittest.TestCase):
                 config.models[1].server_groups[0].overrides["model_path"], "/teacher"
             )
 
-    def test_sync_async_only_change_scheduling_in_training_command(self):
+    def test_sync_async_change_scheduling_and_enforce_async_lag_filter(self):
         args = SimpleNamespace(
             student=Path("/models/student"),
             teacher=Path("/models/teacher"),
@@ -480,7 +480,13 @@ class ConfigurationTests(unittest.TestCase):
             [(a, b) for a, b in zip(asynchronous, bounded, strict=True) if a != b],
             [("distillation.hooks.fully_async", "distillation.hooks.bounded_async")],
         )
-        changes = [(a, b) for a, b in zip(sync, asynchronous, strict=True) if a != b]
+        self.assertNotIn("--dynamic-sampling-filter-path", sync)
+        filter_index = asynchronous.index("--dynamic-sampling-filter-path")
+        self.assertEqual(
+            asynchronous[filter_index + 1], "distillation.hooks.filter_policy_lag"
+        )
+        scheduling_only = asynchronous[:filter_index] + asynchronous[filter_index + 2 :]
+        changes = [(a, b) for a, b in zip(sync, scheduling_only, strict=True) if a != b]
         self.assertEqual(
             changes,
             [("distillation.hooks.synchronous", "distillation.hooks.fully_async")],
