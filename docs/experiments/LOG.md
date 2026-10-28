@@ -8,6 +8,17 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · small-model A/B/C · concurrent release
+
+The user removed the save-first gate and explicitly authorized stopping affected
+runs if a shared bug appears, then applying the correction across A/B/C.
+Dependencies were cleared for `14700907`/`14700908`/`14700909`; the redundant
+pending save-only job `14700906` was cancelled. All three retain the same
+small-model snapshot and model-only/HF export settings. Diagnostic `14700905`
+passed 19 CPU tests but failed on its missing prepared `hooks.json`;
+independent retry `14700921` uses the production launcher to prepare all files.
+Runtime validation, saving and evaluation remain unproven for this configuration.
+
 ### 2026-10-28 · return to small-model validation · submitted
 
 The user chose the initial 1.5B student / 7B teacher pair to reduce scheduling

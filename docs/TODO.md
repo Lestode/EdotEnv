@@ -14,7 +14,9 @@ tracks outstanding outcomes; detailed evidence belongs in the linked records.
 The immediate focus has returned to the initial 1.5B student / 7B teacher pair,
 using the previously executed eight-GPU/two-node layout. Preserve the Ray driver,
 model-mount, policy, telemetry and model-only saving fixes. Disable replay dumps
-for these pilots and verify a one-update checkpoint plus HF export before A/B/C.
+for these pilots. A/B/C are eligible concurrently by user decision; stop affected
+runs on shared failures and apply corrections across all conditions. Verify
+checkpoints and HF exports before evaluation.
 Larger-model pilots are deferred after repeated full-save host-memory failures;
 no evaluated larger-model checkpoint is available. Deliver the requested
 Markdown/PDF report after small-model checkpoint evaluations. See the
