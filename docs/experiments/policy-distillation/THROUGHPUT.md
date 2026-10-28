@@ -3,16 +3,15 @@
 Komondor submissions may use either `gpu` or `ai`, with four allocated GPUs
 per node even on eight-GPU AI hosts. Slurm chooses one partition per job;
 this does not pool nodes across partitions. Retain actual placement in reports.
-AI execution hit a site-runtime loader failure (`libsubid.so.3` with Apptainer
-1.4.4). B/C currently remain on `gpu`; bounded diagnostic `14689539` checks
-the available runtimes before AI is enabled again.
+The site Apptainer 1.4.4 fails on AI hosts; the launcher selects 1.4.1 there,
+validated for container startup on three AI nodes in diagnostic `14689539`.
+GPU execution on AI remains unvalidated.
 
-Status: the first 3×4 attempts passed GPU communication but failed before
-training because the reused student model target was not mounted. Corrected
-container access and all 20 CPU tests passed in `14689413`. Fresh A/B/C retries
-`14689447`/`14689448`/`14689449` use `source-mount-a1` (the previous immutable
-source plus implementation fix `4d791d5`). Larger-model training remains
-unvalidated. Teacher baseline: 29/32 versus original student 27/32.
+Status: corrected runtime-aware A/B/C jobs `14689575`/`14689576`/`14689577`
+use immutable `source-ai-a1` (mount fix `4d791d5`, runtime selection `a9866fd`).
+Earlier failures are retained in the journal. CPU model-access and all 20 tests
+passed in `14689413`; larger-model training remains unvalidated. Teacher baseline:
+29/32 versus original student 27/32.
 
 The user authorized upgrading to a 7B student and frozen 32B teacher, measuring
 pipeline waiting, GPU productivity by role, and quality versus tokens, time and

@@ -8,6 +8,13 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · throughput-7b32b-A/B/C-ai-a1 · runtime-aware retries submitted
+
+- Diagnostic `14689539` completed in 15 seconds: Apptainer 1.4.4 failed on all three tested AI nodes, while 1.4.1 started the existing container successfully on each. This checks container startup, not GPU execution.
+- Fix `a9866fd` selects 1.4.1 on allocated AI nodes and retains 1.4.4 on GPU nodes. New immutable `source-ai-a1` builds on the mount-corrected snapshot.
+- Jobs A `14689575`, B `14689576`, C `14689577` are eligible for `gpu,ai`, each three nodes/four GPUs per node/30 minutes, unchanged workload. Pending B/C a3 attempts were cancelled before held replacements were released; no duplicates. Per-node model access, GPU runtime, collective and Ray readiness remain mandatory before training.
+
+
 ### 2026-10-28 · throughput-7b32b-A-3x4-a3 · AI runtime failed
 
 - A `14689447` immediately scheduled on AI nodes `cn01`, `cn02`, `cn04`, then failed after one second, exit 127. The site Apptainer 1.4.4 executable could not load `libsubid.so.3`; no container or training started.
