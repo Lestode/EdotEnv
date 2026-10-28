@@ -269,6 +269,11 @@ class ConfigurationTests(unittest.TestCase):
             command[command.index("--save-hf") + 1].format(rollout_id=9),
             "/run/hf-checkpoints/9",
         )
+        self.assertNotIn("--no-save-optim", command)
+        args.checkpoint_mode = "model-only"
+        model_only = training_args(args, Path("/run"))
+        self.assertIn("--no-save-optim", model_only)
+        self.assertIn("--save-hf", model_only)
         config = serving_config(args.student, args.teacher, args.profile)["sglang"]
         self.assertEqual([m["server_groups"][0]["num_gpus"] for m in config], [4, 4])
         self.assertEqual(

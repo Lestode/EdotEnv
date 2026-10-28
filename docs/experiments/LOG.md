@@ -8,6 +8,17 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · model-only-save validation · preparing
+
+A `14697224` and B `14697822` exceeded 128 GiB host RAM while saving
+their first full checkpoint; neither has a confirmed evaluation export. The
+user selected a one-update model-only save test at 128 GiB/node instead of the
+queued 256 GiB full-save probe `14698989`. `CHECKPOINT_MODE=model-only` passes
+Slime’s `--no-save-optim`; full saving remains the default. This preserves model
+weights for evaluation but not optimizer state for exact training continuation.
+Validate full runtime arguments, then the actual distributed save and HF export.
+
+
 ### 2026-10-28 · throughput-7b32b-A/B/C-offload-a2 · running / queued
 
 - Current jobs: A `14697224` running; B `14697822` and C `14697823` queued,

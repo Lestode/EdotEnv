@@ -47,6 +47,7 @@ if [ "$SLURM_NODEID" = 0 ]; then
             --data "$TRAIN_DATA" --output "$RUN_ROOT/train" --mode "$MODE" \
             --profile "$DISTILLATION_PROFILE" --rollouts "$ROLLOUTS" \
             --gpus-per-node "$DISTILLATION_GPUS_PER_NODE" \
+            --checkpoint-mode "${CHECKPOINT_MODE:-full}" \
             --response-tokens "$RESPONSE_TOKENS" --execute
     ) > "$RUN_ROOT/driver.log" 2>&1
     driver_status=$?

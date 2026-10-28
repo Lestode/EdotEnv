@@ -235,6 +235,8 @@ def training_args(args, output):
         command += ["--save-hf", str(output / "hf-checkpoints" / "{rollout_id}")]
         for option, value in overrides.items():
             command[command.index(option) + 1] = value
+    if getattr(args, "checkpoint_mode", "full") == "model-only":
+        command.append("--no-save-optim")
     return command
 
 
@@ -273,6 +275,12 @@ def main():
     parser.add_argument("--response-tokens", type=int, default=512)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--save-interval", type=int, default=10)
+    parser.add_argument(
+        "--checkpoint-mode",
+        choices=("full", "model-only"),
+        default="full",
+        help="Model-only omits optimizer state; it cannot resume the same Adam trajectory.",
+    )
     parser.add_argument("--profile", choices=["smoke", "7b32b"], default="smoke")
     parser.add_argument("--gpus-per-node", type=int, choices=(1, 2, 4), default=4)
     parser.add_argument("--execute", action="store_true")
