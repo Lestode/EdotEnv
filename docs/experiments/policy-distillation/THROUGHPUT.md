@@ -65,13 +65,24 @@ evaluated at intermediate checkpoints. Do not infer quality from training loss.
 Roofline profiling is a separate short diagnostic requiring FLOP and byte
 counters, not a plot reconstructed from GPU-utilization percentages.
 
-The public MATH training split is a candidate for subsequent learning runs:
+The user selected MATH's training split for the first learning experiment:
 `DigitalLearningGmbH/MATH-lighteval`, revision
 `0530c78699ea5e8eb5530600900e1f328b48acad`, file
-`data/train-00000-of-00001.parquet`. Prepare it separately, exclude exact
-normalized problem overlap with all MATH-500 evaluation rows, and retain hashes.
-Do not use the MATH test split for training. This does not rule out all semantic
-overlap or model pretraining contamination.
+`data/train-00000-of-00001.parquet`. The preparation command
+`python -m distillation.prepare_math --math500 <all-500-source.jsonl> --output <new-directory>`
+creates 3,000 training prompts and a separate 256-problem development split,
+stratified by subject and difficulty. Remaining rows are reserved. It excludes
+normalized exact overlap with all MATH-500 questions and duplicate problems,
+and retains source/output hashes and selection counts. This does not establish
+absence of semantic overlap or model pretraining contamination.
+
+Only `train.jsonl` is supplied to training; answers and solutions are stored
+separately in `train-references.jsonl`. Development data is for calibration and
+setup choices. Preserve the existing 32-question MATH-500 development selection
+and keep its other 468 questions reserved for final evaluation; do not select
+training questions or tune settings against those reserved results. Data
+preparation does not authorize a longer learning run. Response budgets and
+quality criteria still need to be set from development evidence.
 
 ## Consolidated report
 
