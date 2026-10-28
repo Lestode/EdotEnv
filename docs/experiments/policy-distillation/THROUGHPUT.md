@@ -1,5 +1,10 @@
 # Larger-model throughput and learning pilot
 
+Komondor submissions may use either `gpu` or `ai`, with four allocated GPUs
+per node even on eight-GPU AI hosts. Slurm chooses one partition per job;
+this does not pool nodes across partitions. Retain actual placement in reports.
+AI-node execution remains to be validated by the startup checks and training.
+
 Status: the first 3×4 attempts passed GPU communication but failed before
 training because the reused student model target was not mounted. Corrected
 container access and all 20 CPU tests passed in `14689413`. Fresh A/B/C retries

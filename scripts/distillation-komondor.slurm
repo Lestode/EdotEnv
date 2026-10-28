@@ -1,7 +1,7 @@
 #!/bin/bash
 # Submit with --account=<authorized account> and exported paths described in docs.
 #SBATCH --job-name=distillation-check
-#SBATCH --partition=gpu
+#SBATCH --partition=gpu,ai
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=4

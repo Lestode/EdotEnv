@@ -8,6 +8,12 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · throughput-7b32b-A/B/C-3x4-a3 · AI eligibility enabled
+
+- User requested AI-node support. Existing jobs `14689447`/`14689448`/`14689449` were updated in place to `Partition=gpu,ai`; Slurm confirmed eligibility. No duplicate submissions or resource increases.
+- Four allocated GPUs per node remain advertised to Ray; pinned Slime resolves physical serving IDs within the inherited visible-device list. AI runtime execution remains unvalidated; per-node access, native-kernel, collective and Ray-resource checks precede training.
+- The Komondor launcher now defaults to both partitions. Each job stays within a single partition; record placement and topology rather than assuming identical performance.
+
 ### 2026-10-28 · throughput-7b32b-A/B/C-3x4-a3 · submitted after mount validation
 
 - CPU gate `14689413` passed real-container access to both pinned models, one new shard-access regression and all 19 existing distillation tests. No GPU allocation for this gate.
