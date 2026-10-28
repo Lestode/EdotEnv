@@ -46,6 +46,20 @@ The policy-distillation design records the
 [candidate execution and weight-update policies](experiments/policy-distillation/README.md#candidate-execution-policies)
 and the proposed first comparison.
 
+## Log ML experiments in W&B
+
+Log every ML experiment in Weights & Biases, including smoke tests and failed
+attempts. Use a separate run for each condition and attempt. Record the model,
+data and code revisions, configuration, resource allocation, available training
+and evaluation metrics, and final outcome. Keep local evidence as well.
+
+Set up tracking before launch and verify that metrics actually reach the intended
+project. Prefer live logging; when cluster connectivity prevents it, use a
+periodic relay or offline logging followed by sync, and make any delay visible.
+Do not silently leave tracking disabled. Keep credentials and sensitive content
+out of uploaded artifacts and the public repository. See the
+[distillation tracking setup](experiments/policy-distillation/TRACKING.md).
+
 ## Maintain experiment continuity
 
 Read recent experiment records before planning further runs. Create a journal
