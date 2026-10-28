@@ -72,8 +72,8 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: Lestode/review-agents
-          # Accepted shared reviewer: review-agents PR #11 (compaction response repair).
-          ref: 5bcbc44839b48d2fab2b0d862b6eee027d87b5e7
+          # Accepted shared reviewer: review-agents PR #12 (adaptive summary budget).
+          ref: f27e55e7cdc5e93deb2401355cd46b17cc0fd556
           ssh-key: ${{ secrets.REVIEW_AGENTS_READ_KEY }}
           path: .review-agent
           persist-credentials: false
