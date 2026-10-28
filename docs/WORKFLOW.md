@@ -157,8 +157,8 @@ blocking; out-of-scope private audits are coverage notes rather than prerequisit
 No separate completion-only check is requested.
 
 The combined workflow keeps its existing filename, but is named `API agent
-reviews` and gives runs the title `Review PR #<number>`. One immutable private
-checkout supplies both actions, serialized per PR. An implementation assessment
+reviews` and gives runs the title `Review PR #<number>`. One accepted immutable private
+checkout supplies both executable actions, serialized per PR. An implementation assessment
 still runs when documentation findings fail the preceding action. Each agent's
 own command selects that reviewer for comment requests.
 
@@ -170,9 +170,19 @@ and receives relevant unchanged caller/configuration source through its supporte
 `contextPaths` setting. Missing evidence for a consequential requirement remains
 blocking in either review.
 
-Both reviews include the accepted shared runner input/output contracts,
-integration and compaction contracts, known limitations, and upstream validation references in bounded private
-model context. Normal runs prepend accepted project customization; bootstrap runs
+Both reviews include runner input/output, integration and compaction contracts,
+known limitations, and caller interfaces from the dependency pin proposed at the
+captured PR head. The trusted workflow reads only the fixed reviewer checkout
+step's actual mapping in `jobs.review.steps`, pinned checkout action and literal full SHA,
+requires the fixed private repository and checkout path, and fetches that
+revision into a separate ignored directory as evidence. It never imports or
+executes code from that directory. Runtime actions and configuration helpers
+continue to execute from the accepted checkout. Missing, ambiguous, mutable,
+oversized, or superseded proposal references stop evidence collection. This lets
+normal automatic reviews assess dependency upgrades without a manual branch run.
+The accepted parser uses pinned PyYAML with safe loading and rejects duplicate
+keys, aliases, tags and unsupported checkout layouts. The evidence identifies the proposed revision; it does not establish acceptance.
+Reviewers check acceptance against supplied proposal and discussion. Normal runs prepend accepted project customization; bootstrap runs
 do not activate proposed customization. Temporary context/configuration stays in
 the ignored private checkout and is never uploaded. Reports may cite dependency
 paths and the pin but must not reproduce private source. This supplies evidence
@@ -393,10 +403,12 @@ and stale-head blocking. See [the activation tasks](TODO.md#repository-workflow-
 Initialize Slime with `git submodule update --init slime`. Use Python 3.12 and
 the [experiment’s virtual-environment setup](../experiments/verifier-context/README.md#running-the-comparison)
 for the Harbor/Daytona dependencies required by the project tests. The reviewer
-freshness tests also require Node.js. Then run:
+freshness and dependency-evidence tests also require Node.js. Activate the virtual
+environment so Python subprocesses launched by Node use the same dependencies:
 
 ```sh
-.venv/bin/python -m pip install pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt
+. .venv/bin/activate
+.venv/bin/python -m pip install pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt -r scripts/review-requirements.txt
 .venv/bin/pre-commit run --all-files
 .venv/bin/python scripts/check_project.py
 node --test tests/*.test.cjs
