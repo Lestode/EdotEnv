@@ -8,7 +8,7 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
-### 2026-10-28 · return to small-model validation · preparing
+### 2026-10-28 · return to small-model validation · submitted
 
 The user chose the initial 1.5B student / 7B teacher pair to reduce scheduling
 and memory pressure. Reuse eight GPUs across two nodes, with 64 GiB RAM/node,
@@ -16,8 +16,13 @@ model-only saves, no replay dumps, HF exports and lightweight telemetry.
 The large-model optimizer-offload settings do not apply to this profile.
 Retain the successful Ray/container/mount fixes and existing model baselines.
 Replace the pending larger-model save and A/B/C jobs, keeping their records.
-Validate full runtime arguments and one-update saving before separate A/B/C
-pilots; checkpoint evaluation and a consolidated report remain required.
+Full-argument/CPU gate `14700905` precedes save test `14700906`; A/B/C
+`14700907`/`14700908`/`14700909` each wait for the save test. Pilots request
+ten updates and 512 response tokens, with 30-minute caps. Pending larger jobs
+`14700459`/`14700460`/`14700462`/`14700463` were cancelled before replacement.
+Artifacts: `/project/nk_meshapplied/edotenv/small-validation-20261028`, immutable
+`source-a1` with `ac72126` launch/test overlays. Checkpoint evaluation and the
+consolidated report remain required.
 
 ### 2026-10-28 · model-only without replay dumps · authorized
 
