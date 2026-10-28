@@ -104,17 +104,19 @@ srun --overlap --ntasks="$DISTILLATION_NODES" --ntasks-per-node=1 --kill-on-bad-
     > "$RUN_ROOT/ray.log" 2>&1 &
 pids+=("$!")
 
-# Verify every requested node exposes exactly its allocated GPU count.
-srun --overlap --nodes=1 --ntasks=1 --nodelist="$HEAD_NODE" \
-    apptainer exec --nv --bind "$DISTILLATION_BINDS" \
-    "$RUNTIME_IMAGE" bash -c '
-        set -euo pipefail
-        cd "$PROJECT_ROOT"
-        source scripts/distillation-runtime-env.sh
-        python -m distillation.cluster_ready
-        python -m distillation.launch --student "$STUDENT_MODEL" --teacher "$TEACHER_MODEL" \
-            --data "$TRAIN_DATA" --output "$RUN_ROOT/train" --mode "$MODE" \
-            --profile "$DISTILLATION_PROFILE" --rollouts "$ROLLOUTS" \
-            --gpus-per-node "$DISTILLATION_GPUS_PER_NODE" \
-            --response-tokens "$RESPONSE_TOKENS" --execute
-    ' > "$RUN_ROOT/driver.log" 2>&1
+# The driver runs alongside the head inside its container. Supervise its
+# atomic result without importing Ray from a separate Slurm step.
+ray_srun_pid=${pids[0]}
+while [ ! -f "$RUN_ROOT/driver-exit" ]; do
+    if ! kill -0 "$ray_srun_pid" 2>/dev/null; then
+        wait "$ray_srun_pid" || exit "$?"
+        echo "Ray step exited before reporting the driver result" >&2
+        exit 1
+    fi
+    sleep 2
+done
+read -r driver_status < "$RUN_ROOT/driver-exit"
+case "$driver_status" in
+    ''|*[!0-9]*) echo "Invalid driver exit status" >&2; exit 1 ;;
+esac
+exit "$driver_status"

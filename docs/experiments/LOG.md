@@ -8,6 +8,44 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · ray-multinode-14692340 · completed
+
+- Result: Driver attachment in the head container and CPU tasks on both `cn01`
+  and `cn02` passed. Launcher shell syntax and 20 CPU regressions passed.
+- Resources: Two AI nodes, one GPU allocated per node, four CPUs and 16 GiB
+  per node; 2m11s (0.0728 GPU-hours). Ray used CPU tasks only.
+- Evidence: `throughput-7b32b-20261027/ray-multinode-14692340`, staged
+  `source-ray-a1` with the prepared launcher changes.
+- Limit: Validates the placement pattern; full model training remains untested
+  with the new launcher. Proceed to fresh bounded A/B/C pilots.
+
+### 2026-10-28 · ray-visibility-14691685 · completed
+
+- Question: Does driver placement explain AI Ray attachment failure?
+- Result: Same-container driver discovered the local Ray node and connected;
+  a separate Slurm/container step failed local node discovery. This supports
+  keeping the driver with the head; exact site isolation mechanism is unconfirmed.
+- Resources: One GPU allocated, four CPUs, 16 GiB, 1m39s (0.0275 GPU-hours);
+  Ray advertised zero GPUs and no model ran.
+- Evidence: `throughput-7b32b-20261027/ray-visibility-14691685` logs/results.
+- Next: Validate the prepared launcher correction across nodes before training.
+
+### 2026-10-28 · ray-visibility-14691557 · cancelled
+
+- Diagnostic defect: selected head port 16379 overlaps Ray's default worker
+  range. Ray never started; subsequent connection failures are uninterpretable.
+- Stopped the lingering allocation; retained logs. Retry `14691685` uses 26379
+  and fails immediately when head startup exits. No training ran.
+
+### 2026-10-28 · throughput-7b32b-A/B-ai-a1 · failed
+
+- A `14689575` failed after 11m43s; B `14689576` after 11m25s, both before
+  training at Ray driver readiness. A passed model access and 12-rank collective;
+  its Ray head registered all three nodes. C `14689577` remains held.
+- A used 128 GiB/node; B used 64 GiB. Neither establishes training memory needs.
+- Evidence: retained `A-capacity-ai-a1` / `B-capacity-ai-a1` logs under the
+  `throughput-7b32b-20261027` artifact root. No checkpoints to evaluate.
+
 ### 2026-10-28 · throughput-7b32b-B/C-ai-a1 · reduced host memory
 
 - User authorized reducing pending B `14689576` and C `14689577` to 64 GiB host RAM per node. Updated in place and verified: `MinMemoryNode=64G`, effective `MinCPUsNode=17` (previously 33). GPU counts, workload and time caps unchanged; A remains at 128 GiB/node.

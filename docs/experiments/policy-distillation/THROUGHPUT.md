@@ -5,15 +5,19 @@ per node even on eight-GPU AI hosts. Slurm chooses one partition per job;
 this does not pool nodes across partitions. Retain actual placement in reports.
 The site Apptainer 1.4.4 fails on AI hosts; the launcher selects 1.4.1 there,
 validated for container startup on three AI nodes in diagnostic `14689539`.
-GPU execution on AI remains unvalidated.
+The 12-rank collective passed on AI; larger-model training remains unvalidated.
 
-B/C pending jobs now request 64 GiB host RAM per node at the user’s direction;
-A retains 128 GiB. This reduction is unvalidated through training/checkpointing
+B/C jobs request 64 GiB host RAM per node at the user’s direction;
+A used 128 GiB. This reduction is unvalidated through training/checkpointing
 and must be disclosed in timing comparisons. GPU counts and workload are unchanged.
 
 Status: corrected runtime-aware A/B/C jobs `14689575`/`14689576`/`14689577`
-use immutable `source-ai-a1` (mount fix `4d791d5`, runtime selection `a9866fd`).
-Earlier failures are retained in the journal. CPU model-access and all 20 tests
+used immutable `source-ai-a1` (mount fix `4d791d5`, runtime selection `a9866fd`).
+A/B failed before training at Ray driver attachment; C is held. Diagnostic
+`14691685` passed driver attachment inside the head container but failed from
+a separate step. The launcher now keeps the driver with the head. Two-node attachment, remote
+CPU tasks, shell syntax and 20 CPU regressions passed in `14692340`; the
+training launcher still needs end-to-end execution. Earlier failures are retained in the journal. CPU model-access and all 20 tests
 passed in `14689413`; larger-model training remains unvalidated. Teacher baseline:
 29/32 versus original student 27/32.
 

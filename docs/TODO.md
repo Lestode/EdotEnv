@@ -19,13 +19,15 @@ Teacher baseline is complete: 29/32 correct versus the original student's
 failed before training because a reused model symlink escaped the container
 mounts; all three passed the 12-rank collective. The corrected mounts passed
 real-container model access and 20 CPU tests in job `14689413`.
-Fresh retries A `14689575`, B `14689576`, C `14689577` each request 12 GPUs
-on three nodes, with a 30-minute cap, eligible for `gpu` or `ai`. AI uses the
-site Apptainer 1.4.1 after 1.4.4 failed to load a host library; three-node
-container startup passed, while AI GPU execution remains unvalidated. They may run concurrently under the
-user's revised concurrency decision. Per-node model access is now checked
-before startup. Larger-model training and checkpoint evaluations remain
-unvalidated; deliver the requested Markdown/PDF report before longer runs.
+A `14689575` and B `14689576` failed before training at Ray driver attachment;
+C `14689577` is held. A passed model access and the 12-rank collective on AI.
+Diagnostic `14691685` reproduced successful attachment inside the head container
+and failure from a separate Slurm/container step. The launcher correction keeps
+the driver with the head; two-node attachment and remote task execution passed in `14692340`, along
+with shell syntax and 20 CPU tests. End-to-end training still needs a retry.
+B/C use the user-requested 64 GiB/node; A used 128 GiB. No training memory peak
+or larger-model checkpoint evaluation is available yet. Deliver the requested
+Markdown/PDF report before longer runs.
 See the [journal](experiments/LOG.md) for retained failures and source provenance.
 
 The [experiment design](experiments/policy-distillation/README.md) frames the
