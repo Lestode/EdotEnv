@@ -8,6 +8,17 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · MATH data preparation · submitted
+
+CPU-only job `14702438` prepares the selected MATH training source with code
+`e649014` (four cores, 8 GiB, ten-minute cap). Planned outputs are 3,000
+prompt-only training rows, separate references and 256 held-out development
+rows, with subject/difficulty strata, normalized overlap exclusion against all
+500 MATH-500 questions, and source/output hashes. Output is under the small-model
+base's `math-data-a1`; results remain pending. This is data preparation, not a
+learning run. The existing 32-question MATH-500 development selection and 468
+reserved final-evaluation questions remain distinct from training.
+
 ### 2026-10-28 · small-model A/B/C · concurrent release
 
 The user removed the save-first gate and explicitly authorized stopping affected
