@@ -102,13 +102,33 @@ jobs:
             const parts = text.split('      - name: Fetch the pinned private reviewer\n');
             if (parts.length !== 2) throw new Error('Proposed reviewer checkout is ambiguous.');
             const checkout = parts[1].split(/\n {6}- /)[0];
-            const repositories = [...checkout.matchAll(/^ {10}repository: (.+)$/gm)];
-            const refs = [...checkout.matchAll(/^ {10}ref: (.+)$/gm)];
-            if (repositories.length !== 1 || repositories[0][1] !== 'Lestode/review-agents' ||
-                refs.length !== 1 || !/^[a-f0-9]{40}$/.test(refs[0][1])) {
-              throw new Error('Dependency evidence requires the fixed private repository and a full immutable SHA.');
+            // Parse only the supported scalar mapping layout, never arbitrary YAML
+            // or shell text. Reject unknown keys, duplicate fields and block scalars.
+            const step = {}, inputs = {};
+            let inWith = false;
+            for (const line of checkout.split('\n')) {
+              if (!line.trim() || /^\s*#/.test(line)) continue;
+              if (line === '        with:' && !inWith) { inWith = true; continue; }
+              const field = inWith ? /^ {10}([a-z-]+): (.+)$/.exec(line)
+                : /^ {8}(id|uses): (.+?)(?: +#.*)?$/.exec(line);
+              const target = inWith ? inputs : step;
+              if (!field || Object.hasOwn(target, field[1])) {
+                throw new Error('Unsupported or ambiguous reviewer checkout layout.');
+              }
+              target[field[1]] = field[2];
             }
-            core.setOutput('sha', refs[0][1]);
+            const expected = {
+              repository: 'Lestode/review-agents', path: '.review-agent',
+              'ssh-key': '$' + '{{ secrets.REVIEW_AGENTS_READ_KEY }}', 'persist-credentials': 'false',
+            };
+            if (step.id !== 'shared_reviewer' ||
+                step.uses !== 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262' ||
+                Object.keys(inputs).length !== 5 ||
+                Object.entries(expected).some(([key, value]) => inputs[key] !== value) ||
+                !/^[a-f0-9]{40}$/.test(inputs.ref || '')) {
+              throw new Error('Dependency evidence requires the supported checkout, fixed private repository and full immutable SHA.');
+            }
+            core.setOutput('sha', inputs.ref);
       - name: Fetch proposed contracts as data only
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

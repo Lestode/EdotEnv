@@ -133,7 +133,7 @@ const dependencySource = workflow.split('        id: dependency\n')[1]
   .split('\n').map(line => line.replace(/^ {12}/, '')).join('\n');
 const resolveDependency = new AsyncFunction('github', 'context', 'core', 'process', dependencySource);
 
-const proposedWorkflow = `      - name: Fetch the pinned private reviewer\n        with:\n          repository: Lestode/review-agents\n          ref: ${'a'.repeat(40)}\n      - name: Next step\n`;
+const proposedWorkflow = workflow.replace(/          ref: [a-f0-9]{40}\n/, `          ref: ${'a'.repeat(40)}\n`);
 
 function dependencyFixture({ text = proposedWorkflow, head = 'b'.repeat(40), size = Buffer.byteLength(text) } = {}) {
   const outputs = {}, reads = [];
@@ -173,7 +173,7 @@ test('dependency evidence rejects mutable pins, other repositories and ambiguous
       `          ref: ${'a'.repeat(40)}\n          ref: main`),
   ]) {
     const f = dependencyFixture({ text });
-    await assert.rejects(f.run(), /ambiguous|fixed private repository/);
+    await assert.rejects(f.run(), /ambiguous|fixed private repository|Unsupported/);
     assert.deepEqual(f.outputs, {});
   }
 });
@@ -184,4 +184,16 @@ test('dependency evidence stops before publication on a changed head or oversize
     await assert.rejects(f.run(), /PR changed|oversized/);
     assert.deepEqual(f.outputs, {});
   }
+});
+
+
+test('shell blocks and checkout lookalikes cannot select dependency evidence', async () => {
+  for (const text of [
+    proposedWorkflow.replace('        id: shared_reviewer', '        run: |'),
+    proposedWorkflow.replace('          repository: Lestode/review-agents', '        run: |\n          repository: Lestode/review-agents'),
+    proposedWorkflow.replace('id: shared_reviewer\n        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262', 'id: shared_reviewer\n        uses: attacker/action@main'),
+    proposedWorkflow.replace('          path: .review-agent', '          path: .other-reviewer'),
+    proposedWorkflow.replace('          ref: ' + 'a'.repeat(40), '        ref: ' + 'a'.repeat(40)),
+    proposedWorkflow.replace('          path: .review-agent\n          persist-credentials: false', '          path: .review-agent\n          persist-credentials: false\n          extra-input: unrecognized'),
+  ]) await assert.rejects(dependencyFixture({ text }).run(), /Unsupported|supported checkout/);
 });
