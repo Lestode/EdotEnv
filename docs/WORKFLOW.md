@@ -170,8 +170,8 @@ and receives relevant unchanged caller/configuration source through its supporte
 `contextPaths` setting. Missing evidence for a consequential requirement remains
 blocking in either review.
 
-Both reviews include the accepted shared action input/output contracts,
-integration contract, known limitations, and upstream validation references in bounded private
+Both reviews include the accepted shared runner input/output contracts,
+integration and compaction contracts, known limitations, and upstream validation references in bounded private
 model context. Normal runs prepend accepted project customization; bootstrap runs
 do not activate proposed customization. Temporary context/configuration stays in
 the ignored private checkout and is never uploaded. Reports may cite dependency
@@ -446,6 +446,8 @@ failure-injection scenarios.
 The 2026-10-28 deployment adopts shared reviewer PR #10 at the immutable pin
 above. It keeps the existing 512 KB / 640 KB input limits and finding-blocking
 checks. The consumer context builder follows the updated README section and
-helper signature while retaining the 32 KB private-instruction bound.
+helper signature while retaining the 32 KB private-instruction bound. Unused
+Daytona input declarations and composite execution bodies are excluded from
+caller-interface evidence; the full compaction contract is supplied to both agents.
 Live deployment and the first compacted review are pending until this consumer
 upgrade passes its reviews, is merged, and a fresh request uses the accepted pin.

@@ -117,9 +117,15 @@ jobs:
             const evidence = [
               ['README.md (review contracts)', readme.slice(start, end)],
               ...['documentation-review/action.yml', 'implementation-review/action.yml']
-                .map(file => [file + ' (inputs and outputs)',
-                  section(fs.readFileSync(`.review-agent/${file}`, 'utf8'), 'name:', 'runs:')]),
+                .map(file => {
+                  const manifest = fs.readFileSync(`.review-agent/${file}`, 'utf8');
+                  return [file + ' (runner inputs and outputs)',
+                    section(manifest, 'name:', '  daytona-api-key:') +
+                    section(manifest, '  allow-public-repository:', 'runs:')];
+                }),
               ['KNOWN_ISSUES.md', fs.readFileSync('.review-agent/KNOWN_ISSUES.md', 'utf8')],
+              ['README.md (compaction contract)',
+                section(readme, '### Compacting long review history', '## Future ideas')],
             ];
             // Include only the pinned helper and publication interfaces used by this caller.
             const excerpt = (file, startMarker, endMarker) => {
@@ -131,7 +137,7 @@ jobs:
               excerpt('documentation-review/review.cjs', 'const defaults = Object.freeze(', 'function formatResponse('),
               excerpt('implementation-review/review.cjs', 'function projectSettings(', 'async function collectContext('),
               excerpt('documentation-review/check.cjs', '  ledger(includeResult', '  recover(checks, required'),
-              excerpt('documentation-review/check.cjs', '  finalized(check, report)', '  async reuse(comment)'),
+              excerpt('documentation-review/check.cjs', '  finalized(check, report)', '  async update('),
             ];
             const scope = '\n\n' +
               'The private shared runtime is a separately reviewed, pinned dependency; ' +
