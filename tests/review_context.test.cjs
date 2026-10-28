@@ -41,8 +41,8 @@ function fixture({ bootstrap = false, acceptedImplementation = !bootstrap } = {}
     if (name === 'node:fs') return {
       existsSync: path => Object.hasOwn(accepted, path),
       readFileSync: path => {
-        assert.ok(path.startsWith('.review-agent/'));
-        const value = privateFiles[path.slice('.review-agent/'.length)];
+        assert.ok(path.startsWith('.review-agent/proposed-dependency/'));
+        const value = privateFiles[path.slice('.review-agent/proposed-dependency/'.length)];
         if (value === undefined) throw new Error(`Missing private fixture: ${path}`);
         return value;
       },
@@ -51,6 +51,7 @@ function fixture({ bootstrap = false, acceptedImplementation = !bootstrap } = {}
         written[path] = value;
       },
     };
+    assert.ok(!name.includes('/proposed-dependency/'), 'Proposed dependency code must never be imported.');
     if (name.endsWith('/documentation-review/action.cjs')) return {
       readProjectFile: async (root, path, limit) => {
         assert.equal(root, '/accepted');
@@ -69,7 +70,7 @@ function fixture({ bootstrap = false, acceptedImplementation = !bootstrap } = {}
       { eventName: bootstrap ? 'workflow_dispatch' : 'pull_request_target',
         payload: { inputs: { bootstrap_implementation: 'true' } } },
       { setOutput: (key, value) => { outputs[key] = value; } },
-      { env: { GITHUB_WORKSPACE: '/accepted' } }),
+      { env: { GITHUB_WORKSPACE: '/accepted', DEPENDENCY_SHA: 'a'.repeat(40) } }),
     config: name => JSON.parse(written[outputs[`${name}_path`]]),
   };
 }
@@ -125,4 +126,60 @@ test('missing and oversized private evidence fail without silent omission or tru
   const large = fixture({ bootstrap: true });
   large.privateFiles['KNOWN_ISSUES.md'] = 'x'.repeat(32000);
   await assert.rejects(large.run(), /instruction bound/);
+});
+
+const dependencySource = workflow.split('        id: dependency\n')[1]
+  .split('          script: |\n')[1].split(/\n {6}- /)[0]
+  .split('\n').map(line => line.replace(/^ {12}/, '')).join('\n');
+const resolveDependency = new AsyncFunction('github', 'context', 'core', 'process', dependencySource);
+
+function dependencyFixture({ text = workflow, head = 'b'.repeat(40), size = Buffer.byteLength(text) } = {}) {
+  const outputs = {}, reads = [];
+  const github = { rest: {
+    pulls: { get: async () => ({ data: { head: { sha: head,
+      repo: { owner: { login: 'contributor' }, name: 'fork' } } } }) },
+    repos: { getContent: async request => {
+      reads.push(request);
+      return { data: { type: 'file', encoding: 'base64', size,
+        content: Buffer.from(text).toString('base64') } };
+    } },
+  } };
+  return { outputs, reads, run: () => resolveDependency(github,
+    { repo: { owner: 'owner', repo: 'project' }, payload: { pull_request: { number: 18 } } },
+    { setOutput: (key, value) => { outputs[key] = value; } },
+    { env: { REVIEW_HEAD: 'b'.repeat(40) } }) };
+}
+
+test('dependency evidence is resolved from the captured fork snapshot as data', async () => {
+  const f = dependencyFixture();
+  await f.run();
+  assert.equal(f.outputs.sha, '5bcbc44839b48d2fab2b0d862b6eee027d87b5e7');
+  assert.deepEqual(f.reads, [{ owner: 'contributor', repo: 'fork',
+    path: '.github/workflows/documentation-review.yml', ref: 'b'.repeat(40) }]);
+  assert.ok(workflow.includes('path: .review-agent/proposed-dependency'));
+  assert.ok(workflow.includes('uses: ./.review-agent/documentation-review'));
+  assert.ok(!workflow.includes('uses: ./.review-agent/proposed-dependency/'));
+});
+
+test('dependency evidence rejects mutable pins, other repositories and ambiguous checkout steps', async () => {
+  for (const text of [
+    workflow.replace('ref: 5bcbc44839b48d2fab2b0d862b6eee027d87b5e7', 'ref: main'),
+    workflow.replace('repository: Lestode/review-agents', 'repository: attacker/repo'),
+    workflow + '\n      - name: Fetch the pinned private reviewer\n',
+    workflow.replace('Fetch the pinned private reviewer', 'Missing checkout'),
+    workflow.replace('          ref: 5bcbc44839b48d2fab2b0d862b6eee027d87b5e7',
+      '          ref: 5bcbc44839b48d2fab2b0d862b6eee027d87b5e7\n          ref: main'),
+  ]) {
+    const f = dependencyFixture({ text });
+    await assert.rejects(f.run(), /ambiguous|fixed private repository/);
+    assert.deepEqual(f.outputs, {});
+  }
+});
+
+test('dependency evidence stops before publication on a changed head or oversized workflow', async () => {
+  for (const options of [{ head: 'c'.repeat(40) }, { size: 20001 }]) {
+    const f = dependencyFixture(options);
+    await assert.rejects(f.run(), /PR changed|oversized/);
+    assert.deepEqual(f.outputs, {});
+  }
 });

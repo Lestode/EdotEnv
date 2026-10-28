@@ -40,7 +40,9 @@ and merge requirements. The restored latest-head policy passed its first normal
 protected merge in PR #12; broader failure-injection validation remains deferred.
 Use supported interfaces and keep further workflow work proportionate to
 experimental needs. The [compaction rollout](WORKFLOW.md#context-compaction-rollout)
-records the initial deployment and pending live verification of its response repair.
+records compaction deployment and pending live verification. Dependency upgrades
+need proposed-pin interface evidence; the workflow update supplies it as data
+while keeping executable reviewer code on the accepted pin.
 
 Keep implementation checks proportionate to the change, and distinguish CPU
 checks, reviewer results, and measured GPU training evidence. Launched runs and
