@@ -3,7 +3,9 @@
 Komondor submissions may use either `gpu` or `ai`, with four allocated GPUs
 per node even on eight-GPU AI hosts. Slurm chooses one partition per job;
 this does not pool nodes across partitions. Retain actual placement in reports.
-AI-node execution remains to be validated by the startup checks and training.
+AI execution hit a site-runtime loader failure (`libsubid.so.3` with Apptainer
+1.4.4). B/C currently remain on `gpu`; bounded diagnostic `14689539` checks
+the available runtimes before AI is enabled again.
 
 Status: the first 3×4 attempts passed GPU communication but failed before
 training because the reused student model target was not mounted. Corrected

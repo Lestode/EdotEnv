@@ -8,6 +8,13 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · throughput-7b32b-A-3x4-a3 · AI runtime failed
+
+- A `14689447` immediately scheduled on AI nodes `cn01`, `cn02`, `cn04`, then failed after one second, exit 127. The site Apptainer 1.4.4 executable could not load `libsubid.so.3`; no container or training started.
+- Pending B `14689448` and C `14689449` returned in place to `gpu` to avoid repeating this defect. AI eligibility alone does not establish AI runtime support.
+- Diagnostic `14689539` tests both site runtimes (1.4.4 and 1.4.1) on three AI nodes, one GPU each, two-minute cap. An initial CPU-only submission was rejected by partition policy. Inspect actual command outcomes before another pilot.
+
+
 ### 2026-10-28 · throughput-7b32b-A/B/C-3x4-a3 · AI eligibility enabled
 
 - User requested AI-node support. Existing jobs `14689447`/`14689448`/`14689449` were updated in place to `Partition=gpu,ai`; Slurm confirmed eligibility. No duplicate submissions or resource increases.
