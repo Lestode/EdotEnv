@@ -8,6 +8,19 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · throughput-7b32b-A/B/C-ray-a2 · submitted
+
+- Jobs: A `14692928`, B `14692929`, C `14692971`, separate fresh outputs
+  `A/B/C-capacity-ray-a2`; launcher fix `a77325a`, staged `source-ray-a2`.
+- Budget: Each 12 GPUs on three nodes, 30 minutes, 20 updates, batch 64,
+  2048 response tokens, HF exports at 10/20; concurrent execution authorized.
+  A retains 128 GiB/node, B/C 64 GiB/node. Sharing is permitted.
+- Gate: Two-node Ray driver/task check and 20 CPU tests passed in `14692340`.
+- Evidence: Saved submission commands and `submissions.txt` under the existing
+  `throughput-7b32b-20261027` artifact root. Old held C `14689577` is replaced.
+- Pending: Actual updates, condition-specific invariants, checkpoint evaluation
+  and the consolidated report; no longer run is started by this submission.
+
 ### 2026-10-28 · ray-multinode-14692340 · completed
 
 - Result: Driver attachment in the head container and CPU tasks on both `cn01`

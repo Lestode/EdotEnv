@@ -24,7 +24,8 @@ C `14689577` is held. A passed model access and the 12-rank collective on AI.
 Diagnostic `14691685` reproduced successful attachment inside the head container
 and failure from a separate Slurm/container step. The launcher correction keeps
 the driver with the head; two-node attachment and remote task execution passed in `14692340`, along
-with shell syntax and 20 CPU tests. End-to-end training still needs a retry.
+with shell syntax and 20 CPU tests. Fresh end-to-end retries are A `14692928`, B `14692929`, C `14692971`
+using launcher `a77325a`, with separate outputs and the existing 30-minute caps.
 B/C use the user-requested 64 GiB/node; A used 128 GiB. No training memory peak
 or larger-model checkpoint evaluation is available yet. Deliver the requested
 Markdown/PDF report before longer runs.
