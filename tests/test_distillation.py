@@ -276,6 +276,14 @@ class ConfigurationTests(unittest.TestCase):
         self.assertIn("--no-save-optim", model_only)
         self.assertNotIn("--save-debug-rollout-data", model_only)
         self.assertIn("--save-hf", model_only)
+        args.profile = "smoke"
+        small = training_args(args, Path("/small"))
+        self.assertEqual(
+            small[small.index("--save-hf") + 1], "/small/hf-checkpoints/{rollout_id}"
+        )
+        self.assertNotIn("--save-debug-rollout-data", small)
+        self.assertNotIn("--optimizer-cpu-offload", small)
+        args.profile = "7b32b"
         args.wandb_project = "edotenv"
         args.wandb_team = "team"
         args.wandb_mode = "offline"

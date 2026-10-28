@@ -11,28 +11,14 @@ tracks outstanding outcomes; detailed evidence belongs in the linked records.
 
 ## Policy distillation validation
 
-The user now authorizes a larger 7B-student/32B-teacher throughput and learning
-pilot with lightweight stage/queue/GPU measurements and checkpoint evaluation.
-See the [pilot protocol](experiments/policy-distillation/THROUGHPUT.md).
-Teacher baseline is complete: 29/32 correct versus the original student's
-27/32 on the matched development set. Initial larger-model A/B/C attempts
-failed before training because a reused model symlink escaped the container
-mounts; all three passed the 12-rank collective. The corrected mounts passed
-real-container model access and 20 CPU tests in job `14689413`.
-A `14689575` and B `14689576` failed before training at Ray driver attachment;
-C `14689577` is held. A passed model access and the 12-rank collective on AI.
-Diagnostic `14691685` reproduced successful attachment inside the head container
-and failure from a separate Slurm/container step. The launcher correction keeps
-the driver with the head; two-node attachment and remote task execution passed in `14692340`, along
-with shell syntax and 20 CPU tests. The corrected offload A `14697224` has completed three finite updates and
-passed repeated weight publication. Updated B `14697822` and C `14697823` are
-queued concurrently at the user's request. All use source `01dc547` and
-128 GiB/node: A's measured peak task RSS was approximately 123 GiB with offload.
-Full completion, HF exports and evaluation remain pending.
-The earlier 64 GiB B/C requests were replaced for this offloaded configuration.
-No larger-model checkpoint evaluation is available yet. Deliver the requested
-Markdown/PDF report before longer runs.
-See the [journal](experiments/LOG.md) for retained failures and source provenance.
+The immediate focus has returned to the initial 1.5B student / 7B teacher pair,
+using the previously executed eight-GPU/two-node layout. Preserve the Ray driver,
+model-mount, policy, telemetry and model-only saving fixes. Disable replay dumps
+for these pilots and verify a one-update checkpoint plus HF export before A/B/C.
+Larger-model pilots are deferred after repeated full-save host-memory failures;
+no evaluated larger-model checkpoint is available. Deliver the requested
+Markdown/PDF report after small-model checkpoint evaluations. See the
+[journal](experiments/LOG.md) for job IDs, retained failures and validation gaps.
 
 The [experiment design](experiments/policy-distillation/README.md) frames the
 initial technical validation, with a provisional resource setup. Quality loss

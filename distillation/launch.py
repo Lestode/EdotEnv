@@ -237,6 +237,8 @@ def training_args(args, output):
             command[command.index(option) + 1] = value
     if getattr(args, "checkpoint_mode", "full") == "model-only":
         command.append("--no-save-optim")
+        if "--save-hf" not in command:
+            command += ["--save-hf", str(output / "hf-checkpoints" / "{rollout_id}")]
         # Debug replay storage activates trainer recovery in pinned Slime.
         # Model-only pilots intentionally cannot restore optimizer state.
         replay_index = command.index("--save-debug-rollout-data")

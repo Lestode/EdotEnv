@@ -8,6 +8,17 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · return to small-model validation · preparing
+
+The user chose the initial 1.5B student / 7B teacher pair to reduce scheduling
+and memory pressure. Reuse eight GPUs across two nodes, with 64 GiB RAM/node,
+model-only saves, no replay dumps, HF exports and lightweight telemetry.
+The large-model optimizer-offload settings do not apply to this profile.
+Retain the successful Ray/container/mount fixes and existing model baselines.
+Replace the pending larger-model save and A/B/C jobs, keeping their records.
+Validate full runtime arguments and one-update saving before separate A/B/C
+pilots; checkpoint evaluation and a consolidated report remain required.
+
 ### 2026-10-28 · model-only without replay dumps · authorized
 
 The user approved disabling replay/debug batch dumps for model-only pilots.
