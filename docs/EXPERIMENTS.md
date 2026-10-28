@@ -21,6 +21,13 @@ and inspect the matched baselines before drawing learning-quality conclusions.
 This replaces the baseline-before-training requirement by user decision on
 27 October 2026.
 
+Sequence tasks only where one needs another's output or a relevant correctness
+check. Training still needs usable data, compatible models/runtime, and valid
+token/teacher-score handling. A check for a later comparison does not block
+unrelated exploratory training, setup, or analysis. If a shared defect appears,
+stop affected work; independent work can continue within its authorized budget.
+A bounded smoke outcome does not establish learning quality.
+
 ## Validate before scaling
 
 Before expensive or distributed experiments, run a small number of inexpensive,

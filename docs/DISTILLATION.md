@@ -18,13 +18,27 @@ learning quality remains to be established. The sampled log-probability
 difference is not an exact distribution KL.
 
 Sync and async share those settings. Async allows one publication of policy lag
-by default; sync allows none. Unknown, future, or excessively old policy versions
-abort the attempt rather than silently dropping examples. The bound is configurable
-with `--max-policy-lag`. It does not eliminate off-policy bias or guarantee stability.
-Condition B additionally drains active work through the custom rollout
-hook and a subclass of Slime's worker before publication and rejects mixed-version responses.
-Condition C permits and counts mixed-version responses. This new B integration
-still needs validation; see the [experiment conditions](experiments/policy-distillation/README.md#concrete-comparisons).
+by default; sync allows none. The bound is configurable with `--max-policy-lag`.
+For B/C, the sampling filter rejects a completed group if any response is too
+old, tags the rejection `policy_lag`, and collects replacements before batching.
+This is normal stale-work rejection, not an attempt failure or a relaxed lag
+bound. Unknown or future versions, invalid version metadata, and mixed-version
+responses in A/B still fail. A final check on the batch selected for training
+also fails if an over-age response reaches it. C permits and counts mixed versions.
+
+Retain Slime's `rollout/dynamic_filter/drop_policy_lag`, `dropped_groups`, and
+`dropped_ratio` metrics and collection logs when reporting B/C attempts. Count
+rejected groups separately from consumed responses; report elapsed collection
+and discarded work rather than treating replacements as free. Filtering changes
+which examples reach training and may add generation/teacher work, so matching
+consumed batch sizes alone does not establish comparable cost or quality. It
+neither eliminates off-policy bias nor establishes stability. Long-run filtering
+behavior and selection effects remain experimental.
+
+B additionally drains active work before publication through its rollout hook
+and worker subclass. Earlier bounded smoke runs logged this behavior; that does
+not establish general correctness or learning quality. See the
+[experimental overview](experiments/policy-distillation/README.md#current-experimental-status).
 The wrappers rely on the pinned fresh-run driver's one weight publication per
 rollout; resuming training is outside this launcher's current scope.
 
@@ -99,26 +113,18 @@ output directory. Raw responses and training logs remain in that directory.
 For the two-node allocation, export `PROJECT_ROOT`, `MODEL_ROOT` (containing
 `student/` and `teacher/`), `TRAIN_DATA`, `RUN_ROOT` (a new directory), and
 `RUNTIME_IMAGE`. Submit [the Komondor entry point](../scripts/distillation-komondor.slurm)
-with the authorized account, or [the Euler entry point](../scripts/distillation-euler.slurm)
-using Euler's automatic account/partition selection. Set `MODE=synchronous` (A), `MODE=bounded_async` (B), or
+with the authorized account. Set `MODE=synchronous` (A), `MODE=bounded_async` (B), or
 `MODE=fully_async` (C), with a separate `RUN_ROOT` for each attempt. The current
 script requests two four-GPU nodes for at most 30 minutes. It owns a dedicated
 Ray cluster, first checks an eight-GPU collective in the candidate runtime,
 records runtime/topology evidence, and terminates its own Slurm steps. Cleanup
 kills the recorded Ray step so a server shutdown error cannot retain the allocation.
 
-Euler uses per-CPU memory requests and its installed Apptainer, rather than the
-Komondor module. Its [CPU preparation job](../scripts/distillation-euler-prepare.slurm)
-pulls the pinned public image without modifying it, installs A100 additions in
-an external uv environment, and fetches the locked models. It loads `eth_proxy`
-for downloads. Container execution requires Euler Apptainer access. Set
-`RUNTIME_IMAGE=$RUNTIME_ROOT/base.sif` and `RUNTIME_ENV=$RUNTIME_ROOT/venv`
-for subsequent Euler jobs; the latter is bound into the container and placed
-first on its executable path. The environment must pass preparation before use. The
-[Euler two-node CPU Ray check](../scripts/distillation-euler-ray.slurm) and
-[Komondor counterpart](../scripts/distillation-komondor-ray.slurm) share the same
-startup diagnostic and preserve logs. This check must pass before GPU smoke jobs. These cluster-specific scripts share
-[the execution body](../scripts/distillation-run.sh); they do not change A/B/C semantics.
+The [Komondor two-node CPU Ray check](../scripts/distillation-komondor-ray.slurm)
+checks startup and preserves logs before GPU smoke jobs. The Komondor entry point
+uses [the shared execution body](../scripts/distillation-run.sh). Euler job and
+preparation entry points have been removed under the
+[retirement decision](../AGENTS.md#confirmed-decisions).
 
 [Smoke prompts](../configs/distillation/smoke.jsonl) are for execution checks only.
 They are not a learning benchmark. For baseline and checkpoint evaluation,

@@ -1,6 +1,10 @@
 # B · Bounded overlap with complete responses
 
-Status, 27 October 2026: corrected B-a2 job `14673099` completed all three training updates and saved its checkpoint. Losses and nonzero gradient norms were finite. Across 24 consumed responses, 16 were one publication stale and none mixed policy versions. Producer-drain completion was logged before publication.
+Recorded smoke result, 27 October 2026: corrected B-a2 job `14673099` completed all three training updates and saved its checkpoint. Losses and nonzero gradient norms were finite. Across 24 consumed responses, 16 were one publication stale and none mixed policy versions. Producer-drain completion was logged before publication.
+
+This preserves an earlier smoke checkpoint. Later attempts and the current
+experimental direction are tracked in the [overview](../README.md#current-experimental-status)
+and [journal](../../LOG.md).
 
 Generate and score while training, with at most one publication of lag. Before
 publishing new weights, drain active work; reject any response spanning policy
