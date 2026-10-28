@@ -7,9 +7,9 @@ branch and open a PR against `main`. Update that PR as work progresses. Do not
 push changes directly to `main`. Agents may prepare and push changes within the
 user's authorized task; merging requires explicit user acceptance of the PR.
 
-EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/5bcbc44839b48d2fab2b0d862b6eee027d87b5e7/WORKFLOW.md),
-[documentation review procedure](https://github.com/Lestode/review-agents/blob/5bcbc44839b48d2fab2b0d862b6eee027d87b5e7/documentation-review/SKILL.md),
-and [implementation review procedure](https://github.com/Lestode/review-agents/blob/5bcbc44839b48d2fab2b0d862b6eee027d87b5e7/implementation-review/SKILL.md)
+EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/f27e55e7cdc5e93deb2401355cd46b17cc0fd556/WORKFLOW.md),
+[documentation review procedure](https://github.com/Lestode/review-agents/blob/f27e55e7cdc5e93deb2401355cd46b17cc0fd556/documentation-review/SKILL.md),
+and [implementation review procedure](https://github.com/Lestode/review-agents/blob/f27e55e7cdc5e93deb2401355cd46b17cc0fd556/implementation-review/SKILL.md)
 at the same revision as both actions. Project scope remains in [AGENTS.md](../AGENTS.md).
 Update the action pin and these links together through a reviewed PR. EdotEnv uses
 the user-selected latest-head merge policy below in place of the earlier shared
@@ -98,7 +98,7 @@ index and [documentation instructions](../.github/documentation-review.md).
 index, a separate command and marker, optional unchanged source paths, and
 [implementation instructions](../.github/implementation-review.md).
 The shared action defines the model, collection limits, authorization, execution,
-and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/5bcbc44839b48d2fab2b0d862b6eee027d87b5e7/README.md).
+and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/f27e55e7cdc5e93deb2401355cd46b17cc0fd556/README.md).
 
 Both actions run on a GitHub-hosted Ubuntu runner with `auth-mode: api-key` and
 explicit public-repository opt-in. Fetch it with `REVIEW_AGENTS_READ_KEY`, a
@@ -118,7 +118,7 @@ Responses API review request using the same bounded context as its ChatGPT mode.
 Markdown patch deduplication where applicable, then bounded summaries of older
 automated reports when needed. These extra model calls use the same API billing;
 human discussion, current reports, source, and the original finding ledger remain
-available under the [shared compaction contract](https://github.com/Lestode/review-agents/blob/5bcbc44839b48d2fab2b0d862b6eee027d87b5e7/README.md#compacting-long-review-history).
+available under the [shared compaction contract](https://github.com/Lestode/review-agents/blob/f27e55e7cdc5e93deb2401355cd46b17cc0fd556/README.md#compacting-long-review-history).
 Proposed PR code runs only in the separate verification job; the privileged
 reviewer uses accepted default-branch settings and never executes PR code.
 Keep the review job's per-PR concurrency group and queued execution so repeated
@@ -229,8 +229,8 @@ The initial API-key support was accepted and merged in
 private-consumer pin was `f4db0e334f6fc2216c583fe796638b096a5abbfe`.
 Public-consumer support arrived in shared reviewer PR #4. Shared reviewer PR #3
 added the implementation reviewer and includes that support.
-The current pin is the accepted merge of [shared reviewer PR #11](https://github.com/Lestode/review-agents/pull/11),
-which repairs compaction response handling introduced by shared reviewer PR #10. The caller explicitly selects `execution-mode: runner`
+The current pin is the accepted squash merge of [shared reviewer PR #12](https://github.com/Lestode/review-agents/pull/12),
+which allocates summary allowances from the remaining final review budget. The caller explicitly selects `execution-mode: runner`
 and `check-target: head`; optional Daytona execution and test-merge checks are not
 activated by this upgrade. The latest-head policy below still overrides the shared
 legacy comparison requirement.
@@ -449,9 +449,16 @@ verified the new pin and context preparation, but both agents stopped during
 history compaction before a fresh assessment. The generic failure did not expose
 whether the cause was response format, echoed IDs, byte size, or transport.
 
-The current update adopts accepted shared reviewer PR #11: the harness owns
-source IDs, requests plain-text summaries with size headroom, and preserves safe
-error diagnostics. The no-retry rule, 512 KB / 640 KB input limits, and original
-finding ledger remain unchanged. Both private instruction bundles fit the 32 KB
-bound with the full compaction contract and relevant runner interfaces.
-A fresh long-history consumer run is still needed to verify the repaired path.
+[Consumer PR #17](https://github.com/Lestode/EdotEnv/pull/17) deployed the response
+repair from shared reviewer PR #11. Its [long-history run](https://github.com/Lestode/EdotEnv/actions/runs/40726737722)
+rejected a 2,022-byte documentation summary against the fixed 2,000-byte cap.
+Implementation compaction summarized 153 older reports in seven requests, then
+the final review failed with an HTTP 520 API error. Neither result certified a
+fresh review.
+
+The current update adopts accepted shared reviewer PR #12. Summaries share the
+remaining final review space, up to 20 KB each, with unused space available to
+later summaries. The no-retry rule, 512 KB / 640 KB total input limits, protected
+context, and original finding ledger remain unchanged. Private instruction
+bundles must still fit 32 KB. A fresh long-history run is needed to verify the
+new allowance policy after deployment.
