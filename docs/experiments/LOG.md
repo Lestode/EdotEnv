@@ -8,6 +8,20 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · offload-args-14696291 · completed
+
+- Full Slime/Megatron argument validation passed in 3m32s after adding required
+  `--use-precision-aware-optimizer`. Main parameters, gradients and both Adam
+  moments explicitly retain FP32. Half of optimizer state remains on CPU.
+- Evidence: `throughput-7b32b-20261027/offload-args-14696291.log`;
+  `offload-full-args.py` validates the failed run's recorded command with the
+  correction. One AI GPU allocated; no model training (0.0589 GPU-hours).
+- Prior attempt A `14695736` failed in 6m24s before training because this flag
+  was missing. The tiny optimizer test bypassed full argument validation and
+  did not cover that requirement. Preserve `A-capacity-offload-a1` evidence.
+- Next: A-only full-model retry; optimizer offloading and HF export remain
+  unvalidated end to end. B/C remain stopped/held.
+
 ### 2026-10-28 · offload-check-14695604 · completed
 
 - Candidate: The 7B/32B profile uses Megatron optimizer CPU offload fraction 0.5,

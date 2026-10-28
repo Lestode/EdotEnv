@@ -254,6 +254,7 @@ class ConfigurationTests(unittest.TestCase):
             profile="7b32b",
         )
         command = training_args(args, Path("/run"))
+        self.assertIn("--use-precision-aware-optimizer", command)
         for option, expected in [
             ("--hidden-size", "3584"),
             ("--num-attention-heads", "28"),
