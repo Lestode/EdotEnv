@@ -7,6 +7,10 @@ The site Apptainer 1.4.4 fails on AI hosts; the launcher selects 1.4.1 there,
 validated for container startup on three AI nodes in diagnostic `14689539`.
 GPU execution on AI remains unvalidated.
 
+B/C pending jobs now request 64 GiB host RAM per node at the user’s direction;
+A retains 128 GiB. This reduction is unvalidated through training/checkpointing
+and must be disclosed in timing comparisons. GPU counts and workload are unchanged.
+
 Status: corrected runtime-aware A/B/C jobs `14689575`/`14689576`/`14689577`
 use immutable `source-ai-a1` (mount fix `4d791d5`, runtime selection `a9866fd`).
 Earlier failures are retained in the journal. CPU model-access and all 20 tests

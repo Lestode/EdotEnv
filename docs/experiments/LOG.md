@@ -8,6 +8,13 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · throughput-7b32b-B/C-ai-a1 · reduced host memory
+
+- User authorized reducing pending B `14689576` and C `14689577` to 64 GiB host RAM per node. Updated in place and verified: `MinMemoryNode=64G`, effective `MinCPUsNode=17` (previously 33). GPU counts, workload and time caps unchanged; A remains at 128 GiB/node.
+- A's startup cgroup peaks were about 7.1–7.7 GiB/node; training and checkpoint peaks were not yet measured. The reduced limit is not yet validated, and the difference must be recorded in comparisons.
+- AI snapshot after update: free GPUs 1/0/6/2 on cn01–04. Only cn03 meets four GPUs plus the reduced CPU/RAM request; neither three-node job fits yet.
+
+
 ### 2026-10-28 · throughput-7b32b-A/B/C-ai-a1 · runtime-aware retries submitted
 
 - Diagnostic `14689539` completed in 15 seconds: Apptainer 1.4.4 failed on all three tested AI nodes, while 1.4.1 started the existing container successfully on each. This checks container startup, not GPU execution.
