@@ -32,6 +32,11 @@ if [ -n "${APPTAINER_MODULE:-}" ]; then module load "$APPTAINER_MODULE"; fi
 command -v apptainer >/dev/null
 mkdir -m 700 "$RUN_ROOT"
 export PROJECT_ROOT MODEL_ROOT TRAIN_DATA RUN_ROOT RUNTIME_IMAGE MODE
+# A reused snapshot may be a symlink outside MODEL_ROOT. Bind its target too.
+STUDENT_MODEL=$(readlink -e "$MODEL_ROOT/student")
+TEACHER_MODEL=$(readlink -e "$MODEL_ROOT/teacher")
+export STUDENT_MODEL TEACHER_MODEL
+export DISTILLATION_BINDS="$PROJECT_ROOT,$MODEL_ROOT,$STUDENT_MODEL,$TEACHER_MODEL,$RUN_ROOT,$(dirname "$TRAIN_DATA")"
 # Explicitly share one private token between head, workers and driver. The
 # runtime otherwise enables authentication differently for CLI and API clients.
 export RAY_AUTH_MODE=token
@@ -48,6 +53,16 @@ export RAY_HEAD_IP
 RAY_ADDRESS="$RAY_HEAD_IP:$RAY_PORT"
 export PYTHONPATH="$PROJECT_ROOT:$PROJECT_ROOT/slime:${PYTHONPATH:-}"
 export CUDA_DEVICE_MAX_CONNECTIONS=1
+
+# Check model visibility on every node with the same mounts as Ray and training.
+srun --ntasks="$DISTILLATION_NODES" --ntasks-per-node=1 --kill-on-bad-exit=1 \
+    apptainer exec --nv --bind "$DISTILLATION_BINDS" "$RUNTIME_IMAGE" \
+    bash -c '
+        set -euo pipefail
+        cd "$PROJECT_ROOT"
+        source scripts/distillation-runtime-env.sh
+        python -m distillation.model_access
+    ' > "$RUN_ROOT/model-access.log" 2>&1
 
 # Exercise the actual candidate runtime's inter-node collective before training.
 srun --ntasks="$DISTILLATION_NODES" --ntasks-per-node=1 --kill-on-bad-exit=1 \
@@ -84,20 +99,20 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 srun --overlap --ntasks="$DISTILLATION_NODES" --ntasks-per-node=1 --kill-on-bad-exit=1 \
-    apptainer exec --nv --bind "$PROJECT_ROOT,$MODEL_ROOT,$RUN_ROOT,$(dirname "$TRAIN_DATA")" \
+    apptainer exec --nv --bind "$DISTILLATION_BINDS" \
     "$RUNTIME_IMAGE" bash "$PROJECT_ROOT/scripts/distillation-node.sh" \
     > "$RUN_ROOT/ray.log" 2>&1 &
 pids+=("$!")
 
 # Verify every requested node exposes exactly its allocated GPU count.
 srun --overlap --nodes=1 --ntasks=1 --nodelist="$HEAD_NODE" \
-    apptainer exec --nv --bind "$PROJECT_ROOT,$MODEL_ROOT,$RUN_ROOT,$(dirname "$TRAIN_DATA")" \
+    apptainer exec --nv --bind "$DISTILLATION_BINDS" \
     "$RUNTIME_IMAGE" bash -c '
         set -euo pipefail
         cd "$PROJECT_ROOT"
         source scripts/distillation-runtime-env.sh
         python -m distillation.cluster_ready
-        python -m distillation.launch --student "$MODEL_ROOT/student" --teacher "$MODEL_ROOT/teacher" \
+        python -m distillation.launch --student "$STUDENT_MODEL" --teacher "$TEACHER_MODEL" \
             --data "$TRAIN_DATA" --output "$RUN_ROOT/train" --mode "$MODE" \
             --profile "$DISTILLATION_PROFILE" --rollouts "$ROLLOUTS" \
             --gpus-per-node "$DISTILLATION_GPUS_PER_NODE" \

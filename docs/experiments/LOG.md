@@ -8,6 +8,12 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · throughput-7b32b-A/B/C-3x4-a2 · failed before training
+
+- A `14676512` failed after 5m58s; B `14676513` and C `14676514` after 1m08s each. All passed the 12-rank BF16 collective, but no training started and no checkpoints were produced.
+- Shared cause: the reused 7B student symlink points outside the mounted model root. Metadata exists on the host but was invisible inside the training containers. Driver logs retain the missing config exception; Ray startup waits also appear.
+- Correction: bind resolved student/teacher directories in workers and driver, and check pinned metadata plus shard readability on every node before startup. Preserve these attempts; validate the corrected mounts before fresh retries.
+
 ### 2026-10-27 · throughput-7b32b-A/B/C-3x4-a2 · submitted
 
 - Decision: User requested returning to four GPUs per node. Pending 12×1 jobs `14676046`/`14676047`/`14676048` were cancelled before replacements were released; no GPU time was used. Exactly one active submission per condition.
