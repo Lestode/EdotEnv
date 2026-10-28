@@ -1,5 +1,6 @@
 """Read the supported reviewer checkout from untrusted workflow YAML as data."""
 
+import posixpath
 import re
 import sys
 
@@ -65,14 +66,33 @@ def resolve(source: str) -> str:
         or not re.fullmatch(r"[a-f0-9]{40}", inputs["ref"])
     ):
         raise ValueError("Unsupported checkout inputs")
-    for other in steps:
+    for index, other in enumerate(steps):
         if other is step:
             continue
-        if other.get("id") == "shared_reviewer" or (
-            isinstance(other.get("with"), dict)
-            and other["with"].get("path") == ".review-agent"
+        if other.get("id") == "shared_reviewer":
+            raise ValueError("Ambiguous reviewer checkout ID")
+        other_inputs = other.get("with", {})
+        if not isinstance(other_inputs, dict):
+            continue
+        destination = other_inputs.get("path")
+        checkout = str(other.get("uses", "")).startswith("actions/checkout@")
+        if destination is None:
+            if checkout and index > steps.index(step):
+                raise ValueError("Later root checkout can replace reviewer files")
+            continue
+        if not isinstance(destination, str):
+            raise ValueError("Unsupported checkout destination")
+        if checkout and ("${{" in destination or posixpath.isabs(destination)):
+            raise ValueError("Unresolved checkout destination")
+        destination = posixpath.normpath(destination)
+        if destination == ".review-agent" or (
+            checkout
+            and destination.startswith(".review-agent/")
+            and destination != ".review-agent/proposed-dependency"
         ):
             raise ValueError("Ambiguous reviewer checkout destination")
+        if checkout and index > steps.index(step) and destination == ".":
+            raise ValueError("Later root checkout can replace reviewer files")
     return inputs["ref"]
 
 

@@ -224,3 +224,13 @@ test('duplicate YAML keys, aliases and tagged objects are rejected', async () =>
     'env:\n  A: !!python/object/apply:os.system ["false"]\n' + proposedWorkflow,
   ]) await assert.rejects(dependencyFixture({ text }).run(), /Unsupported|ambiguous/);
 });
+
+test('equivalent or overlapping checkout destinations cannot replace the selected reviewer', async () => {
+  for (const path of ['./.review-agent', '.review-agent/', 'sibling/../.review-agent',
+    '.review-agent/documentation-review', '.', '${{ github.workspace }}/.review-agent', '/absolute/.review-agent']) {
+    const text = proposedWorkflow + '\n      - name: Other checkout\n' +
+      '        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262\n' +
+      '        with:\n          path: ' + path + '\n';
+    await assert.rejects(dependencyFixture({ text }).run(), /Unsupported|ambiguous/);
+  }
+});
