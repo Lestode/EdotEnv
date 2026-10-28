@@ -8,6 +8,13 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · throughput-7b32b-A/B/C-3x4-a3 · submitted after mount validation
+
+- CPU gate `14689413` passed real-container access to both pinned models, one new shard-access regression and all 19 existing distillation tests. No GPU allocation for this gate.
+- Fresh retries: A `14689447`, B `14689448`, C `14689449`, each 12 GPUs/three nodes/30 minutes on `gpu`, same workload as a2. Every node now checks model access before Ray and collectives.
+- Source: private `source-mount-a1`, copied from `source-layout-a2` with the three implementation/test files from `4d791d5`. Separate a3 outputs; prior failures preserved. GPU training and evaluations remain pending.
+
+
 ### 2026-10-28 · throughput-7b32b-A/B/C-3x4-a2 · failed before training
 
 - A `14676512` failed after 5m58s; B `14676513` and C `14676514` after 1m08s each. All passed the 12-rank BF16 collective, but no training started and no checkpoints were produced.

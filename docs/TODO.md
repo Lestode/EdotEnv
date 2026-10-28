@@ -14,16 +14,17 @@ tracks outstanding outcomes; detailed evidence belongs in the linked records.
 The user now authorizes a larger 7B-student/32B-teacher throughput and learning
 pilot with lightweight stage/queue/GPU measurements and checkpoint evaluation.
 See the [pilot protocol](experiments/policy-distillation/THROUGHPUT.md).
-Preparation `14674318`, final-source CPU check `14674338`, and dependent teacher
-baseline `14674339` are submitted. The contract check passed all 18 tests and model preparation completed. Teacher
-baseline completed across two attempts: 29/32 correct, four truncated; the
-matched original 7B baseline was 27/32 with five truncated. A/B/C short smoke jobs `14676512`, `14676513`, `14676514` use three nodes × four GPUs each, independently of the baseline. The user requested returning from 12×1; those pending jobs were cancelled without GPU use. All 19 CPU contract tests passed; larger-model GPU execution remains unvalidated. See the throughput protocol; review results before longer runs.
-The user extended the capacity pilot to matched A/B/C runs, with checkpoint
-evaluations and a consolidated Markdown/PDF report after completion. Each pilot
-has 12 GPUs and a 30-minute cap; keep total active allocation at most 24 GPUs.
-The larger profile and three-node layout are not yet runtime-validated.
-Do not confuse these jobs with the completed 1.5B/7B A/B/C smoke tests.
-
+Teacher baseline is complete: 29/32 correct versus the original student's
+27/32 on the matched development set. Initial larger-model A/B/C attempts
+failed before training because a reused model symlink escaped the container
+mounts; all three passed the 12-rank collective. The corrected mounts passed
+real-container model access and 20 CPU tests in job `14689413`.
+Fresh retries A `14689447`, B `14689448`, C `14689449` each request 12 GPUs
+on three nodes, with a 30-minute cap. They may run concurrently under the
+user's revised concurrency decision. Per-node model access is now checked
+before startup. Larger-model training and checkpoint evaluations remain
+unvalidated; deliver the requested Markdown/PDF report before longer runs.
+See the [journal](experiments/LOG.md) for retained failures and source provenance.
 
 The [experiment design](experiments/policy-distillation/README.md) frames the
 initial technical validation, with a provisional resource setup. Quality loss

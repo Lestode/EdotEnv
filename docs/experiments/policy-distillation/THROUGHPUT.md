@@ -1,12 +1,11 @@
 # Larger-model throughput and learning pilot
 
-Status: preparation and all 19 layout/adapter CPU checks passed. The user
-returned to one 3×4 smoke run per condition: A `14676512`, B `14676513`,
-C `14676514`. These replace cancelled pending 12×1 jobs, with no baseline
-dependency. Source `b3aed46`, private root `edotenv/throughput-7b32b-20261027`,
-checkout `source-layout-a2`. Execution for the larger model pair remains
-unvalidated. The completed teacher baseline scored 29/32 versus 27/32 for the
-original student on the matched development questions.
+Status: the first 3×4 attempts passed GPU communication but failed before
+training because the reused student model target was not mounted. Corrected
+container access and all 20 CPU tests passed in `14689413`. Fresh A/B/C retries
+`14689447`/`14689448`/`14689449` use `source-mount-a1` (the previous immutable
+source plus implementation fix `4d791d5`). Larger-model training remains
+unvalidated. Teacher baseline: 29/32 versus original student 27/32.
 
 The user authorized upgrading to a 7B student and frozen 32B teacher, measuring
 pipeline waiting, GPU productivity by role, and quality versus tokens, time and
