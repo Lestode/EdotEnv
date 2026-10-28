@@ -8,6 +8,30 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · MATH A/B/C pilots · submitted
+
+The user cancelled remaining smoke work and selected MATH training prompts.
+A/B/C `14702480`/`14702481`/`14702486` are independently queued: eight GPUs
+across two nodes, 64 GiB/node, ten updates, batch eight, 2,048 response tokens,
+30-minute caps, model-only saves and HF exports. Immutable `source-a1` in
+`edotenv/math-pilot-20261028` has `856cbdd` overlays. Async sampling now drops
+and replaces over-age groups through Slime's filter hook, retaining lag one;
+report discard counts and selection effects. W&B offline capture plus an online
+numeric relay is configured and the three relay runs were created successfully.
+Validation `14702479` passed 19 checks but an old command-equality expectation
+failed; corrected-test check `14702490` also exercises the actual filter/parser.
+
+### 2026-10-28 · smoke outcomes and MATH data · retained
+
+Smoke A `14700907` completed ten updates in 12m05s and saved distributed model
+weights and a seven-shard HF export. B `14700908` and C `14700909` each stopped
+after two updates when queued responses exceeded the one-publication lag bound;
+B had 15 ready responses for an eight-response batch. A's smoke evaluation
+`14701466` was cancelled at the user's request; preserve partial results without
+claiming a completed evaluation. MATH prep `14702438` completed in one minute:
+3,000 train, 256 development and 4,239 reserve rows. Four references could not be
+extracted and one duplicate/overlap row was excluded; manifests retain hashes.
+
 ### 2026-10-28 · MATH data preparation · submitted
 
 CPU-only job `14702438` prepares the selected MATH training source with code
