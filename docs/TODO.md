@@ -24,12 +24,13 @@ C `14689577` is held. A passed model access and the 12-rank collective on AI.
 Diagnostic `14691685` reproduced successful attachment inside the head container
 and failure from a separate Slurm/container step. The launcher correction keeps
 the driver with the head; two-node attachment and remote task execution passed in `14692340`, along
-with shell syntax and 20 CPU tests. A `14692928` completed one finite update, then hit CUDA OOM during weight
-publication. B `14692929` was cancelled; C `14692971` is held. The candidate
-fix offloads 50% of optimizer state to CPU using Megatron’s supported option;
-optimizer/update/export validation is pending before further A/B/C runs.
-B/C use the user-requested 64 GiB/node; A used 128 GiB. No training memory peak
-or larger-model checkpoint evaluation is available yet. Deliver the requested
+with shell syntax and 20 CPU tests. The corrected offload A `14697224` has completed three finite updates and
+passed repeated weight publication. Updated B `14697822` and C `14697823` are
+queued concurrently at the user's request. All use source `01dc547` and
+128 GiB/node: A's measured peak task RSS was approximately 123 GiB with offload.
+Full completion, HF exports and evaluation remain pending.
+The earlier 64 GiB B/C requests were replaced for this offloaded configuration.
+No larger-model checkpoint evaluation is available yet. Deliver the requested
 Markdown/PDF report before longer runs.
 See the [journal](experiments/LOG.md) for retained failures and source provenance.
 

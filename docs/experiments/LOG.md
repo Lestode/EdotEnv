@@ -8,6 +8,19 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-28 · throughput-7b32b-A/B/C-offload-a2 · running / queued
+
+- Current jobs: A `14697224` running; B `14697822` and C `14697823` queued,
+  concurrently authorized by the user. Old held C `14692971` was cancelled.
+- Source: immutable `source-offload-a2`, launch/tests overlays `01dc547`;
+  separate `A/B/C-capacity-offload-a2` outputs and saved submission commands.
+- Budget: Each 12 GPUs, three nodes, 30 minutes, 20 updates, 128 GiB/node.
+  B/C now match A because A's reported maximum task RSS reached approximately
+  123 GiB; offloading makes the previous 64 GiB request unsuitable.
+- Partial result at 11:53 UTC: A completed three finite updates; publication
+  after the first two succeeded, with roughly 11 GiB GPU memory free afterward.
+  No update-10 HF export exists yet. Full completion and quality remain pending.
+
 ### 2026-10-28 · offload-args-14696291 · completed
 
 - Full Slime/Megatron argument validation passed in 3m32s after adding required
