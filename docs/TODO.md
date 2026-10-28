@@ -11,16 +11,17 @@ tracks outstanding outcomes; detailed evidence belongs in the linked records.
 
 ## Policy distillation validation
 
-The immediate focus has returned to the initial 1.5B student / 7B teacher pair,
-using the previously executed eight-GPU/two-node layout. Preserve the Ray driver,
-model-mount, policy, telemetry and model-only saving fixes. Disable replay dumps
-for these pilots. A/B/C are eligible concurrently by user decision; stop affected
-runs on shared failures and apply corrections across all conditions. Verify
-checkpoints and HF exports before evaluation.
-Larger-model pilots are deferred after repeated full-save host-memory failures;
-no evaluated larger-model checkpoint is available. Deliver the requested
-Markdown/PDF report after small-model checkpoint evaluations. See the
-[journal](experiments/LOG.md) for job IDs, retained failures and validation gaps.
+The user selected the initial 1.5B student / 7B teacher pair and MATH training
+prompts, with development and evaluation kept separate. A smoke run completed
+ten updates and saved a model/HF export. B and C stopped on the one-publication
+lag limit; old queue entries need rejection before batching without relaxing
+that bound. Use Slime's sampling-filter hook and report discarded work.
+The MATH preparation produced 3,000 training prompts and 256 development rows;
+all 500 MATH-500 questions are excluded by normalized exact matching.
+The user cancelled remaining smoke work and requests updated A/B/C on MATH.
+Retain model-only saving, Ray/mount fixes, lightweight telemetry and verified
+W&B delivery. Learning quality and acceptable loss remain unestablished.
+See the [journal](experiments/LOG.md) for job IDs, failures and validation gaps.
 
 The [experiment design](experiments/policy-distillation/README.md) frames the
 initial technical validation, with a provisional resource setup. Quality loss

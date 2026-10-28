@@ -22,6 +22,7 @@ import yaml
 from aiohttp import web
 
 from distillation.hooks import (
+    group_policy_eligible,
     policy_age,
     post_process_rewards,
     response_log_probs,
@@ -102,6 +103,28 @@ class ScoringTests(unittest.IsolatedAsyncioTestCase):
 
 
 class PolicyAgeTests(unittest.TestCase):
+    def test_stale_group_filter_replaces_old_samples_without_relaxing_bound(self):
+        def sample(*versions):
+            return SimpleNamespace(weight_versions=list(versions))
+
+        self.assertFalse(
+            group_policy_eligible([sample("1")], 3, 1, complete_response=True)
+        )
+        self.assertTrue(
+            group_policy_eligible(
+                [sample("2"), sample("3")], 3, 1, complete_response=True
+            )
+        )
+        self.assertTrue(
+            group_policy_eligible([sample("2", "3")], 3, 1, complete_response=False)
+        )
+        with self.assertRaisesRegex(ValueError, "spans policy versions"):
+            group_policy_eligible([sample("2", "3")], 3, 1, complete_response=True)
+        with self.assertRaises(ValueError):
+            group_policy_eligible([sample("4")], 3, 1, complete_response=False)
+        with self.assertRaises(ValueError):
+            group_policy_eligible([], 3, 1, complete_response=False)
+
     def test_b_preserves_slime_worker_dispatch_across_rounds(self):
         # The actual factory and entrypoint must agree on the worker's type.
         # A delegation-only wrapper incorrectly selects Slime's distributed path.

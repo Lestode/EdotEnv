@@ -111,6 +111,32 @@ def validate_sample_policy(versions, current_version, max_lag, *, complete_respo
     return age, mixed
 
 
+def group_policy_eligible(samples, current_version, max_lag, *, complete_response):
+    """Reject stale groups before batching; invalid version metadata still fails."""
+    if not samples:
+        raise ValueError("Empty policy group")
+    ages = [policy_age(sample.weight_versions, current_version) for sample in samples]
+    if complete_response and any(
+        len({int(v) for v in sample.weight_versions}) > 1 for sample in samples
+    ):
+        raise ValueError(
+            "Response spans policy versions in a complete-response condition"
+        )
+    return max(ages) <= max_lag
+
+
+def filter_policy_lag(args, samples, **kwargs):
+    from slime.rollout.filter_hub.base_types import DynamicFilterOutput
+
+    keep = group_policy_eligible(
+        samples,
+        args.distillation_collection_version,
+        args.distillation_max_policy_lag,
+        complete_response=args.distillation_complete_response,
+    )
+    return DynamicFilterOutput(keep=keep, reason=None if keep else "policy_lag")
+
+
 def _generate(args, rollout_id, data_buffer, *, asynchronous, complete_response=True):
     if asynchronous:
         from slime.rollout.fully_async_rollout import (
@@ -120,6 +146,8 @@ def _generate(args, rollout_id, data_buffer, *, asynchronous, complete_response=
         from slime.rollout.sglang_rollout import generate_rollout as generate
     from slime.rollout.base_types import call_rollout_fn, iter_samples
 
+    args.distillation_collection_version = rollout_id + 1
+    args.distillation_complete_response = complete_response
     worker = getattr(data_buffer, "consumers", {}).get("fully_async")
     queue_before = worker.queue_size() if worker is not None else 0
     started = time.monotonic()

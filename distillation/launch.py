@@ -243,6 +243,11 @@ def training_args(args, output):
         # Model-only pilots intentionally cannot restore optimizer state.
         replay_index = command.index("--save-debug-rollout-data")
         del command[replay_index : replay_index + 2]
+    if args.mode != "synchronous":
+        command += [
+            "--dynamic-sampling-filter-path",
+            "distillation.hooks.filter_policy_lag",
+        ]
     if getattr(args, "wandb_project", None):
         command += [
             "--use-wandb",
