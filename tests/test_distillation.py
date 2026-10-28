@@ -274,6 +274,14 @@ class ConfigurationTests(unittest.TestCase):
         model_only = training_args(args, Path("/run"))
         self.assertIn("--no-save-optim", model_only)
         self.assertIn("--save-hf", model_only)
+        args.wandb_project = "edotenv"
+        args.wandb_team = "team"
+        args.wandb_mode = "offline"
+        tracked = training_args(args, Path("/run/train"))
+        self.assertIn("--use-wandb", tracked)
+        self.assertEqual(tracked[tracked.index("--wandb-group") + 1], "run")
+        self.assertEqual(tracked[tracked.index("--wandb-mode") + 1], "offline")
+        self.assertNotIn("--wandb-key", tracked)
         config = serving_config(args.student, args.teacher, args.profile)["sglang"]
         self.assertEqual([m["server_groups"][0]["num_gpus"] for m in config], [4, 4])
         self.assertEqual(

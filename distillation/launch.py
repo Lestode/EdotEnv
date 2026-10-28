@@ -237,6 +237,21 @@ def training_args(args, output):
             command[command.index(option) + 1] = value
     if getattr(args, "checkpoint_mode", "full") == "model-only":
         command.append("--no-save-optim")
+    if getattr(args, "wandb_project", None):
+        command += [
+            "--use-wandb",
+            "--wandb-project",
+            args.wandb_project,
+            "--wandb-mode",
+            args.wandb_mode,
+            "--wandb-group",
+            output.parent.name,
+            "--disable-wandb-random-suffix",
+            "--wandb-dir",
+            str(output / "wandb"),
+        ]
+        if args.wandb_team:
+            command += ["--wandb-team", args.wandb_team]
     return command
 
 
@@ -283,6 +298,13 @@ def main():
     )
     parser.add_argument("--profile", choices=["smoke", "7b32b"], default="smoke")
     parser.add_argument("--gpus-per-node", type=int, choices=(1, 2, 4), default=4)
+    parser.add_argument("--wandb-project", default=os.environ.get("WANDB_PROJECT"))
+    parser.add_argument("--wandb-team", default=os.environ.get("WANDB_ENTITY"))
+    parser.add_argument(
+        "--wandb-mode",
+        choices=("online", "offline"),
+        default=os.environ.get("WANDB_MODE", "offline"),
+    )
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     for key in ("student", "teacher", "data", "output"):
