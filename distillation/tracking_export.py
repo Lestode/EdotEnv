@@ -14,7 +14,7 @@ from pathlib import Path
 
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 METRIC = re.compile(r"(?:step|rollout|perf) (\d+): (\{.*\})")
-PREFIXES = ("train/", "rollout/", "perf/", "eval/")
+PREFIXES = ("train/", "rollout/", "perf/", "eval/", "distillation/")
 
 
 def collect(run_dir):
