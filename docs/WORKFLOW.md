@@ -403,10 +403,12 @@ and stale-head blocking. See [the activation tasks](TODO.md#repository-workflow-
 Initialize Slime with `git submodule update --init slime`. Use Python 3.12 and
 the [experiment’s virtual-environment setup](../experiments/verifier-context/README.md#running-the-comparison)
 for the Harbor/Daytona dependencies required by the project tests. The reviewer
-freshness tests also require Node.js. Then run:
+freshness and dependency-evidence tests also require Node.js. Activate the virtual
+environment so Python subprocesses launched by Node use the same dependencies:
 
 ```sh
-.venv/bin/python -m pip install pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt
+. .venv/bin/activate
+.venv/bin/python -m pip install pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt -r scripts/review-requirements.txt
 .venv/bin/pre-commit run --all-files
 .venv/bin/python scripts/check_project.py
 node --test tests/*.test.cjs
