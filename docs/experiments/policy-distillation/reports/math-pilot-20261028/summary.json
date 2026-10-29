@@ -1,0 +1,330 @@
+{
+  "training": {
+    "A": {
+      "job": "14702480",
+      "seconds": 822,
+      "gpu_hours": 1.8266666666666667,
+      "responses": 80,
+      "response_tokens": 158868,
+      "mixed": 0,
+      "stale": 0,
+      "drops": 0,
+      "drop_fraction": 0.0,
+      "max_age": 0,
+      "truncated": 67,
+      "collection_s": 117.89944256283343,
+      "actor_s": 12.797259330749512,
+      "train_s": 29.008861541748047,
+      "wait_s": 150.97802257537842,
+      "wait_fraction": 0.838827914133618,
+      "publication_s": 4.343347072601318,
+      "correct": 20,
+      "eval_truncated": 11,
+      "gained": 0,
+      "lost": 4
+    },
+    "B": {
+      "job": "14702481",
+      "seconds": 707,
+      "gpu_hours": 1.5711111111111111,
+      "responses": 80,
+      "response_tokens": 157073,
+      "mixed": 0,
+      "stale": 72,
+      "drops": 7,
+      "drop_fraction": 0.08045977011494253,
+      "max_age": 1,
+      "truncated": 68,
+      "collection_s": 11.232804424129426,
+      "actor_s": 11.740942001342773,
+      "train_s": 28.402169227600098,
+      "wait_s": 108.54709935188293,
+      "wait_fraction": 0.7926080984425561,
+      "publication_s": 4.421447992324829,
+      "correct": 20,
+      "eval_truncated": 10,
+      "gained": 1,
+      "lost": 5
+    },
+    "C": {
+      "job": "14702486",
+      "seconds": 704,
+      "gpu_hours": 1.5644444444444445,
+      "responses": 80,
+      "response_tokens": 158000,
+      "mixed": 38,
+      "stale": 60,
+      "drops": 19,
+      "drop_fraction": 0.1919191919191919,
+      "max_age": 1,
+      "truncated": 67,
+      "collection_s": 93.35003804252483,
+      "actor_s": 12.758806228637695,
+      "train_s": 21.45638418197632,
+      "wait_s": 136.10693955421448,
+      "wait_fraction": 0.8638237397308217,
+      "publication_s": 13.335264205932617,
+      "correct": 24,
+      "eval_truncated": 7,
+      "gained": 1,
+      "lost": 1
+    }
+  },
+  "gpu_summary": {
+    "A": {
+      "mean_utilization_pct": 5.519623233908948,
+      "peak_memory_gib": 32.890625,
+      "mean_power_w": 73.56387362637362
+    },
+    "B": {
+      "mean_utilization_pct": 7.946846846846847,
+      "peak_memory_gib": 35.03125,
+      "mean_power_w": 78.77661711711711
+    },
+    "C": {
+      "mean_utilization_pct": 7.4847457627118645,
+      "peak_memory_gib": 35.216796875,
+      "mean_power_w": 77.72315677966101
+    }
+  },
+  "accounting": {
+    "14702480": {
+      "state": "COMPLETED",
+      "seconds": 822,
+      "start": "2026-10-28T18:49:34",
+      "end": "2026-10-28T19:03:16",
+      "nodes": "cn[02,04]",
+      "resources": "billing=34,cpu=34,gres/gpu=8,mem=128G,node=2"
+    },
+    "14702481": {
+      "state": "COMPLETED",
+      "seconds": 707,
+      "start": "2026-10-28T19:03:17",
+      "end": "2026-10-28T19:15:04",
+      "nodes": "cn[02-03]",
+      "resources": "billing=34,cpu=34,gres/gpu=8,mem=128G,node=2"
+    },
+    "14702486": {
+      "state": "COMPLETED",
+      "seconds": 704,
+      "start": "2026-10-28T19:15:05",
+      "end": "2026-10-28T19:26:49",
+      "nodes": "cn[02-03]",
+      "resources": "billing=34,cpu=34,gres/gpu=8,mem=128G,node=2"
+    },
+    "14728534": {
+      "state": "COMPLETED",
+      "seconds": 1215,
+      "start": "2026-10-29T08:38:10",
+      "end": "2026-10-29T08:58:25",
+      "nodes": "x1001c0s2b0n1",
+      "resources": "billing=17,cpu=17,gres/gpu=4,mem=64G,node=1"
+    },
+    "14728535": {
+      "state": "COMPLETED",
+      "seconds": 1215,
+      "start": "2026-10-29T08:38:10",
+      "end": "2026-10-29T08:58:25",
+      "nodes": "x1001c5s2b0n0",
+      "resources": "billing=17,cpu=17,gres/gpu=4,mem=64G,node=1"
+    },
+    "14728536": {
+      "state": "COMPLETED",
+      "seconds": 1215,
+      "start": "2026-10-29T08:38:10",
+      "end": "2026-10-29T08:58:25",
+      "nodes": "x1001c5s2b0n1",
+      "resources": "billing=17,cpu=17,gres/gpu=4,mem=64G,node=1"
+    },
+    "14728542": {
+      "state": "COMPLETED",
+      "seconds": 1120,
+      "start": "2026-10-29T08:43:00",
+      "end": "2026-10-29T09:01:40",
+      "nodes": "x1001c6s0b0n0",
+      "resources": "billing=17,cpu=17,gres/gpu=4,mem=64G,node=1"
+    }
+  },
+  "matched_student_baseline": {
+    "correct": 24,
+    "planned": 32,
+    "truncated": 8,
+    "failed": 0,
+    "data_sha256": "3e9a67b0f26aec2646bc497bbcf544f5b97ffdc756b689ba84377f22e8217627",
+    "tokenizer_sha256": "88145e3c3249adc2546ede277e9819d6e405e19072456e4b521cbc724bd60773",
+    "generation": {
+      "temperature": 0,
+      "max_new_tokens": 8192
+    },
+    "batch_size": 8,
+    "scorer": "slime.rollout.rm_hub.math_utils.grade_answer_verl"
+  },
+  "data_manifest": {
+    "source": {
+      "repo": "DigitalLearningGmbH/MATH-lighteval",
+      "revision": "0530c78699ea5e8eb5530600900e1f328b48acad",
+      "file": "data/train-00000-of-00001.parquet"
+    },
+    "source_rows": 7500,
+    "dropped": {
+      "unextractable_answer": 4,
+      "empty_overlap_or_duplicate": 1
+    },
+    "splits": {
+      "train": 3000,
+      "development": 256,
+      "reserve": 4239
+    },
+    "strata": {
+      "train": {
+        "Algebra / Level 1": 71,
+        "Algebra / Level 2": 136,
+        "Algebra / Level 3": 156,
+        "Algebra / Level 4": 159,
+        "Algebra / Level 5": 174,
+        "Counting & Probability / Level 1": 20,
+        "Counting & Probability / Level 2": 48,
+        "Counting & Probability / Level 3": 64,
+        "Counting & Probability / Level 4": 66,
+        "Counting & Probability / Level 5": 111,
+        "Geometry / Level 1": 16,
+        "Geometry / Level 2": 40,
+        "Geometry / Level 3": 52,
+        "Geometry / Level 4": 71,
+        "Geometry / Level 5": 169,
+        "Geometry / Level ?": 1,
+        "Intermediate Algebra / Level 1": 23,
+        "Intermediate Algebra / Level 2": 67,
+        "Intermediate Algebra / Level 3": 121,
+        "Intermediate Algebra / Level 4": 136,
+        "Intermediate Algebra / Level 5": 171,
+        "Number Theory / Level 1": 19,
+        "Number Theory / Level 2": 53,
+        "Number Theory / Level 3": 76,
+        "Number Theory / Level 4": 75,
+        "Number Theory / Level 5": 124,
+        "Prealgebra / Level 1": 50,
+        "Prealgebra / Level 2": 132,
+        "Prealgebra / Level 3": 100,
+        "Prealgebra / Level 4": 99,
+        "Prealgebra / Level 5": 101,
+        "Precalculus / Level 1": 26,
+        "Precalculus / Level 2": 65,
+        "Precalculus / Level 3": 67,
+        "Precalculus / Level 4": 70,
+        "Precalculus / Level 5": 71
+      },
+      "development": {
+        "Algebra / Level 1": 6,
+        "Algebra / Level 2": 12,
+        "Algebra / Level 3": 13,
+        "Algebra / Level 4": 14,
+        "Algebra / Level 5": 15,
+        "Counting & Probability / Level 1": 2,
+        "Counting & Probability / Level 2": 4,
+        "Counting & Probability / Level 3": 5,
+        "Counting & Probability / Level 4": 6,
+        "Counting & Probability / Level 5": 9,
+        "Geometry / Level 1": 1,
+        "Geometry / Level 2": 3,
+        "Geometry / Level 3": 4,
+        "Geometry / Level 4": 6,
+        "Geometry / Level 5": 14,
+        "Intermediate Algebra / Level 1": 2,
+        "Intermediate Algebra / Level 2": 6,
+        "Intermediate Algebra / Level 3": 10,
+        "Intermediate Algebra / Level 4": 12,
+        "Intermediate Algebra / Level 5": 15,
+        "Number Theory / Level 1": 2,
+        "Number Theory / Level 2": 4,
+        "Number Theory / Level 3": 7,
+        "Number Theory / Level 4": 6,
+        "Number Theory / Level 5": 11,
+        "Prealgebra / Level 1": 4,
+        "Prealgebra / Level 2": 11,
+        "Prealgebra / Level 3": 9,
+        "Prealgebra / Level 4": 8,
+        "Prealgebra / Level 5": 9,
+        "Precalculus / Level 1": 2,
+        "Precalculus / Level 2": 6,
+        "Precalculus / Level 3": 6,
+        "Precalculus / Level 4": 6,
+        "Precalculus / Level 5": 6
+      }
+    },
+    "split_method": "proportional subject/level quotas, deterministic salted SHA256 ordering",
+    "math500_rows_excluded": 500,
+    "math500_source_sha256": "35dc41080a3680858b27fa7e0533d2d547825316fc5dafe5d316f4ccc5a06132",
+    "overlap_normalization": "NFKC, collapse whitespace, casefold; not semantic deduplication",
+    "reference_visibility": "train.jsonl contains only id and prompt; answers/solutions stored separately",
+    "pretraining_contamination": "unknown; split separation does not establish absence",
+    "files_sha256": {
+      "train.jsonl": "7d1b34e890cee856a700bea81e870b69d2be69ac497a602f61390f35b6216379",
+      "train-references.jsonl": "9a69217d6ab37e45c4f93a6d5354c4cb2138c19cbd4f291d74fb23e633f448f1",
+      "development.jsonl": "57b02187cca33d44a54be90513b66b5c832aa661e6fb910a92fe2469316f95ca",
+      "reserve.jsonl": "bb752e4765b6ce23c0c6bf1d0a8437c263ba39ebb480ce8e2c40cc41365495a1",
+      "source-train.parquet": "eca6e667f4305dd5e5ba09b4fd55e7f3174a0fbe361cdfd4c44758b593a76933"
+    }
+  },
+  "source_overlay": "856cbdd",
+  "snapshot_base_git": "b3aed46c99c2c335488bc13af689cebbe550c7d4",
+  "slime_revision": "18868a79b0b083a093798a94ed0f8cb4f71b9c14",
+  "adapter_sha256": {
+    "._model_access.py": "8422ea14b70f369783ae8317263375310ec8fdde77043f644bacd670d30b736f",
+    "__init__.py": "22639210a4907cc4237faf86413edddaf3ef6290058fb8e1adeba95040d0d24c",
+    "cluster_ready.py": "4846990a086646a2d909371b92ec9504688f8796579a3b7cb2be1e2a31e11d96",
+    "collective_probe.py": "be044dbb94e64894a3a754689144ec970d555bd0266ccd8d931edcd334bd2259",
+    "download.py": "6e30b7f0840f46adaaef7b48886ad34c3e60c585f470fc1d88e294d340e04043",
+    "evaluate.py": "71a8c69330e1062e843bd9e3648490812ecb9ee5599962a93f29ff16ac3b04c7",
+    "hooks.py": "d9effd0ee020ce49f4fb558bfb99a0a07508c386be06ba7e8dee6d8369476529",
+    "launch.py": "c6cd47f5f649845687651c840f501ee8a61054deed1360b34d55af8f69e62443",
+    "layout.py": "ec19a26f2b746f726552eb7b3fe53a19211f0c35c592622acf1b5810177a006a",
+    "model_access.py": "7ea97b975dd8d52bd1d6f42d94a9b9c5d4422205362892efa209c2063edef72c",
+    "policies.py": "2456554b456dafed2c9a75959f24ed04637a81dbc93592debafd4b020713699b",
+    "preflight.py": "1e068dde39b1ca9c2d99e5470756813aa91852e8754f6cc3fd374c981fdb5b4d",
+    "ray_probe.py": "8b3010d818d0808ad3e21bf792783ef6f5635efad39d703a06f974c40b756c3c",
+    "rollout.py": "539ff0151a7cad9e654f1ae40cb89b8dab7b5ecd44f2a0393b86b1e6fa84b8a3",
+    "runtime_probe.py": "215112d1b1505e362c4a4407072cc5afb9d005bb2426d80f539b03b7cf71b6d5"
+  },
+  "model_pins": {
+    "student": {
+      "repo": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+      "revision": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+      "files": {
+        "config.json": "37bd455e9679d2959536270fed49d25cc7c290a64f6e52abb97c71345a9cee41",
+        "tokenizer.json": "88145e3c3249adc2546ede277e9819d6e405e19072456e4b521cbc724bd60773",
+        "tokenizer_config.json": "8ac8c85fb242563c2260baec0909debd69d718af6a0b3d90e6cab62b4d341cd5",
+        "generation_config.json": "72cbec1015da9ed03ad025483005cbf6481403abf947adfd54e504d1a66a2126"
+      },
+      "model_vocab_size": 151936,
+      "weight_sha256": {
+        "model.safetensors": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945"
+      }
+    },
+    "teacher": {
+      "repo": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+      "revision": "916b56a44061fd5cd7d6a8fb632557ed4f724f60",
+      "files": {
+        "config.json": "8290d3c1e385e2616572eb6926f7e2745f901d1c13da95970326a8a73f6c379c",
+        "tokenizer.json": "88145e3c3249adc2546ede277e9819d6e405e19072456e4b521cbc724bd60773",
+        "tokenizer_config.json": "8ac8c85fb242563c2260baec0909debd69d718af6a0b3d90e6cab62b4d341cd5",
+        "generation_config.json": "72cbec1015da9ed03ad025483005cbf6481403abf947adfd54e504d1a66a2126"
+      },
+      "model_vocab_size": 152064,
+      "weight_sha256": {
+        "model-00001-of-000002.safetensors": "8b27be8d43b81d0cd19b3113ef88caf1a61c2fc602de77e3cce97aedcec184b4",
+        "model-00002-of-000002.safetensors": "1780a9502f56f592cb4d6262c8c76ca8ad36a86b0257e052c672d87f49707e80"
+      }
+    }
+  },
+  "runtime": {
+    "torch": "2.13.0+cu130",
+    "ray": "2.59.0",
+    "sglang": "0.5.21",
+    "transformers": "5.12.1",
+    "transformer-engine": "2.18.0",
+    "flash-attn": "2.8.3"
+  },
+  "training_gpu_hours": 4.9622222222222225,
+  "evaluation_gpu_hours": 5.294444444444444
+}

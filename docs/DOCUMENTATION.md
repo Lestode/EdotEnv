@@ -1,6 +1,7 @@
 # Documentation rules
 
 - Keep supporting project documentation in `docs/`; keep `AGENTS.md` at the project root.
+- Keep PR descriptions and comments readable for humans. Link to source instead of pasting bulk excerpts to feed an automated reviewer; report missing review context as a tooling limitation.
 - Keep project documents logically consistent, both internally and with each other.
 - Write planning and continuity documents as shared context for the user and future agents. Preserve the user's actual intent, rationale, current state, consequential decisions, and unresolved questions. Assume a capable reader; omit generic methodological teaching and speculative inventories unless requested.
 - Keep these documents high-level and outcome-oriented. Do not turn them into exhaustive task lists or prescribe a detailed pathway for future agents. Leave room to choose and revise an approach as evidence changes. Include procedural detail only where it is needed to preserve a consequential decision, operate the system, or reproduce a result.

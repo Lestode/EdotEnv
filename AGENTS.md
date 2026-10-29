@@ -27,6 +27,7 @@ transit through its existing SSH setup are permitted.
 - Do not run builds, student generation, teacher scoring, or training workloads
   on greengoblin. Prepare artifacts locally and use authorized Komondor compute
   allocations for cluster execution.
+- Always check for and reuse an existing authenticated Komondor session first; follow [connection guidance](docs/KOMONDOR.md).
 - Use SSH transit settings that preserve gateway state; do not automatically
   add host keys or create persistent SSH control sockets on the gateway.
 - If an operation would require a gateway change, stop that operation, report
@@ -41,8 +42,8 @@ Use a `codex/` feature branch and a pull request for every change after the init
 - OPCD is retired from the project scope. The user chose classical policy distillation because prompt engineering and context manipulation make the intended study difficult to evaluate scientifically. The earlier context-distillation requirements and paper-specific objective no longer apply.
 - The primary question is whether the implementation works and its shortcuts preserve quality within an acceptable loss; synchronous/asynchronous execution is one comparison, with speed and cost secondary. The [experiment design](docs/experiments/policy-distillation/README.md) records the provisional validation setup; resource sizing may evolve.
 - The teacher will be an accessible model.
-- The initial classical distillation model pair is selected in [experiment guidance](docs/EXPERIMENTS.md#initial-policy-distillation-pair); tokenizer compatibility and baseline quality still need validation before training.
-- Komondor is the target compute cluster; authenticated access and an A100 Slurm allocation have been verified. See [hardware planning](docs/HARDWARE.md) for evidence and remaining validation.
+- The initial classical distillation model pair is selected in [experiment guidance](docs/EXPERIMENTS.md#initial-policy-distillation-pair). Tokenizer metadata compatibility and both frozen-model development baselines completed on Komondor; teacher-score alignment through training remains to be validated. Results and limits are in the [run journal](docs/experiments/LOG.md).
+- Komondor is the target compute cluster; authenticated access and an A100 Slurm allocation have been verified. See [hardware planning](docs/HARDWARE.md) for evidence and remaining validation. Euler execution was retired by the user on 28 October 2026; its job and preparation entry points are removed. Earlier attempts are [historical evidence](docs/experiments/policy-distillation/EULER.md), not an alternative execution path.
 - For now, the user manages collaboration and access in this repository.
 - Always bring conflicting information to the user for review before resolving it, including conflicts introduced by a new request. Follow the [finding-resolution and conflict policy](docs/WORKFLOW.md#finding-resolution-and-conflicts) for review findings, consequences, and recorded decisions.
 - When using tools or systems developed by the user or the company, use their documented configuration and supported interfaces. Report limitations before changing their implementation or adding local capabilities; follow the [supported-interface policy](docs/WORKFLOW.md#supported-interfaces-for-user-and-company-systems).
@@ -54,7 +55,7 @@ Use a `codex/` feature branch and a pull request for every change after the init
 These do not block local design and implementation. Resolve each before the run or feature that depends on it.
 
 - Data: which training and evaluation datasets, who grants access, and where may they be processed and stored?
-- Teacher scoring: which backend should the validation study use? See [current work](docs/TODO.md).
+- Distillation: does the initial sampled-token baseline and its SGLang teacher-scoring path learn reliably, and which shortcuts preserve that benefit? See [implementation and evidence](docs/DISTILLATION.md).
 - Compute sizing: which GPU/node counts and per-run budget should each experiment use within the verified Komondor project access? Multi-node execution remains unvalidated; see [hardware planning](docs/HARDWARE.md).
 - Runtime: which GPU container runtime/images are permitted, and can we install modified code and fetch dependencies/model weights?
 - Distribution: one managed cluster or independent sites? Are concurrent multi-node jobs and Ray/NCCL/teacher-service connections permitted?

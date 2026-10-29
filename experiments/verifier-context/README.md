@@ -95,8 +95,8 @@ virtual environment. This SDK does not change the task containers' own locked
 dependencies:
 
 ```sh
-python3.12 -m venv .venv
-.venv/bin/python -m pip install -r experiments/verifier-context/requirements.txt
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python -r experiments/verifier-context/requirements.txt
 ```
 
 Prepare inputs without Docker, credentials, or any API calls. Replace

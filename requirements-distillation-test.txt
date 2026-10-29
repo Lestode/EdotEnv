@@ -1,0 +1,6 @@
+# CPU checks only. Do not install this into the Slime GPU runtime.
+torch==2.8.0
+aiohttp==3.12.15
+PyYAML==6.0.2
+numpy==2.3.4
+httpx==0.28.1

@@ -1,6 +1,6 @@
 # Project TODO
 
-Current context, 2026-10-26: the immediate focus is classical policy distillation
+Current context, 2026-10-28: the immediate focus is classical policy distillation
 from a more capable frozen teacher. We want to establish that the implementation
 works and that its shortcuts do not cause unacceptable quality loss. Slime
 already supports synchronous and asynchronous execution; their availability
@@ -11,19 +11,40 @@ tracks outstanding outcomes; detailed evidence belongs in the linked records.
 
 ## Policy distillation validation
 
-The [experiment design](experiments/policy-distillation/README.md) frames the
-initial technical validation, with a provisional resource setup. Quality loss
-relative to a trustworthy reference is the primary concern; speed and cost are
-secondary. Distinguish shortcuts and confounders so that a failure can be
-attributed to its cause, including differences between learning regimes.
+This remains exploratory work; learning benefit, acceptable shortcut loss and
+broader correctness remain open.
 
-The [initial model pair](EXPERIMENTS.md#initial-policy-distillation-pair) is
-selected; tokenizer compatibility and both models' baseline quality still need
-validation before training. The selected sampled-token objective still needs
-correctness evidence; the task and acceptable quality loss remain open. The
-study should establish that distillation improves the student and whether the
-shortcuts preserve that benefit. Async stability and the actual two-node runtime
-remain unvalidated.
+The 1.5B-student / 7B-teacher MATH A/B/C pilot completed ten updates per
+condition, model-only saving, HF export and matched checkpoint evaluation.
+The original student scored 24/32; A/B each 20/32; C 24/32. C exercised mixed
+versions in 38/80 accepted responses. Async lag stayed within one after stale
+groups were discarded. Training truncation was 67-68/80 responses, and only
+80 accepted responses were optimized per condition. Execution works on this
+path; useful learning and acceptable quality loss remain unestablished.
+See the [consolidated report](experiments/policy-distillation/reports/math-pilot-20261028/REPORT.md).
+Training/evaluation metrics are synced to W&B. Before longer runs, calibrate
+response budgets on development data and agree on quality-loss criteria.
+Automatic monitoring was cancelled by the user; do not restart it implicitly.
+
+The user authorized 500-update A/B/C reruns from the original student on the same
+MATH training split. Prepare 8,192 response tokens and 12,288 total context,
+periodic model-only exports and W&B capture. Longer-context memory/runtime are
+not yet validated; runtime estimates must distinguish measured 2,048-token
+steps from extrapolation. No quality-preservation threshold is established.
+
+Continue separate A/B/C experiments from recorded outcomes, retaining the strict
+lag bound, discarded-work reporting, model-only saves and verified tracking.
+The stale-group filter is implemented; its longer-run behavior still needs
+experimental evidence. Baselines and training can proceed independently once
+their own prerequisites hold, under the [dependency rule](EXPERIMENTS.md#run-independent-work-concurrently).
+Matched baselines are needed before interpreting quality.
+
+[Komondor](HARDWARE.md#access-boundary) is the execution target. Euler support is
+retired under the [scope decision](../AGENTS.md#confirmed-decisions); its earlier
+attempts remain [historical](experiments/policy-distillation/EULER.md). Missing
+pinned Slime/Megatron interfaces still limit static implementation review. Keep
+those evidence gaps distinct from observed runtime failures and quality results.
+Do not infer authorization for a sustained run from smoke success.
 
 ## Markdown guidance final-score comparison
 

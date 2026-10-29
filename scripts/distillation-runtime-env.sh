@@ -1,0 +1,14 @@
+#!/bin/bash
+# Source inside the pinned Slime container before importing torch/TE.
+# Both loaders must select PyTorch's cuDNN instead of the older system copy.
+export CUDNN_HOME=/opt/sglang/lib/python3.12/site-packages/nvidia/cudnn
+export LD_LIBRARY_PATH="$CUDNN_HOME/lib:${LD_LIBRARY_PATH:-}"
+# Match the launcher's explicit FlashAttention backend in native-kernel probes.
+export NVTE_FLASH_ATTN=1
+export NVTE_FLASH_ATTN_V3=0
+export NVTE_FLASH_ATTN_V4=0
+export NVTE_FUSED_ATTN=0
+export NVTE_UNFUSED_ATTN=0
+# Dependencies are already installed with uv in this shared container. Ray's
+# uv-run autodetection walks inaccessible Slurm ancestors on Komondor.
+export RAY_ENABLE_UV_RUN_RUNTIME_ENV=0

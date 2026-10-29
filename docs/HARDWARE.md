@@ -1,8 +1,9 @@
 # Hardware planning
 
-Status, 2026-10-24: Komondor login through the existing greengoblin gateway is
-verified. A one-GPU Slurm inventory job completed successfully on an A100.
-The Slime runtime, distillation training, and distributed execution remain unvalidated.
+Status, 2026-10-26: Komondor access and an eight-A100 BF16 NCCL all-reduce
+across two nodes are verified. The successful layout uses one Slurm task per
+node with four workers; per-GPU Slurm tasks failed during NCCL initialization.
+The Slime runtime and distributed distillation training remain unvalidated.
 
 ## Access boundary
 
@@ -11,14 +12,39 @@ for all access through greengoblin. Perform runtime setup and workload validatio
 on authorized Komondor resources. The gateway's hardware and software inventory
 does not establish the cluster's available compute resources or runtime.
 
+Manual tests, numerical checks, inference, and training run in authorized
+Komondor compute allocations. Local editing and artifact preparation are allowed;
+use uv for new project-managed Python environments. CI remains on GitHub runners.
+The [distillation journal](experiments/LOG.md) records current CPU and runtime
+qualification; historical single-GPU evidence below is not a training result.
+
+## Allocation preference
+
+Decision, 27 October 2026: fully idle nodes and whole-node exclusivity are not
+requirements. Prefer using available GPUs on shared nodes when the job's CPU,
+memory and placement needs can be met. Record the actual allocation and node
+sharing in experiment evidence; sharing may affect timing comparisons.
+
+The Komondor launcher does not request whole-node exclusivity. Request it only
+when a concrete runtime or measurement need justifies it. Initial A/B/C
+submissions used exclusivity; allocation changes are recorded in the journal.
+Removing exclusivity alone does not make a four-GPU-per-node layout fit
+scattered single GPUs; placement must also be feasible.
+
+A scheduler snapshot on 27 October showed 34 unallocated GPUs in `gpu`, one in
+`ai`, and four in `test`, with no fully idle nodes. These are historical counts,
+not a reservation or a guarantee of schedulability.
+
 ## Observed cluster resources and limits
 
 - Slurm advertises four A100-SXM4-40GB GPUs per standard `gpu` node (one node
   currently advertises three), eight GPUs per `ai` node, and four A100 GPUs on
-  the one-hour `test` partition. Only a one-GPU `test` allocation has been run.
+  the one-hour `test` partition. Both one-GPU `test` and two-node/eight-GPU `gpu`
+  allocations have been run.
 - The project association permits `normal` and `lowpri` QOS, with `normal` as
-  the default, and reports GPU-hour balance available. This does not establish
-  an agreed budget for training runs or validate multi-node execution.
+  the default, and reports GPU-hour balance available. The user delegated the
+  initial validation budget; current training smoke
+  attempts are bounded to 30 minutes across eight GPUs (at most four GPU-hours).
 - `apptainer --version` reports 1.4.4. Module listings also expose Singularity,
   CUDA, and PyTorch environments, including PyTorch 2.4.1. Listing a module does
   not establish compatibility with the pinned Slime stack.

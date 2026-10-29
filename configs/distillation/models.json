@@ -1,0 +1,22 @@
+{
+  "student": {
+    "repo": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+    "revision": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+    "files": {
+      "config.json": "37bd455e9679d2959536270fed49d25cc7c290a64f6e52abb97c71345a9cee41",
+      "tokenizer.json": "88145e3c3249adc2546ede277e9819d6e405e19072456e4b521cbc724bd60773",
+      "tokenizer_config.json": "8ac8c85fb242563c2260baec0909debd69d718af6a0b3d90e6cab62b4d341cd5",
+      "generation_config.json": "72cbec1015da9ed03ad025483005cbf6481403abf947adfd54e504d1a66a2126"
+    }
+  },
+  "teacher": {
+    "repo": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+    "revision": "916b56a44061fd5cd7d6a8fb632557ed4f724f60",
+    "files": {
+      "config.json": "8290d3c1e385e2616572eb6926f7e2745f901d1c13da95970326a8a73f6c379c",
+      "tokenizer.json": "88145e3c3249adc2546ede277e9819d6e405e19072456e4b521cbc724bd60773",
+      "tokenizer_config.json": "8ac8c85fb242563c2260baec0909debd69d718af6a0b3d90e6cab62b4d341cd5",
+      "generation_config.json": "72cbec1015da9ed03ad025483005cbf6481403abf947adfd54e504d1a66a2126"
+    }
+  }
+}

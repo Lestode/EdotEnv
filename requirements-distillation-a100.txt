@@ -1,0 +1,3 @@
+# Add to the pinned Slime CUDA runtime with --no-deps --no-build-isolation.
+# Build against that runtime's torch; never install CPU-test requirements here.
+flash-attn==2.8.3
