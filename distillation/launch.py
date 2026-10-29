@@ -15,7 +15,7 @@ SLIME_REVISION = "18868a79b0b083a093798a94ed0f8cb4f71b9c14"
 CONDITIONS = {"synchronous": "A", "bounded_async": "B", "fully_async": "C"}
 
 
-def serving_config(student, teacher, profile="smoke"):
+def serving_config(student, teacher, profile="smoke", context_tokens=4096):
     pilot = profile == "7b32b"
     return {
         "sglang": [
@@ -32,7 +32,7 @@ def serving_config(student, teacher, profile="smoke"):
                             "attention_backend": "triton",
                             "dtype": "bfloat16",
                             "mem_fraction_static": 0.65,
-                            "context_length": 4096,
+                            "context_length": context_tokens,
                         },
                     }
                 ],
@@ -59,7 +59,7 @@ def training_args(args, output):
         "--save",
         str(output / "checkpoints"),
         "--save-interval",
-        str(args.rollouts),
+        str(getattr(args, "save_interval", None) or args.rollouts),
         "--swiglu",
         "--num-layers",
         "28",
@@ -152,9 +152,11 @@ def training_args(args, output):
         "--rollout-max-response-len",
         str(args.response_tokens),
         "--rollout-max-context-len",
-        "4096",
+        str(getattr(args, "context_tokens", 4096)),
+        "--seq-length",
+        str(getattr(args, "context_tokens", 4096)),
         "--rollout-max-prompt-len",
-        str(4096 - args.response_tokens),
+        str(getattr(args, "context_tokens", 4096) - args.response_tokens),
         "--rollout-temperature",
         "1",
         "--rollout-top-p",
@@ -268,8 +270,16 @@ def training_args(args, output):
 
 def validate_options(args):
     layout(getattr(args, "profile", "smoke"), getattr(args, "gpus_per_node", 4))
-    if args.rollouts < 1 or not 1 <= args.response_tokens <= 2048:
-        raise ValueError("Require positive rollouts and 1–2048 response tokens")
+    context_tokens = getattr(args, "context_tokens", 4096)
+    if (
+        args.rollouts < 1
+        or not 1 <= args.response_tokens <= 8192
+        or not args.response_tokens < context_tokens <= 32768
+        or (getattr(args, "save_interval", None) is not None and args.save_interval < 1)
+    ):
+        raise ValueError(
+            "Require positive rollouts/save interval and response < context <= 32768 (response <= 8192)"
+        )
     if args.max_policy_lag < 0 or (
         args.mode == "synchronous" and args.max_policy_lag != 0
     ):
@@ -299,6 +309,7 @@ def main():
     parser.add_argument("--max-policy-lag", type=int)
     parser.add_argument("--rollouts", type=int, default=3)
     parser.add_argument("--response-tokens", type=int, default=512)
+    parser.add_argument("--context-tokens", type=int, default=4096)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--save-interval", type=int, default=10)
     parser.add_argument(
@@ -351,7 +362,12 @@ def main():
     os.umask(0o077)
     args.output.mkdir(parents=True, exist_ok=False)
     (args.output / "serving.json").write_text(
-        json.dumps(serving_config(args.student, args.teacher, args.profile), indent=2)
+        json.dumps(
+            serving_config(
+                args.student, args.teacher, args.profile, args.context_tokens
+            ),
+            indent=2,
+        )
         + "\n"
     )
     (args.output / "hooks.json").write_text(

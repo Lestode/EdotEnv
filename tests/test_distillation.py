@@ -265,6 +265,40 @@ class PolicyAgeTests(unittest.TestCase):
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_long_context_and_checkpoint_interval_reach_all_roles(self):
+        args = SimpleNamespace(
+            student=Path("/student"),
+            teacher=Path("/teacher"),
+            data=Path("/data"),
+            mode="synchronous",
+            rollouts=500,
+            response_tokens=8192,
+            context_tokens=12288,
+            save_interval=50,
+            seed=42,
+            profile="smoke",
+            checkpoint_mode="model-only",
+        )
+        command = training_args(args, Path("/run"))
+        for option, expected in [
+            ("--num-rollout", "500"),
+            ("--save-interval", "50"),
+            ("--rollout-max-response-len", "8192"),
+            ("--rollout-max-context-len", "12288"),
+            ("--seq-length", "12288"),
+            ("--rollout-max-prompt-len", "4096"),
+        ]:
+            self.assertEqual(command[command.index(option) + 1], expected)
+        config = serving_config(
+            args.student, args.teacher, args.profile, args.context_tokens
+        )
+        for model in config["sglang"]:
+            self.assertEqual(
+                model["server_groups"][0]["overrides"]["context_length"], 12288
+            )
+        self.assertIn("--save-hf", command)
+        self.assertNotIn("--save-debug-rollout-data", command)
+
     def test_larger_profile_resource_layout(self):
         args = SimpleNamespace(
             student=Path("/student"),

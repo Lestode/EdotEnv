@@ -35,3 +35,10 @@ permanent access or remove authentication requirements.
 Verified on 27 October 2026: an existing gateway master reached Komondor without
 another eduID prompt, and the experiment directory was readable. Access and
 resource allocations must still be checked when resuming work.
+
+On 29 October, the gateway's Tailscale IPv4 connection timed out while its
+advertised IPv6 address worked. An outer IPv6 connection may use the existing
+trusted IPv4 host-key alias (`HostKeyAlias`) with strict checking and no host-key
+updates, while retaining the same inner authenticated control socket. This
+changes only the transit address; it does not authorize gateway modifications
+or a fresh cluster-authentication fallback.

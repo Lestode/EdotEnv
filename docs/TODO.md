@@ -26,6 +26,12 @@ Training/evaluation metrics are synced to W&B. Before longer runs, calibrate
 response budgets on development data and agree on quality-loss criteria.
 Automatic monitoring was cancelled by the user; do not restart it implicitly.
 
+The user authorized 500-update A/B/C reruns from the original student on the same
+MATH training split. Prepare 8,192 response tokens and 12,288 total context,
+periodic model-only exports and W&B capture. Longer-context memory/runtime are
+not yet validated; runtime estimates must distinguish measured 2,048-token
+steps from extrapolation. No quality-preservation threshold is established.
+
 Continue separate A/B/C experiments from recorded outcomes, retaining the strict
 lag bound, discarded-work reporting, model-only saves and verified tracking.
 The stale-group filter is implemented; its longer-run behavior still needs

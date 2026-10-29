@@ -48,7 +48,9 @@ if [ "$SLURM_NODEID" = 0 ]; then
             --profile "$DISTILLATION_PROFILE" --rollouts "$ROLLOUTS" \
             --gpus-per-node "$DISTILLATION_GPUS_PER_NODE" \
             --checkpoint-mode "${CHECKPOINT_MODE:-full}" \
-            --response-tokens "$RESPONSE_TOKENS" --execute
+            --response-tokens "$RESPONSE_TOKENS" \
+            --context-tokens "${CONTEXT_TOKENS:-4096}" \
+            --save-interval "${SAVE_INTERVAL:-$ROLLOUTS}" --execute
     ) > "$RUN_ROOT/driver.log" 2>&1
     driver_status=$?
     set -e
