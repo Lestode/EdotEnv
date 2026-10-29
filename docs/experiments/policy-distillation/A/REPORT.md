@@ -1,6 +1,10 @@
 # A · Synchronous distillation
 
-Status, 27 October 2026: corrected smoke test `14673098` completed successfully. All three optimizer steps (0–2) logged finite losses and nonzero finite gradient norms; the final checkpoint was saved. All 24 consumed responses had zero reported policy age and no mixed versions.
+Recorded smoke result, 27 October 2026: corrected smoke test `14673098` completed successfully. All three optimizer steps (0–2) logged finite losses and nonzero finite gradient norms; the final checkpoint was saved. All 24 consumed responses had zero reported policy age and no mixed versions.
+
+This preserves an earlier smoke checkpoint. Later attempts and the current
+experimental direction are tracked in the [overview](../README.md#current-experimental-status)
+and [journal](../../LOG.md).
 
 Collect a batch, train, then publish weights. Each response must use one policy
 version with zero lag. This is the learning reference if execution and subsequent

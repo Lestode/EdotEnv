@@ -1,4 +1,13 @@
-# Larger-model throughput and learning pilot
+# Historical larger-model throughput pilot
+
+Status, 28 October 2026: this pilot was superseded by the return to the initial
+small-model pair. The [current overview](README.md#current-experimental-status)
+and [journal](../LOG.md) own current direction and later outcomes. The profile,
+resource choices and plans below are retained as historical context, not an
+instruction to restart the larger-model jobs. These were exploratory attempts,
+not a validated throughput or learning comparison.
+
+## Historical profile and attempts
 
 Current outcome: the user returned to the 1.5B-student / 7B-teacher pair and MATH
 training data. All three short runs and matched evaluations completed; see the
@@ -17,7 +26,7 @@ B/C jobs request 64 GiB host RAM per node at the user’s direction;
 A used 128 GiB. This reduction is unvalidated through training/checkpointing
 and must be disclosed in timing comparisons. GPU counts and workload are unchanged.
 
-Status: corrected runtime-aware A/B/C jobs `14689575`/`14689576`/`14689577`
+Earlier startup checkpoint: corrected runtime-aware A/B/C jobs `14689575`/`14689576`/`14689577`
 used immutable `source-ai-a1` (mount fix `4d791d5`, runtime selection `a9866fd`).
 A/B failed before training at Ray driver attachment; C is held. Diagnostic
 `14691685` passed driver attachment inside the head container but failed from
@@ -27,11 +36,15 @@ training launcher still needs end-to-end execution. Earlier failures are retaine
 passed in `14689413`; larger-model training remains unvalidated. Teacher baseline:
 29/32 versus original student 27/32.
 
-Current memory blocker: the Ray-fixed A attempt completed one optimizer update
-then exhausted GPU memory during TP weight gathering for publication. The next
-candidate keeps 50% of optimizer state on CPU using Megatron’s supported hybrid
-optimizer. This changes host-memory and transfer costs and remains unvalidated
-for full training/checkpoint export. Validate A first; B/C remain stopped/held.
+Historical failure sequence: the Ray-fixed A attempt completed an optimizer
+update, then exhausted GPU memory during publication. Half-optimizer CPU offload
+subsequently allowed repeated publication, but A/B and later C hit host-memory
+limits during full checkpoint saving. Model-only saving was then explored before
+the return to small-model validation. The later saving failures and small-model return superseded the publication-memory
+diagnosis as a description of current work. Attempt details and superseding decisions remain in the
+[journal](../LOG.md).
+
+## Plan recorded for the larger-model pilot
 
 The user authorized upgrading to a 7B student and frozen 32B teacher, measuring
 pipeline waiting, GPU productivity by role, and quality versus tokens, time and

@@ -1,17 +1,15 @@
-# Policy distillation validation update
+# Historical policy distillation checkpoint
 
-26 October 2026 · Komondor · Engineering validation checkpoint
+26 October 2026 · Komondor · Archived engineering checkpoint
 
-**Both frozen-model baselines completed. End-to-end training remains blocked at
-distributed startup.** No optimizer updates have run, neither sync nor async
-training has passed, and no full run has started. At this checkpoint submissions
-were paused and no jobs for this experiment remained running or queued.
+**Historical snapshot:** both frozen-model baselines had completed, but training
+was blocked at distributed startup and no optimizer updates had run at that
+point. The measurements below are retained unchanged; this is not the current
+progress summary. Later smoke attempts produced updates and checkpoints.
 
-The user subsequently authorized separate A/B/C execution checks. Their current
-records are [A](A/REPORT.md), [B](B/REPORT.md), and [C](C/REPORT.md); the measured
-results below remain unchanged. B's response-boundary enforcement now passes
-[CPU regressions](B/REPORT.md), with cluster authentication pending before
-diagnosing Ray startup on allocated CPUs. No new GPU attempts have been submitted.
+Use the [current experimental overview](README.md#current-experimental-status),
+condition reports [A](A/REPORT.md), [B](B/REPORT.md), [C](C/REPORT.md), and the
+[journal](../LOG.md) for subsequent outcomes and limitations.
 
 ## Question and setup
 
@@ -47,7 +45,7 @@ truncation do not establish a reliable effect size. These starting-checkpoint
 baselines do not establish successful distillation or acceptable shortcut loss.
 The final study protocol and acceptable quality loss remain open.
 
-## Engineering results and current blocker
+## Engineering results at this checkpoint
 
 Fourteen CPU adapter tests passed. Native A100 checks passed for attention
 against a reference, backward computation, RMSNorm and an Adam update. An
@@ -66,10 +64,10 @@ optimizer updates:
 | 14651539 | 1m48s | Authenticated head started, then its client service timed out waiting for node registration. Unresolved. |
 
 CPU checks passed for Ray remote tasks, missing network tools and explicit
-authentication. Reliable two-node startup remains unvalidated. The last attempt
+authentication. Reliable two-node startup remained unvalidated at this checkpoint. The last attempt
 exited automatically; the earlier three were stopped promptly.
 
-## Resource use and next decision
+## Resource use and next decision at this checkpoint
 
 The two completed baselines used approximately **1.034 GPU-hours**. The four
 subsequent smoke attempts used **1.102 GPU-hours**, for **2.136 GPU-hours** combined.
@@ -77,7 +75,7 @@ This is allocated GPU count multiplied by allocation duration, including startup
 and cleanup. It excludes earlier setup, failed baseline attempts and CPU-only
 checks; it is not a complete project cost or a monetary bill.
 
-The proposed next step is one bounded investigation of Ray startup, preserving
+The next step proposed at this checkpoint was one bounded investigation of Ray startup, preserving
 its node-local failure logs and reproducing it on CPU resources where possible.
 Resume the three-update sync test only after that startup check passes; attempt
 async after sync succeeds. No sustained training is proposed at this checkpoint.
@@ -86,7 +84,7 @@ async after sync succeeds. No sustained training is proposed at this checkpoint.
 
 The [run journal](../LOG.md), [model lock](../../../configs/distillation/models.json)
 and [pilot protocol](../../../configs/distillation/baseline-pilot.json) preserve
-the evidence and configuration. Latest executed revision: `d2bd5dc`.
+the evidence and configuration. Executed revision at this checkpoint: `d2bd5dc`.
 [PR 15](https://github.com/Lestode/EdotEnv/pull/15) remains open; implementation
 review is incomplete because the reviewer cannot inspect the pinned Slime
 interfaces. Raw responses, logs and credentials remain private.

@@ -1,6 +1,10 @@
 # C · Mid-response updates with rebuilt cache
 
-Status, 27 October 2026: non-exclusive C-a3 job `14673436` completed three updates with finite losses and nonzero finite gradients, and saved its checkpoint. Of 24 consumed responses, 16 were one publication stale; none mixed policy versions. The execution smoke passed, but the distinctive mid-response shortcut was not exercised.
+Recorded smoke result, 27 October 2026: non-exclusive C-a3 job `14673436` completed three updates with finite losses and nonzero finite gradients, and saved its checkpoint. Of 24 consumed responses, 16 were one publication stale; none mixed policy versions. The execution smoke passed, but the distinctive mid-response shortcut was not exercised.
+
+This preserves an earlier smoke checkpoint. Later attempts and the current
+experimental direction are tracked in the [overview](../README.md#current-experimental-status)
+and [journal](../../LOG.md).
 
 Use the same overlap and one-publication lag bound as B, but permit Slime to
 abort unfinished generation, flush KV cache, publish weights and resume partial

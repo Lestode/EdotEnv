@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shared execution body; submit a cluster-specific Slurm entry point.
+# Shared execution body for the Komondor Slurm entry point.
 set -euo pipefail
 umask 077
 : "${PROJECT_ROOT:?Shared checkout containing the initialized Slime submodule}"
@@ -14,7 +14,7 @@ export DISTILLATION_NODES
 export DISTILLATION_PROFILE=${DISTILLATION_PROFILE:-smoke}
 export ROLLOUTS=${ROLLOUTS:-3}
 export RESPONSE_TOKENS=${RESPONSE_TOKENS:-512}
-# Slurm's per-node request may be numeric or a typed GPU resource (Euler).
+# Slurm's per-node request may be numeric or a typed GPU resource.
 # A uniform allocation is required by pinned Slime's serving placement.
 : "${SLURM_GPUS_PER_NODE:?Submit with --gpus-per-node=1,2,or4}"
 export DISTILLATION_GPUS_PER_NODE="${SLURM_GPUS_PER_NODE##*:}"

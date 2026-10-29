@@ -7,9 +7,9 @@ branch and open a PR against `main`. Update that PR as work progresses. Do not
 push changes directly to `main`. Agents may prepare and push changes within the
 user's authorized task; merging requires explicit user acceptance of the PR.
 
-EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/WORKFLOW.md),
-[documentation review procedure](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/documentation-review/SKILL.md),
-and [implementation review procedure](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/implementation-review/SKILL.md)
+EdotEnv adopts the shared [working agreement](https://github.com/Lestode/review-agents/blob/f27e55e7cdc5e93deb2401355cd46b17cc0fd556/WORKFLOW.md),
+[documentation review procedure](https://github.com/Lestode/review-agents/blob/f27e55e7cdc5e93deb2401355cd46b17cc0fd556/documentation-review/SKILL.md),
+and [implementation review procedure](https://github.com/Lestode/review-agents/blob/f27e55e7cdc5e93deb2401355cd46b17cc0fd556/implementation-review/SKILL.md)
 at the same revision as both actions. Project scope remains in [AGENTS.md](../AGENTS.md).
 Update the action pin and these links together through a reviewed PR. EdotEnv uses
 the user-selected latest-head merge policy below in place of the earlier shared
@@ -98,7 +98,7 @@ index and [documentation instructions](../.github/documentation-review.md).
 index, a separate command and marker, optional unchanged source paths, and
 [implementation instructions](../.github/implementation-review.md).
 The shared action defines the model, collection limits, authorization, execution,
-and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/57e1e998e109d879f41c1872eb547e8502555e60/README.md).
+and publication behavior; see [its integration guide](https://github.com/Lestode/review-agents/blob/f27e55e7cdc5e93deb2401355cd46b17cc0fd556/README.md).
 
 Both actions run on a GitHub-hosted Ubuntu runner with `auth-mode: api-key` and
 explicit public-repository opt-in. Fetch it with `REVIEW_AGENTS_READ_KEY`, a
@@ -114,7 +114,11 @@ Pass it only through the action's `openai-api-key` input. Do not put the key in
 project files or PR comments. The API project needs billing and access to the
 shared action's pinned model; this mode uses OpenAI API billing and needs no
 local Mac runner or ChatGPT sign-in. Each shared action makes a tool-free
-Responses API request using the same bounded review context as its ChatGPT mode.
+Responses API review request using the same bounded context as its ChatGPT mode. Oversized inputs first receive lossless
+Markdown patch deduplication where applicable, then bounded summaries of older
+automated reports when needed. These extra model calls use the same API billing;
+human discussion, current reports, source, and the original finding ledger remain
+available under the [shared compaction contract](https://github.com/Lestode/review-agents/blob/f27e55e7cdc5e93deb2401355cd46b17cc0fd556/README.md#compacting-long-review-history).
 Proposed PR code runs only in the separate verification job; the privileged
 reviewer uses accepted default-branch settings and never executes PR code.
 Keep the review job's per-PR concurrency group and queued execution so repeated
@@ -153,8 +157,8 @@ blocking; out-of-scope private audits are coverage notes rather than prerequisit
 No separate completion-only check is requested.
 
 The combined workflow keeps its existing filename, but is named `API agent
-reviews` and gives runs the title `Review PR #<number>`. One immutable private
-checkout supplies both actions, serialized per PR. An implementation assessment
+reviews` and gives runs the title `Review PR #<number>`. One accepted immutable private
+checkout supplies both executable actions, serialized per PR. An implementation assessment
 still runs when documentation findings fail the preceding action. Each agent's
 own command selects that reviewer for comment requests.
 
@@ -166,9 +170,19 @@ and receives relevant unchanged caller/configuration source through its supporte
 `contextPaths` setting. Missing evidence for a consequential requirement remains
 blocking in either review.
 
-Both reviews include the accepted shared action manifests, integration contract,
-known limitations, and upstream validation references in bounded private
-model context. Normal runs prepend accepted project customization; bootstrap runs
+Both reviews include runner input/output, integration and compaction contracts,
+known limitations, and caller interfaces from the dependency pin proposed at the
+captured PR head. The trusted workflow reads only the fixed reviewer checkout
+step's actual mapping in `jobs.review.steps`, pinned checkout action and literal full SHA,
+requires the fixed private repository and checkout path, and fetches that
+revision into a separate ignored directory as evidence. It never imports or
+executes code from that directory. Runtime actions and configuration helpers
+continue to execute from the accepted checkout. Missing, ambiguous, mutable,
+oversized, or superseded proposal references stop evidence collection. This lets
+normal automatic reviews assess dependency upgrades without a manual branch run.
+The accepted parser uses pinned PyYAML with safe loading and rejects duplicate
+keys, aliases, tags and unsupported checkout layouts. The evidence identifies the proposed revision; it does not establish acceptance.
+Reviewers check acceptance against supplied proposal and discussion. Normal runs prepend accepted project customization; bootstrap runs
 do not activate proposed customization. Temporary context/configuration stays in
 the ignored private checkout and is never uploaded. Reports may cite dependency
 paths and the pin but must not reproduce private source. This supplies evidence
@@ -223,8 +237,13 @@ re-enable the workflow in Actions if needed.
 The initial API-key support was accepted and merged in
 [review-agents PR #2](https://github.com/Lestode/review-agents/pull/2). Its original
 private-consumer pin was `f4db0e334f6fc2216c583fe796638b096a5abbfe`.
-Public-consumer support arrived in shared reviewer PR #4. The new pin above
-is the accepted merge commit of shared reviewer PR #3, which includes that support.
+Public-consumer support arrived in shared reviewer PR #4. Shared reviewer PR #3
+added the implementation reviewer and includes that support.
+The current pin is the accepted squash merge of [shared reviewer PR #12](https://github.com/Lestode/review-agents/pull/12),
+which allocates summary allowances from the remaining final review budget. The caller explicitly selects `execution-mode: runner`
+and `check-target: head`; optional Daytona execution and test-merge checks are not
+activated by this upgrade. The latest-head policy below still overrides the shared
+legacy comparison requirement.
 
 [EdotEnv PR #1](https://github.com/Lestode/EdotEnv/pull/1) activated the initial
 private-repository workflow on the default branch. The repository's
@@ -353,8 +372,9 @@ administrator enforcement, PRs, resolved conversations, and force-push/deletion
 restrictions. The obsolete comparison workflow was disabled through GitHub's
 workflow configuration. Its unchanged source file remains available because the
 accepted reviewer configuration still reads it during this transition; the new
-configuration stops collecting that retired workflow. The shared reviewer
-implementation and pin remain unchanged. Updated scope customization takes effect
+configuration stops collecting that retired workflow. At that transition, the
+shared reviewer implementation and pin remained unchanged. Updated scope
+customization takes effect
 only after this configuration PR is accepted on the default branch; an existing
 incomplete report does not silently become successful.
 
@@ -385,11 +405,13 @@ the [experiment’s virtual-environment setup](../experiments/verifier-context/R
 for the Harbor/Daytona dependencies required by the project tests. Run manual
 checks in a Komondor compute allocation under [hardware policy](HARDWARE.md#access-boundary).
 Use uv for project-managed dependency setup. The reviewer
-freshness tests also require Node.js. Then run:
+freshness and dependency-evidence tests also require Node.js. Activate the virtual
+environment so Node launches Python with the same dependencies:
 
 ```sh
 uv venv --python 3.12 .venv
-uv pip install --python .venv/bin/python pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt
+. .venv/bin/activate
+uv pip install --python .venv/bin/python pre-commit==4.2.0 -r experiments/verifier-context/requirements.txt -r scripts/review-requirements.txt
 uv pip install --python .venv/bin/python --index-url https://download.pytorch.org/whl/cpu 'torch==2.8.0+cpu'
 uv pip install --python .venv/bin/python -r requirements-distillation-test.txt
 .venv/bin/pre-commit run --all-files
@@ -414,8 +436,9 @@ returned “2 of 3 required status checks are expected.” No protection was byp
 
 The owner then explicitly [selected the simpler latest-head policy and accepted
 both merges](https://github.com/Lestode/EdotEnv/pull/12#issuecomment-6415770108).
-This supersedes EdotEnv's earlier test-merge adoption. Retain the previously working accepted reviewer revision and its default
-head publication; the unsuccessful shared PR #9 proposal is not adopted. Require `Project checks`, `Documentation reviewer`, and
+This supersedes EdotEnv's earlier test-merge adoption. Preserve head publication
+when upgrading the accepted reviewer; the unsuccessful shared PR #9 proposal is
+not adopted. Require `Project checks`, `Documentation reviewer`, and
 `Implementation reviewer` from GitHub Actions. Strict up-to-date checking and
 all unrelated protections remain required. No comparison or completion-only gate
 is added, and findings or incomplete assessments are not waived.
@@ -434,3 +457,25 @@ passed on `7dcadc811ad227006f5efe993667708d7b1297fe`. The merge produced
 `3c1277bba93278e434e455926e930be75727febe`; strict protection and all unrelated
 settings were preserved. This verifies the normal merge path, not the deferred
 failure-injection scenarios.
+
+### Context-compaction rollout
+
+On 2026-10-28, [consumer PR #16](https://github.com/Lestode/EdotEnv/pull/16)
+deployed shared reviewer PR #10. The [first automatic run](https://github.com/Lestode/EdotEnv/actions/runs/40719052512)
+verified the new pin and context preparation, but both agents stopped during
+history compaction before a fresh assessment. The generic failure did not expose
+whether the cause was response format, echoed IDs, byte size, or transport.
+
+[Consumer PR #17](https://github.com/Lestode/EdotEnv/pull/17) deployed the response
+repair from shared reviewer PR #11. Its [long-history run](https://github.com/Lestode/EdotEnv/actions/runs/40726737722)
+rejected a 2,022-byte documentation summary against the fixed 2,000-byte cap.
+Implementation compaction summarized 153 older reports in seven requests, then
+the final review failed with an HTTP 520 API error. Neither result certified a
+fresh review.
+
+The current update adopts accepted shared reviewer PR #12. Summaries share the
+remaining final review space, up to 20 KB each, with unused space available to
+later summaries. The no-retry rule, 512 KB / 640 KB total input limits, protected
+context, and original finding ledger remain unchanged. Private instruction
+bundles must still fit 32 KB. A fresh long-history run is needed to verify the
+new allowance policy after deployment.
