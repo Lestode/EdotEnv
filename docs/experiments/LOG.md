@@ -8,6 +8,19 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-29 · 500-update MATH A/B/C · submitted
+
+The user authorized 500 updates per condition. A/B/C `14732023`/`14732024`/
+`14732025` use eight GPUs/two nodes, 64 GiB/node and 12-hour caps, starting from
+the same original student. Response/context limits rise to 8,192/12,288 tokens;
+model-only checkpoints and HF exports every 50 updates make milestones 100,
+250 and 500 available. Source `17b3d44` overlays are recorded in `LONG_REVISION`
+under `edotenv/math-long-20261029/source-a1`. Relevant check `14731889` has
+passed 21 CPU tests; full parser and longer-context GPU execution remain to be
+confirmed. A has started allocation/startup; B/C are queued. W&B offline capture
+and an incremental online numeric relay are configured. The 8-12 hour estimate
+per condition is extrapolated; see the [plan](policy-distillation/LONG-RUN.md).
+
 ### 2026-10-29 · MATH A/B/C and matched evaluations · completed
 
 A/B/C `14702480`/`14702481`/`14702486` completed ten finite updates and saved
