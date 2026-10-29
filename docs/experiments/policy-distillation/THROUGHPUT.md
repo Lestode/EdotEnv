@@ -1,5 +1,11 @@
 # Larger-model throughput and learning pilot
 
+Current outcome: the user returned to the 1.5B-student / 7B-teacher pair and MATH
+training data. All three short runs and matched evaluations completed; see the
+[consolidated report](reports/math-pilot-20261028/REPORT.md). The larger-model
+configuration and startup/memory records below are historical and are not the
+current allocation or a claim of larger-model validation.
+
 Komondor submissions may use either `gpu` or `ai`, with four allocated GPUs
 per node even on eight-GPU AI hosts. Slurm chooses one partition per job;
 this does not pool nodes across partitions. Retain actual placement in reports.

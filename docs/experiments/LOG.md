@@ -8,6 +8,18 @@ the earlier entry so failures remain visible.
 
 ## Run entries
 
+### 2026-10-29 · MATH A/B/C and matched evaluations · completed
+
+A/B/C `14702480`/`14702481`/`14702486` completed ten finite updates and saved
+model/HF checkpoints in 13m42s/11m47s/11m44s. Accepted lag stayed at zero/one/one;
+C had 38 mixed-version responses, B none. B/C discarded seven/nineteen stale
+groups. Training used 4.962 GPU-hours; 67-68/80 responses per run were truncated.
+Matched TP4 evaluations `14728534`/`14728535`/`14728536` scored 20/32, 20/32,
+24/32; original-student evaluation `14728542` scored 24/32. All completed without
+request/grading failures. Evaluations used 5.294 GPU-hours. Numeric results are
+synced to W&B. See the [report](policy-distillation/reports/math-pilot-20261028/REPORT.md)
+for paired outcomes, plots, exact revisions, limitations and evidence paths.
+
 ### 2026-10-28 · MATH A/B/C pilots · submitted
 
 The user cancelled remaining smoke work and selected MATH training prompts.

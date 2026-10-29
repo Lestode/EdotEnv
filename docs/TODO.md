@@ -11,17 +11,17 @@ tracks outstanding outcomes; detailed evidence belongs in the linked records.
 
 ## Policy distillation validation
 
-The user selected the initial 1.5B student / 7B teacher pair and MATH training
-prompts, with development and evaluation kept separate. A smoke run completed
-ten updates and saved a model/HF export. B and C stopped on the one-publication
-lag limit; old queue entries need rejection before batching without relaxing
-that bound. Use Slime's sampling-filter hook and report discarded work.
-The MATH preparation produced 3,000 training prompts and 256 development rows;
-all 500 MATH-500 questions are excluded by normalized exact matching.
-The user cancelled remaining smoke work and requests updated A/B/C on MATH.
-Retain model-only saving, Ray/mount fixes, lightweight telemetry and verified
-W&B delivery. Learning quality and acceptable loss remain unestablished.
-See the [journal](experiments/LOG.md) for job IDs, failures and validation gaps.
+The 1.5B-student / 7B-teacher MATH A/B/C pilot completed ten updates per
+condition, model-only saving, HF export and matched checkpoint evaluation.
+The original student scored 24/32; A/B each 20/32; C 24/32. C exercised mixed
+versions in 38/80 accepted responses. Async lag stayed within one after stale
+groups were discarded. Training truncation was 67-68/80 responses, and only
+80 accepted responses were optimized per condition. Execution works on this
+path; useful learning and acceptable quality loss remain unestablished.
+See the [consolidated report](experiments/policy-distillation/reports/math-pilot-20261028/REPORT.md).
+Training/evaluation metrics are synced to W&B. Before longer runs, calibrate
+response budgets on development data and agree on quality-loss criteria.
+Automatic monitoring was cancelled by the user; do not restart it implicitly.
 
 The [experiment design](experiments/policy-distillation/README.md) frames the
 initial technical validation, with a provisional resource setup. Quality loss
